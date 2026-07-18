@@ -24,6 +24,16 @@ export function WeatherProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
+      // Cache-first: check cached weather before requesting GPS
+      if (lastCoords.current) {
+        const cached = await getCachedWeather(lastCoords.current.lat, lastCoords.current.lon);
+        if (cached) {
+          setWeather(cached);
+          setLoading(false);
+          return;
+        }
+      }
+
       if (useGPS) {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
@@ -36,7 +46,6 @@ export function WeatherProvider({ children }: { children: ReactNode }) {
         const lon = loc.coords.longitude;
         lastCoords.current = { lat, lon };
 
-        // Try cache first
         const cached = await getCachedWeather(lat, lon);
         if (cached) {
           setWeather(cached);
