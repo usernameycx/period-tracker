@@ -2,13 +2,20 @@ import * as SQLite from 'expo-sqlite';
 import { seedDietRules } from './diet-rules';
 
 let db: SQLite.SQLiteDatabase | null = null;
+let initPromise: Promise<SQLite.SQLiteDatabase> | null = null;
 
 export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
   if (db) return db;
-  db = await SQLite.openDatabaseAsync('period_tracker.db');
-  await initTables(db);
-  await seedDietRules(db);
-  return db;
+  if (!initPromise) {
+    initPromise = (async () => {
+      const database = await SQLite.openDatabaseAsync('period_tracker.db');
+      await initTables(database);
+      await seedDietRules(database);
+      db = database;
+      return database;
+    })();
+  }
+  return initPromise;
 }
 
 async function initTables(db: SQLite.SQLiteDatabase): Promise<void> {

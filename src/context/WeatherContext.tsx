@@ -17,7 +17,7 @@ export function WeatherProvider({ children }: { children: ReactNode }) {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { useGPS } = useSettings();
+  const { useGPS, city } = useSettings();
   const lastCoords = useRef<{ lat: number; lon: number } | null>(null);
 
   const refresh = useCallback(async () => {
@@ -55,6 +55,29 @@ export function WeatherProvider({ children }: { children: ReactNode }) {
 
         const data = await fetchWeather(lat, lon);
         setWeather(data);
+      } else {
+        // Manual city mode: geocode city name to coordinates
+        try {
+          const geocode = await Location.geocodeAsync(city);
+          if (geocode.length > 0) {
+            const { latitude: lat, longitude: lon } = geocode[0];
+            lastCoords.current = { lat, lon };
+
+            const cached = await getCachedWeather(lat, lon);
+            if (cached) {
+              setWeather(cached);
+              setLoading(false);
+              return;
+            }
+
+            const data = await fetchWeather(lat, lon);
+            setWeather(data);
+          } else {
+            setError(`无法找到城市"${city}"的坐标`);
+          }
+        } catch {
+          setError(`定位城市"${city}"失败`);
+        }
       }
     } catch (e: any) {
       setError(e.message);
@@ -66,7 +89,7 @@ export function WeatherProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [useGPS]);
+  }, [useGPS, city]);
 
   useEffect(() => { refresh(); }, [refresh]);
 

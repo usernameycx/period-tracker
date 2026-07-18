@@ -7,7 +7,7 @@ import { exportData, importData } from '../../src/utils/backup';
 import { usePeriod } from '../../src/context/PeriodContext';
 
 export default function SettingsPage() {
-  const { notifyHour, setNotifyHour, notifyMinute, setNotifyMinute } = useSettings();
+  const { notifyHour, setNotifyHour, notifyMinute, setNotifyMinute, refresh: refreshSettings } = useSettings();
   const { refresh } = usePeriod();
 
   const handleExport = async () => {
@@ -23,7 +23,19 @@ export default function SettingsPage() {
     Alert.prompt
       ? Alert.prompt('导入备份', '粘贴 JSON 数据', [
           { text: '取消', style: 'cancel' },
-          { text: '导入', onPress: async (text: string | undefined) => { if (text) { await importData(text); refresh(); Alert.alert('导入完成'); } } },
+          {
+            text: '导入',
+            onPress: async (text: string | undefined) => {
+              if (!text) return;
+              try {
+                await importData(text);
+                await Promise.all([refresh(), refreshSettings()]);
+                Alert.alert('导入完成', '数据已成功恢复');
+              } catch (e: any) {
+                Alert.alert('导入失败', e.message || '请检查 JSON 格式是否正确');
+              }
+            },
+          },
         ])
       : Alert.alert('导入', 'iOS 暂不支持直接粘贴，后续版本会用文件选择');
   };

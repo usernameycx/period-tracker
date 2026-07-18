@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { usePeriod } from '../context/PeriodContext';
-import { getNextPredictedStart, getAveragePeriodDays, getPhaseForDate } from '../services/prediction';
-import { PHASE_LABELS, PHASE_EMOJI } from '../constants/phases';
+import { getNextPredictedStart, getAveragePeriodDays, getAverageCycleLength, getPhaseForDate } from '../services/prediction';
+import { PHASE_LABELS, PHASE_EMOJI, OVULATION_BEFORE_PERIOD, OVULATION_SPAN, DEFAULT_PERIOD_DAYS, DEFAULT_CYCLE_DAYS } from '../constants/phases';
 import { parseDate } from '../utils/date';
 
 export default function CycleStatusCard() {
@@ -20,6 +20,7 @@ export default function CycleStatusCard() {
 
   const nextStart = getNextPredictedStart(records);
   const avgDays = getAveragePeriodDays(records);
+  const cycleLength = getAverageCycleLength(records);
   const today = new Date();
 
   let phaseInfo;
@@ -28,6 +29,20 @@ export default function CycleStatusCard() {
   } else {
     phaseInfo = { phase: 'follicular' as const, dayOffset: 1 };
   }
+
+  // Compute phase duration for progress bar
+  const phaseDuration = (() => {
+    switch (phaseInfo.phase) {
+      case 'period': return avgDays;
+      case 'ovulation': return OVULATION_SPAN;
+      case 'luteal': return OVULATION_BEFORE_PERIOD - Math.floor(OVULATION_SPAN / 2);
+      case 'follicular': {
+        const cl = cycleLength || DEFAULT_CYCLE_DAYS;
+        const lutealDays = OVULATION_BEFORE_PERIOD - Math.floor(OVULATION_SPAN / 2);
+        return Math.max(1, cl - avgDays - OVULATION_SPAN - lutealDays);
+      }
+    }
+  })();
 
   return (
     <View style={styles.card}>
@@ -45,7 +60,7 @@ export default function CycleStatusCard() {
         </View>
       </View>
       <View style={styles.progressBar}>
-        <View style={[styles.progress, { width: `${Math.min(100, (phaseInfo.dayOffset / 5) * 100)}%` }]} />
+        <View style={[styles.progress, { width: `${Math.min(100, (phaseInfo.dayOffset / phaseDuration) * 100)}%` }]} />
       </View>
     </View>
   );

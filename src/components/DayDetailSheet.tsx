@@ -26,6 +26,7 @@ export default function DayDetailSheet({ visible, date, onClose }: Props) {
   const dateStr = formatDate(date);
 
   useEffect(() => {
+    let cancelled = false;
     setStartInput(dateStr);
     setEndInput(dateStr);
     // Check existing record
@@ -45,6 +46,7 @@ export default function DayDetailSheet({ visible, date, onClose }: Props) {
     // Load diet
     (async () => {
       const db = await getDatabase();
+      if (cancelled) return;
       const next = getNextPredictedStart(records);
       const avg = getAveragePeriodDays(records);
       let phase: Phase;
@@ -58,8 +60,10 @@ export default function DayDetailSheet({ visible, date, onClose }: Props) {
         dayOff = 1;
       }
       const rule = await getDietRules(db, phase, dayOff);
-      setDiet(rule);
+      if (!cancelled) setDiet(rule);
     })();
+
+    return () => { cancelled = true; };
   }, [date, records]);
 
   const handleSave = async () => {

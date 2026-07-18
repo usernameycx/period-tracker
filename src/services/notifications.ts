@@ -8,6 +8,18 @@ import { getCachedWeather } from './weather';
 import { Phase, PHASE_LABELS } from '../constants/phases';
 import { parseDate } from '../utils/date';
 
+export function setupNotificationHandler(): void {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: false,
+      shouldSetBadge: false,
+    }),
+  });
+}
+
 export async function requestNotificationPermission(): Promise<boolean> {
   const { status } = await Notifications.requestPermissionsAsync();
   return status === 'granted';

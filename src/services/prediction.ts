@@ -51,9 +51,10 @@ export function getPhaseForDate(
 ): { phase: Phase; dayOffset: number } {
   const daysUntilPeriod = diffDays(predictedNextStart, date);
 
-  // 当前正处于经期
-  if (daysUntilPeriod >= 0 && daysUntilPeriod < avgPeriodDays) {
-    return { phase: 'period', dayOffset: daysUntilPeriod + 1 };
+  // 当前正处于经期：从 predictedNextStart 开始，持续 avgPeriodDays 天
+  // daysUntilPeriod=0 → day 1, daysUntilPeriod=-1 → day 2, ...
+  if (daysUntilPeriod <= 0 && daysUntilPeriod > -avgPeriodDays) {
+    return { phase: 'period', dayOffset: -daysUntilPeriod + 1 };
   }
 
   // 排卵期：下次经期前 OVULATION_BEFORE_PERIOD 天，前后各 (OVULATION_SPAN-1)/2 天

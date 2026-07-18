@@ -4,13 +4,14 @@ import { useEffect } from 'react';
 import { PeriodProvider } from '../src/context/PeriodContext';
 import { WeatherProvider } from '../src/context/WeatherContext';
 import { SettingsProvider, useSettings } from '../src/context/SettingsContext';
-import { requestNotificationPermission, scheduleDailyNotification } from '../src/services/notifications';
+import { requestNotificationPermission, scheduleDailyNotification, setupNotificationHandler } from '../src/services/notifications';
 
 function NotificationScheduler() {
   const { notifyHour, notifyMinute } = useSettings();
 
   useEffect(() => {
     (async () => {
+      setupNotificationHandler();
       const granted = await requestNotificationPermission();
       if (granted) {
         await scheduleDailyNotification(notifyHour, notifyMinute);

@@ -2,7 +2,8 @@ import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { usePeriod } from '../context/PeriodContext';
 import { getNextPredictedStart } from '../services/prediction';
-import { parseDate, formatDate, isSameDay } from '../utils/date';
+import { parseDate, formatDate, isSameDay, addDays } from '../utils/date';
+import { OVULATION_BEFORE_PERIOD, OVULATION_SPAN } from '../constants/phases';
 
 interface Props {
   onDayPress: (date: Date) => void;
@@ -31,12 +32,17 @@ export default function CalendarView({ onDayPress, selectedDate, currentMonth, o
     return set;
   }, [records]);
 
-  const ovulationDate = useMemo(() => {
+  const ovulationDates = useMemo(() => {
+    const set = new Set<string>();
     const next = getNextPredictedStart(records);
-    if (!next) return null;
-    const d = parseDate(next);
-    d.setDate(d.getDate() - 14);
-    return formatDate(d);
+    if (next) {
+      const center = addDays(parseDate(next), -OVULATION_BEFORE_PERIOD);
+      const half = Math.floor(OVULATION_SPAN / 2);
+      for (let i = -half; i <= half; i++) {
+        set.add(formatDate(addDays(center, i)));
+      }
+    }
+    return set;
   }, [records]);
 
   const year = currentMonth.getFullYear();
@@ -69,7 +75,7 @@ export default function CalendarView({ onDayPress, selectedDate, currentMonth, o
           const date = new Date(year, month, d);
           const dateStr = formatDate(date);
           const isPeriod = periodDates.has(dateStr);
-          const isOvulation = ovulationDate === dateStr;
+          const isOvulation = ovulationDates.has(dateStr);
           const isSelected = isSameDay(date, selectedDate);
 
           return (

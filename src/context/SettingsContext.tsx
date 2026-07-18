@@ -10,6 +10,7 @@ interface Settings {
   setNotifyHour: (h: number) => void;
   notifyMinute: number;
   setNotifyMinute: (m: number) => void;
+  refresh: () => Promise<void>;
 }
 
 const Ctx = createContext<Settings>({} as Settings);
@@ -35,8 +36,16 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const setNotifyHour = (h: number) => { setNotifyHourState(h); AsyncStorage.setItem('notifyHour', String(h)); };
   const setNotifyMinute = (m: number) => { setNotifyMinuteState(m); AsyncStorage.setItem('notifyMinute', String(m)); };
 
+  const refresh = async () => {
+    const m = await AsyncStorage.getMany(['city', 'useGPS', 'notifyHour', 'notifyMinute']);
+    if (m.city) setCityState(m.city);
+    if (m.useGPS !== null) setUseGPSState(m.useGPS === 'true');
+    if (m.notifyHour) setNotifyHourState(Number(m.notifyHour));
+    if (m.notifyMinute) setNotifyMinuteState(Number(m.notifyMinute));
+  };
+
   return (
-    <Ctx.Provider value={{ city, setCity, useGPS, setUseGPS, notifyHour, setNotifyHour, notifyMinute, setNotifyMinute }}>
+    <Ctx.Provider value={{ city, setCity, useGPS, setUseGPS, notifyHour, setNotifyHour, notifyMinute, setNotifyMinute, refresh }}>
       {children}
     </Ctx.Provider>
   );

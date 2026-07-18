@@ -13,8 +13,13 @@ export default function TodayPage() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([refreshWeather(), refreshPeriod()]);
-    setRefreshing(false);
+    try {
+      await Promise.all([refreshWeather(), refreshPeriod()]);
+    } catch (e) {
+      console.warn('Refresh failed:', e);
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   return (
