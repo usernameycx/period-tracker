@@ -67,6 +67,8 @@ export async function fetchWeather(lat: number, lon: number): Promise<WeatherDat
 async function cacheWeather(lat: number, lon: number, data: WeatherData): Promise<void> {
   const cached: CachedWeather = { data, timestamp: Date.now() };
   await AsyncStorage.setItem(cacheKey(lat, lon), JSON.stringify(cached));
+  await AsyncStorage.setItem('last_lat', String(lat));
+  await AsyncStorage.setItem('last_lon', String(lon));
 }
 
 export async function getCachedWeather(lat: number, lon: number): Promise<WeatherData | null> {
