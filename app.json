@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "经期助手",
+    "slug": "period-tracker",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "period-tracker",
+    "userInterfaceStyle": "light",
+    "plugins": [
+      "expo-router",
+      [
+        "expo-notifications",
+        { "icon": "./assets/images/notification-icon.png", "color": "#FFB6C1" }
+      ],
+      [
+        "expo-location",
+        { "locationWhenInUsePermission": "用于获取当前位置的天气信息" }
+      ]
+    ],
+    "ios": { "supportsTablet": false, "bundleIdentifier": "com.periodtracker.app" },
+    "android": { "package": "com.periodtracker.app", "adaptiveIcon": { "backgroundColor": "#FFB6C1" } }
+  }
+}
