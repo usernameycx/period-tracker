@@ -1,5 +1,17 @@
 {
   "enabledPlugins": {
     "expo@claude-plugins-official": true
+  },
+  "permissions": {
+    "allow": [
+      "Bash(cd ~/period-tracker && git *)",
+      "Bash(cd ~/period-tracker && npx tsc *)",
+      "Bash(cd ~/period-tracker && npx expo *)",
+      "Bash(cd ~/period-tracker && npm *)",
+      "Bash(cd ~/period-tracker && mkdir *)",
+      "Bash(cd ~/period-tracker && ls *)",
+      "Bash(test *)",
+      "Bash(mkdir *)"
+    ]
   }
 }
