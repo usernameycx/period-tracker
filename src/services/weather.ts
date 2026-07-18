@@ -1,9 +1,11 @@
 import { getWeatherAdvice, getUVAdvice } from '../constants/weather-advice';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { todayStr } from '../utils/date';
 
-const CACHE_KEY = 'weather_cache';
 const CACHE_DURATION_MS = 60 * 60 * 1000; // 1 hour
+
+function cacheKey(lat: number, lon: number): string {
+  return `weather_cache_${lat}_${lon}`;
+}
 
 export interface WeatherData {
   temperature: number;
@@ -25,9 +27,20 @@ interface CachedWeather {
 export async function fetchWeather(lat: number, lon: number): Promise<WeatherData> {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,relative_humidity_2m,uv_index&timezone=auto`;
 
-  const res = await fetch(url);
+  let res: Response;
+  try {
+    res = await fetch(url);
+  } catch (e) {
+    throw new Error(`网络请求失败: ${(e as Error).message}`);
+  }
   if (!res.ok) throw new Error(`Weather API error: ${res.status}`);
-  const json = await res.json();
+  let json: any;
+  try {
+    json = await res.json();
+  } catch {
+    throw new Error('解析天气数据失败');
+  }
+  if (!json.current) throw new Error('无效的天气数据');
 
   const current = json.current;
   const code = current.weather_code;
@@ -47,18 +60,18 @@ export async function fetchWeather(lat: number, lon: number): Promise<WeatherDat
     updatedAt: new Date().toISOString(),
   };
 
-  await cacheWeather(data);
+  await cacheWeather(lat, lon, data);
   return data;
 }
 
-async function cacheWeather(data: WeatherData): Promise<void> {
+async function cacheWeather(lat: number, lon: number, data: WeatherData): Promise<void> {
   const cached: CachedWeather = { data, timestamp: Date.now() };
-  await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(cached));
+  await AsyncStorage.setItem(cacheKey(lat, lon), JSON.stringify(cached));
 }
 
-export async function getCachedWeather(): Promise<WeatherData | null> {
+export async function getCachedWeather(lat: number, lon: number): Promise<WeatherData | null> {
   try {
-    const raw = await AsyncStorage.getItem(CACHE_KEY);
+    const raw = await AsyncStorage.getItem(cacheKey(lat, lon));
     if (!raw) return null;
     const cached: CachedWeather = JSON.parse(raw);
     if (Date.now() - cached.timestamp > CACHE_DURATION_MS) return null;
