@@ -103,7 +103,7 @@ export async function updateDietRule(
 }
 
 export async function resetDietRulesToDefault(db: SQLiteDatabase): Promise<void> {
-  await db.runAsync('DELETE FROM diet_rules WHERE is_builtin = 0');
+  await db.runAsync('DELETE FROM diet_rules');
   const data = buildDietData();
   for (const d of data) {
     await db.runAsync(
