@@ -20,10 +20,12 @@ export default function SettingsPage() {
   };
 
   const handleImport = () => {
-    Alert.alert('导入备份', '请将之前导出的 JSON 粘贴到下方（实际使用中可通过文件选择）', [
-      { text: '取消', style: 'cancel' },
-      { text: '模拟导入', onPress: async () => { await importData('{}'); refresh(); Alert.alert('导入完成'); } },
-    ]);
+    Alert.prompt
+      ? Alert.prompt('导入备份', '粘贴 JSON 数据', [
+          { text: '取消', style: 'cancel' },
+          { text: '导入', onPress: async (text: string | undefined) => { if (text) { await importData(text); refresh(); Alert.alert('导入完成'); } } },
+        ])
+      : Alert.alert('导入', 'iOS 暂不支持直接粘贴，后续版本会用文件选择');
   };
 
   return (
