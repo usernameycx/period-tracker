@@ -4,7 +4,7 @@ import { usePeriod } from '../context/PeriodContext';
 import { getPhaseForDate, getNextPredictedStart, getAveragePeriodDays } from '../services/prediction';
 import { getDatabase } from '../db/database';
 import { getDietRules, DietRule } from '../db/diet-rules';
-import { Phase, PHASE_LABELS, PHASE_EMOJI } from '../constants/phases';
+import { Phase } from '../constants/phases';
 import { parseDate } from '../utils/date';
 
 export default function DietCard() {
