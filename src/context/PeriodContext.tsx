@@ -1,35 +1,53 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { getDatabase } from '../db/database';
+import { PeriodRecord, getAllPeriodRecords, insertPeriodRecord, updatePeriodRecord, deletePeriodRecord } from '../db/period-records';
 
-interface PeriodData {
-  lastPeriodStart: Date | null;
-  cycleLength: number;
-  periodLength: number;
+interface PeriodCtx {
+  records: PeriodRecord[];
+  loading: boolean;
+  addRecord: (startDate: string, endDate: string) => Promise<void>;
+  updateRecord: (id: number, startDate: string, endDate: string) => Promise<void>;
+  removeRecord: (id: number) => Promise<void>;
+  refresh: () => Promise<void>;
 }
 
-interface PeriodContextType {
-  periodData: PeriodData;
-  setPeriodData: (data: PeriodData) => void;
-}
-
-const PeriodContext = createContext<PeriodContextType>({
-  periodData: { lastPeriodStart: null, cycleLength: 28, periodLength: 5 },
-  setPeriodData: () => {},
-});
+const Ctx = createContext<PeriodCtx>({} as PeriodCtx);
+export const usePeriod = () => useContext(Ctx);
 
 export function PeriodProvider({ children }: { children: ReactNode }) {
-  const [periodData, setPeriodData] = useState<PeriodData>({
-    lastPeriodStart: null,
-    cycleLength: 28,
-    periodLength: 5,
-  });
+  const [records, setRecords] = useState<PeriodRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const refresh = useCallback(async () => {
+    const db = await getDatabase();
+    const all = await getAllPeriodRecords(db);
+    setRecords(all);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  const addRecord = async (startDate: string, endDate: string) => {
+    const db = await getDatabase();
+    await insertPeriodRecord(db, startDate, endDate);
+    await refresh();
+  };
+
+  const updateRecord = async (id: number, startDate: string, endDate: string) => {
+    const db = await getDatabase();
+    await updatePeriodRecord(db, id, startDate, endDate);
+    await refresh();
+  };
+
+  const removeRecord = async (id: number) => {
+    const db = await getDatabase();
+    await deletePeriodRecord(db, id);
+    await refresh();
+  };
 
   return (
-    <PeriodContext.Provider value={{ periodData, setPeriodData }}>
+    <Ctx.Provider value={{ records, loading, addRecord, updateRecord, removeRecord, refresh }}>
       {children}
-    </PeriodContext.Provider>
+    </Ctx.Provider>
   );
-}
-
-export function usePeriod() {
-  return useContext(PeriodContext);
 }

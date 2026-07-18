@@ -1,39 +1,43 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-interface SettingsData {
-  language: string;
-  notificationsEnabled: boolean;
-  theme: 'light' | 'dark';
+interface Settings {
+  city: string;
+  setCity: (c: string) => void;
+  useGPS: boolean;
+  setUseGPS: (v: boolean) => void;
+  notifyHour: number;
+  setNotifyHour: (h: number) => void;
+  notifyMinute: number;
+  setNotifyMinute: (m: number) => void;
 }
 
-interface SettingsContextType {
-  settings: SettingsData;
-  updateSettings: (data: Partial<SettingsData>) => void;
-}
-
-const SettingsContext = createContext<SettingsContextType>({
-  settings: { language: 'zh', notificationsEnabled: true, theme: 'light' },
-  updateSettings: () => {},
-});
+const Ctx = createContext<Settings>({} as Settings);
+export const useSettings = () => useContext(Ctx);
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
-  const [settings, setSettings] = useState<SettingsData>({
-    language: 'zh',
-    notificationsEnabled: true,
-    theme: 'light',
-  });
+  const [city, setCityState] = useState('成都');
+  const [useGPS, setUseGPSState] = useState(true);
+  const [notifyHour, setNotifyHourState] = useState(8);
+  const [notifyMinute, setNotifyMinuteState] = useState(0);
 
-  const updateSettings = (data: Partial<SettingsData>) => {
-    setSettings((prev) => ({ ...prev, ...data }));
-  };
+  useEffect(() => {
+    AsyncStorage.getMany(['city', 'useGPS', 'notifyHour', 'notifyMinute']).then(m => {
+      if (m.city) setCityState(m.city);
+      if (m.useGPS !== null) setUseGPSState(m.useGPS === 'true');
+      if (m.notifyHour) setNotifyHourState(Number(m.notifyHour));
+      if (m.notifyMinute) setNotifyMinuteState(Number(m.notifyMinute));
+    });
+  }, []);
+
+  const setCity = (c: string) => { setCityState(c); AsyncStorage.setItem('city', c); };
+  const setUseGPS = (v: boolean) => { setUseGPSState(v); AsyncStorage.setItem('useGPS', String(v)); };
+  const setNotifyHour = (h: number) => { setNotifyHourState(h); AsyncStorage.setItem('notifyHour', String(h)); };
+  const setNotifyMinute = (m: number) => { setNotifyMinuteState(m); AsyncStorage.setItem('notifyMinute', String(m)); };
 
   return (
-    <SettingsContext.Provider value={{ settings, updateSettings }}>
+    <Ctx.Provider value={{ city, setCity, useGPS, setUseGPS, notifyHour, setNotifyHour, notifyMinute, setNotifyMinute }}>
       {children}
-    </SettingsContext.Provider>
+    </Ctx.Provider>
   );
-}
-
-export function useSettings() {
-  return useContext(SettingsContext);
 }
