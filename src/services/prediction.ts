@@ -1,14 +1,9 @@
 import { PeriodRecord } from '../db/period-records';
-import { Phase, DEFAULT_PERIOD_DAYS, OVULATION_BEFORE_PERIOD, OVULATION_SPAN, MIN_RECORDS_FOR_PREDICTION } from '../constants/phases';
+import { Phase, DEFAULT_PERIOD_DAYS, DEFAULT_CYCLE_DAYS, OVULATION_BEFORE_PERIOD, OVULATION_SPAN, MIN_RECORDS_FOR_PREDICTION } from '../constants/phases';
 import { parseDate, diffDays, addDays, formatDate } from '../utils/date';
 
-export function getAveragePeriodDays(records: PeriodRecord[]): number {
-  if (records.length === 0) return DEFAULT_PERIOD_DAYS;
-  const durations = records.map(r => {
-    const d = diffDays(parseDate(r.end_date), parseDate(r.start_date)) + 1;
-    return d > 0 ? d : DEFAULT_PERIOD_DAYS;
-  });
-  return Math.round(durations.reduce((a, b) => a + b, 0) / durations.length);
+export function getAveragePeriodDays(_records?: PeriodRecord[]): number {
+  return DEFAULT_PERIOD_DAYS;
 }
 
 export function getAverageCycleLength(records: PeriodRecord[]): number | null {
@@ -16,26 +11,26 @@ export function getAverageCycleLength(records: PeriodRecord[]): number | null {
   const sorted = [...records].sort((a, b) => a.start_date.localeCompare(b.start_date));
   const lengths: number[] = [];
   for (let i = 1; i < sorted.length; i++) {
-    lengths.push(diffDays(parseDate(sorted[i].start_date), parseDate(sorted[i - 1].start_date)));
+    const len = diffDays(parseDate(sorted[i].start_date), parseDate(sorted[i - 1].start_date));
+    // Clamp to biologically plausible range
+    if (len >= 21 && len <= 35) {
+      lengths.push(len);
+    }
   }
   if (lengths.length === 0) return null;
 
-  // 加权平均：越近的权重越高
-  let weightedSum = 0;
-  let weightSum = 0;
-  for (let i = 0; i < lengths.length; i++) {
-    const weight = i + 1; // 最早权重1，最新权重=lengths.length
-    weightedSum += lengths[i] * weight;
-    weightSum += weight;
-  }
-  return Math.round(weightedSum / weightSum);
+  // Simple average (not weighted — too unstable with sparse data)
+  const avg = Math.round(lengths.reduce((a, b) => a + b, 0) / lengths.length);
+  // Blend toward 28 when data is sparse
+  const blend = Math.min(1, lengths.length / 4);
+  return Math.round(avg * blend + DEFAULT_CYCLE_DAYS * (1 - blend));
 }
 
 export function predictNextPeriod(records: PeriodRecord[]): Date | null {
-  const cycleLength = getAverageCycleLength(records);
-  if (cycleLength === null) return null;
   const sorted = [...records].sort((a, b) => b.start_date.localeCompare(a.start_date));
+  if (sorted.length === 0) return null;
   const lastStart = parseDate(sorted[0].start_date);
+  const cycleLength = getAverageCycleLength(records) || DEFAULT_CYCLE_DAYS;
   return addDays(lastStart, cycleLength);
 }
 
@@ -47,30 +42,111 @@ export function getNextPredictedStart(records: PeriodRecord[]): string | null {
 export function getPhaseForDate(
   date: Date,
   predictedNextStart: Date,
-  avgPeriodDays: number
-): { phase: Phase; dayOffset: number } {
-  const daysUntilPeriod = diffDays(predictedNextStart, date);
+  avgPeriodDays: number,
+  cycleLength: number
+): CalendarPhaseInfo {
+  // Normalize date to midnight to avoid time-of-day skew in diffDays
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const nextDate = formatDate(predictedNextStart);
 
-  // 当前正处于经期：从 predictedNextStart 开始，持续 avgPeriodDays 天
-  // daysUntilPeriod=0 → day 1, daysUntilPeriod=-1 → day 2, ...
-  if (daysUntilPeriod <= 0 && daysUntilPeriod > -avgPeriodDays) {
-    return { phase: 'period', dayOffset: -daysUntilPeriod + 1 };
+  // Derive current cycle start from predicted next start
+  const currentCycleStart = addDays(predictedNextStart, -cycleLength);
+  const daysFromStart = diffDays(d, currentCycleStart) + 1;
+  const daysUntilNext = diffDays(predictedNextStart, d);
+
+  // Period: current cycle days 1..avgPeriodDays
+  if (daysFromStart >= 1 && daysFromStart <= avgPeriodDays) {
+    return { phase: 'period', dayOffset: daysFromStart, daysUntilPeriod: daysUntilNext, nextPeriodDate: nextDate };
   }
 
-  // 排卵期：下次经期前 OVULATION_BEFORE_PERIOD 天，前后各 (OVULATION_SPAN-1)/2 天
+  // Also catch dates at or after predictedNextStart (next cycle's period)
+  if (daysUntilNext <= 0 && daysUntilNext > -avgPeriodDays) {
+    return { phase: 'period', dayOffset: -daysUntilNext + 1, daysUntilPeriod: daysUntilNext, nextPeriodDate: nextDate };
+  }
+
+  // Ovulation window (counted backward from next period, same as calendar)
   const ovulationStart = OVULATION_BEFORE_PERIOD + Math.floor(OVULATION_SPAN / 2);
   const ovulationEnd = OVULATION_BEFORE_PERIOD - Math.floor(OVULATION_SPAN / 2);
-  if (daysUntilPeriod <= ovulationStart && daysUntilPeriod >= ovulationEnd) {
-    return { phase: 'ovulation', dayOffset: ovulationStart - daysUntilPeriod + 1 };
+  if (daysUntilNext <= ovulationStart && daysUntilNext >= ovulationEnd) {
+    return { phase: 'ovulation', dayOffset: ovulationStart - daysUntilNext + 1, daysUntilPeriod: daysUntilNext, nextPeriodDate: nextDate };
   }
 
-  // 卵泡期：经期结束后到排卵期前
-  if (daysUntilPeriod > ovulationStart) {
-    const dayOffset = daysUntilPeriod - avgPeriodDays;
-    return { phase: 'follicular', dayOffset: Math.max(1, dayOffset) };
+  // Follicular: after period, before ovulation — use daysFromStart like calendar
+  if (daysUntilNext > ovulationStart) {
+    const dayOffset = daysFromStart - avgPeriodDays;
+    return { phase: 'follicular', dayOffset: Math.max(1, dayOffset), daysUntilPeriod: daysUntilNext, nextPeriodDate: nextDate };
   }
 
-  // 黄体期：排卵结束后到下次经期前
-  const dayOffset = ovulationEnd - daysUntilPeriod;
-  return { phase: 'luteal', dayOffset: Math.max(1, dayOffset) };
+  // Luteal: after ovulation, before next period
+  const dayOffset = ovulationEnd - daysUntilNext;
+  return { phase: 'luteal', dayOffset: Math.max(1, dayOffset), daysUntilPeriod: daysUntilNext, nextPeriodDate: nextDate };
+}
+
+export interface CalendarPhaseInfo {
+  phase: Phase;
+  dayOffset: number;
+  /** Days until the next period starts (0 = today is period day 1) */
+  daysUntilPeriod: number;
+  /** The date when the next period is expected (formatted YYYY-MM-DD) */
+  nextPeriodDate: string;
+}
+
+/** Compute phase for a calendar day. Only colors dates within recorded cycles;
+ *  dates before the first record or beyond the last predicted end → null. */
+export function getPhaseForCalendarDay(
+  date: Date,
+  records: PeriodRecord[]
+): CalendarPhaseInfo | null {
+  if (records.length === 0) return null;
+
+  const sorted = [...records].sort((a, b) => a.start_date.localeCompare(b.start_date));
+  const PERIOD_DAYS = DEFAULT_PERIOD_DAYS;
+
+  // Find which cycle this date belongs to
+  for (let i = 0; i < sorted.length; i++) {
+    const cycleStart = parseDate(sorted[i].start_date);
+
+    // Date is before this cycle → not in any cycle yet
+    if (date < cycleStart) return null;
+
+    // Determine cycle end (next recorded start, or predicted)
+    let cycleEnd: Date;
+    if (i + 1 < sorted.length) {
+      cycleEnd = parseDate(sorted[i + 1].start_date);
+    } else {
+      // Last cycle: predict next period
+      const predicted = predictNextPeriod(records);
+      cycleEnd = predicted || addDays(cycleStart, DEFAULT_CYCLE_DAYS);
+    }
+
+    // Date is within this cycle?
+    if (date < cycleEnd) {
+      const daysFromStart = diffDays(date, cycleStart) + 1;
+      const daysUntilEnd = diffDays(cycleEnd, date);
+      const nextDate = formatDate(cycleEnd);
+
+      // Period: days 1..PERIOD_DAYS
+      if (daysFromStart >= 1 && daysFromStart <= PERIOD_DAYS) {
+        return { phase: 'period', dayOffset: daysFromStart, daysUntilPeriod: daysUntilEnd, nextPeriodDate: nextDate };
+      }
+
+      // Ovulation window
+      const ovStart = OVULATION_BEFORE_PERIOD + Math.floor(OVULATION_SPAN / 2);
+      const ovEnd = OVULATION_BEFORE_PERIOD - Math.floor(OVULATION_SPAN / 2);
+      if (daysUntilEnd <= ovStart && daysUntilEnd >= ovEnd) {
+        return { phase: 'ovulation', dayOffset: ovStart - daysUntilEnd + 1, daysUntilPeriod: daysUntilEnd, nextPeriodDate: nextDate };
+      }
+
+      // Follicular
+      if (daysUntilEnd > ovStart) {
+        return { phase: 'follicular', dayOffset: Math.max(1, daysFromStart - PERIOD_DAYS), daysUntilPeriod: daysUntilEnd, nextPeriodDate: nextDate };
+      }
+
+      // Luteal
+      return { phase: 'luteal', dayOffset: Math.max(1, ovEnd - daysUntilEnd), daysUntilPeriod: daysUntilEnd, nextPeriodDate: nextDate };
+    }
+  }
+
+  // Date is beyond the last cycle end → no marking
+  return null;
 }

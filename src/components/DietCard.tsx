@@ -1,54 +1,52 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { usePeriod } from '../context/PeriodContext';
-import { getPhaseForDate, getNextPredictedStart, getAveragePeriodDays } from '../services/prediction';
+import { useCurrentPhase } from '../hooks/useCurrentPhase';
 import { getDatabase } from '../db/database';
 import { getDietRules, DietRule } from '../db/diet-rules';
-import { Phase } from '../constants/phases';
-import { parseDate } from '../utils/date';
+import { Phase, PHASE_LABELS } from '../constants/phases';
+import { Colors, Spacing, FontSize, Radius, sharedCard } from '../constants/theme';
+import Icon from './Icon';
 
 export default function DietCard() {
-  const { records, loading } = usePeriod();
+  const { records } = usePeriod();
+  const phaseInfo = useCurrentPhase();
   const [diet, setDiet] = useState<DietRule | null>(null);
 
   useEffect(() => {
     (async () => {
       if (records.length === 0) return;
       const db = await getDatabase();
-      const nextStart = getNextPredictedStart(records);
-      const avgDays = getAveragePeriodDays(records);
-      const today = new Date();
-
-      let phase: Phase;
-      let dayOffset: number;
-      if (nextStart) {
-        const info = getPhaseForDate(today, parseDate(nextStart), avgDays);
-        phase = info.phase;
-        dayOffset = info.dayOffset;
-      } else {
-        phase = 'follicular';
-        dayOffset = 1;
-      }
-
+      const phase: Phase = phaseInfo?.phase || 'follicular';
+      const dayOffset: number = phaseInfo?.dayOffset || 1;
       const rule = await getDietRules(db, phase, dayOffset);
       setDiet(rule);
     })();
-  }, [records]);
+  }, [records, phaseInfo]);
 
   if (!diet) {
     return (
-      <View style={styles.card}>
-        <Text style={styles.title}>🥗 今日饮食</Text>
+      <View style={sharedCard.base}>
+        <View style={styles.titleRow}>
+          <Icon name="diet" size={18} color={Colors.accentWarm} />
+          <Text style={styles.title}>今日饮食</Text>
+        </View>
         <Text style={styles.empty}>暂无推荐数据，录入经期后可查看</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.card}>
-      <Text style={styles.title}>🥗 今日饮食建议</Text>
+    <View style={sharedCard.base}>
+      <View style={styles.titleRow}>
+        <Icon name="diet" size={18} color={Colors.accentWarm} />
+        <Text style={styles.title}>{PHASE_LABELS[diet.phase]} · 第{diet.day_offset}天 饮食建议</Text>
+      </View>
       <View style={styles.section}>
-        <Text style={styles.label}>✅ 推荐多吃</Text>
+        <View style={styles.labelRow}>
+          <Icon name="check" size={14} color={Colors.success} />
+          <Text style={styles.label}>推荐多吃</Text>
+        </View>
         <View style={styles.tagRow}>
           {diet.recommend.map((f, i) => (
             <View key={i} style={styles.recTag}><Text style={styles.recText}>{f}</Text></View>
@@ -56,7 +54,10 @@ export default function DietCard() {
         </View>
       </View>
       <View style={styles.section}>
-        <Text style={styles.label}>❌ 建议少吃</Text>
+        <View style={styles.labelRow}>
+          <Icon name="close" size={14} color={Colors.danger} />
+          <Text style={styles.label}>建议少吃</Text>
+        </View>
         <View style={styles.tagRow}>
           {diet.avoid.map((f, i) => (
             <View key={i} style={styles.avoidTag}><Text style={styles.avoidText}>{f}</Text></View>
@@ -68,18 +69,19 @@ export default function DietCard() {
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#FFF', borderRadius: 16, padding: 20,
-    shadowColor: '#FFB6C1', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15, shadowRadius: 8, elevation: 3, marginBottom: 14,
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: Spacing.md },
+  title: { fontSize: FontSize.lg, fontWeight: '700', color: Colors.text, flex: 1 },
+  section: { marginBottom: Spacing.md },
+  labelRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, marginBottom: Spacing.sm },
+  label: { fontSize: FontSize.sm2, fontWeight: '600', color: Colors.textSecondary },
+  tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
+  recTag: {
+    backgroundColor: Colors.primaryBg, borderRadius: Radius.full,
+    paddingHorizontal: Spacing.md, paddingVertical: Spacing.xs,
+    borderWidth: 1, borderColor: Colors.primaryLight,
   },
-  title: { fontSize: 18, fontWeight: '700', color: '#FF69B4', marginBottom: 12 },
-  section: { marginBottom: 12 },
-  label: { fontSize: 14, fontWeight: '600', color: '#555', marginBottom: 8 },
-  tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  recTag: { backgroundColor: '#FFF0F3', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6 },
-  recText: { fontSize: 13, color: '#FF69B4', fontWeight: '500' },
-  avoidTag: { backgroundColor: '#FFF5F5', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6 },
-  avoidText: { fontSize: 13, color: '#E57373', fontWeight: '500' },
-  empty: { color: '#BBB', fontSize: 14, textAlign: 'center', marginTop: 8 },
+  recText: { fontSize: FontSize.sm, color: Colors.primary, fontWeight: '600' },
+  avoidTag: { backgroundColor: Colors.dangerBg, borderRadius: Radius.full, paddingHorizontal: Spacing.md, paddingVertical: Spacing.xs },
+  avoidText: { fontSize: FontSize.sm, color: Colors.danger, fontWeight: '500' },
+  empty: { color: Colors.textHint, fontSize: FontSize.sm2, textAlign: 'center', marginTop: Spacing.sm },
 });

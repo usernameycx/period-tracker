@@ -1,0 +1,60 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="indigoGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#22224D"/>
+      <stop offset="100%" stop-color="#1B1B3A"/>
+    </linearGradient>
+    <linearGradient id="roseGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFB6C1" stop-opacity="0.25"/>
+      <stop offset="15%" stop-color="#FF69B4" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#E85D9C" stop-opacity="0.80"/>
+    </linearGradient>
+    <radialGradient id="crescentGlow" cx="38%" cy="32%" r="62%">
+      <stop offset="0%" stop-color="#FFE0E8"/>
+      <stop offset="100%" stop-color="#FFB6C1"/>
+    </radialGradient>
+    <clipPath id="circleMask">
+      <circle cx="512" cy="512" r="440"/>
+    </clipPath>
+    <mask id="crescentMask">
+      <circle cx="640" cy="376" r="92" fill="white"/>
+      <circle cx="680" cy="360" r="72" fill="black"/>
+    </mask>
+  </defs>
+
+  <!-- Dark disc — the icon is the circle itself, no background box -->
+  <circle cx="512" cy="512" r="440" fill="#1B1B3A"/>
+
+  <rect x="72" y="72" width="880" height="448" fill="url(#indigoGrad)" clip-path="url(#circleMask)"/>
+  <rect x="72" y="512" width="880" height="440" fill="url(#roseGrad)" clip-path="url(#circleMask)"/>
+
+  <path d="M 72,512 C 96,502 120,542 144,512 C 168,482 192,542 216,512 C 240,482 264,542 288,512 C 312,482 336,542 360,512 C 384,482 408,542 432,512 C 456,482 480,542 512,512 C 536,482 560,542 584,512 C 608,482 632,542 656,512 C 680,482 704,542 728,512 C 752,482 776,542 800,512 C 824,482 848,542 872,512 C 896,482 920,542 944,512 C 952,506 952,518 952,518"
+    fill="none" stroke="#FFB6C1" stroke-width="4.4" stroke-linecap="round"
+    clip-path="url(#circleMask)" opacity="0.82"/>
+
+  <path d="M 72,508 C 96,498 120,538 144,508 C 168,478 192,538 216,508 C 240,478 264,538 288,508 C 312,478 336,538 360,508 C 384,478 408,538 432,508 C 456,478 480,538 512,508 C 536,478 560,538 584,508 C 608,478 632,538 656,508 C 680,478 704,538 728,508 C 752,478 776,538 800,508 C 824,478 848,538 872,508 C 896,478 920,538 944,508 C 952,504 952,512 952,512"
+    fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="1.2"
+    clip-path="url(#circleMask)"/>
+
+  <path d="M 72,552 C 232,584 392,520 552,552 C 712,584 832,520 952,552"
+    fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="24"
+    clip-path="url(#circleMask)"/>
+
+  <g mask="url(#crescentMask)">
+    <circle cx="640" cy="376" r="92" fill="url(#crescentGlow)" opacity="0.88"/>
+  </g>
+
+  <g fill="rgba(255,255,255,0.55)">
+    <circle cx="576" cy="452" r="4.8"/>
+    <circle cx="690" cy="324" r="2.8"/>
+    <circle cx="416" cy="352" r="3.6"/>
+    <circle cx="372" cy="420" r="2.8"/>
+    <circle cx="740" cy="476" r="3.2"/>
+    <circle cx="308" cy="312" r="2.2"/>
+    <circle cx="684" cy="272" r="2.2"/>
+    <circle cx="488" cy="292" r="2.6"/>
+  </g>
+
+  <circle cx="512" cy="512" r="439" fill="none" stroke="#3C3844" stroke-width="1.4" opacity="0.48"/>
+  <circle cx="512" cy="512" r="437" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="0.8"/>
+</svg>

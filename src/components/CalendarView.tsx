@@ -1,9 +1,11 @@
 import React, { useMemo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { usePeriod } from '../context/PeriodContext';
-import { getNextPredictedStart } from '../services/prediction';
-import { parseDate, formatDate, isSameDay, addDays } from '../utils/date';
-import { OVULATION_BEFORE_PERIOD, OVULATION_SPAN } from '../constants/phases';
+import { getPhaseForCalendarDay } from '../services/prediction';
+import { parseDate, formatDate, isSameDay } from '../utils/date';
+import { Phase, PHASE_LABELS, PHASE_COLORS } from '../constants/phases';
+import { Colors, Spacing, FontSize, Radius, Shadow } from '../constants/theme';
+import PressableScale from './PressableScale';
 
 interface Props {
   onDayPress: (date: Date) => void;
@@ -15,44 +17,49 @@ interface Props {
 const WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六'];
 const MONTHS = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
 
+/** Split array into chunks of `size` */
+function chunk<T>(arr: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+}
+
 export default function CalendarView({ onDayPress, selectedDate, currentMonth, onMonthChange }: Props) {
   const { records } = usePeriod();
 
-  const periodDates = useMemo(() => {
-    const set = new Set<string>();
-    records.forEach(r => {
-      const start = parseDate(r.start_date);
-      const end = parseDate(r.end_date);
-      const d = new Date(start);
-      while (d <= end) {
-        set.add(formatDate(new Date(d)));
-        d.setDate(d.getDate() + 1);
-      }
-    });
-    return set;
-  }, [records]);
+  const phaseMap = useMemo(() => {
+    const map = new Map<string, { phase: Phase; dayOffset: number }>();
+    if (records.length === 0) return map;
 
-  const ovulationDates = useMemo(() => {
-    const set = new Set<string>();
-    const next = getNextPredictedStart(records);
-    if (next) {
-      const center = addDays(parseDate(next), -OVULATION_BEFORE_PERIOD);
-      const half = Math.floor(OVULATION_SPAN / 2);
-      for (let i = -half; i <= half; i++) {
-        set.add(formatDate(addDays(center, i)));
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    const start = new Date(year, month - 1, 20);
+    const end = new Date(year, month + 1, 10);
+    const d = new Date(start);
+    while (d <= end) {
+      const info = getPhaseForCalendarDay(d, records);
+      if (info) {
+        map.set(formatDate(new Date(d)), info);
       }
+      d.setDate(d.getDate() + 1);
     }
-    return set;
-  }, [records]);
+    return map;
+  }, [records, currentMonth]);
 
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const todayStr = formatDate(new Date());
 
   const days: (number | null)[] = [];
   for (let i = 0; i < firstDay; i++) days.push(null);
   for (let d = 1; d <= daysInMonth; d++) days.push(d);
+
+  // Pad to multiple of 7 so every row has full cells, preventing last-row stretch
+  while (days.length % 7 !== 0) days.push(null);
+
+  const rows = chunk(days, 7);
 
   const goPrev = () => onMonthChange(new Date(year, month - 1, 1));
   const goNext = () => onMonthChange(new Date(year, month + 1, 1));
@@ -60,49 +67,80 @@ export default function CalendarView({ onDayPress, selectedDate, currentMonth, o
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={goPrev}><Text style={styles.nav}>‹</Text></TouchableOpacity>
+        <PressableScale onPress={goPrev}><Text style={styles.nav}>‹</Text></PressableScale>
         <Text style={styles.monthLabel}>{year}年 {MONTHS[month]}</Text>
-        <TouchableOpacity onPress={goNext}><Text style={styles.nav}>›</Text></TouchableOpacity>
+        <PressableScale onPress={goNext}><Text style={styles.nav}>›</Text></PressableScale>
       </View>
 
       <View style={styles.weekRow}>
         {WEEKDAYS.map(w => <Text key={w} style={styles.weekday}>{w}</Text>)}
       </View>
 
-      <View style={styles.grid}>
-        {days.map((d, idx) => {
-          if (d === null) return <View key={`e${idx}`} style={styles.dayCell} />;
-          const date = new Date(year, month, d);
-          const dateStr = formatDate(date);
-          const isPeriod = periodDates.has(dateStr);
-          const isOvulation = ovulationDates.has(dateStr);
-          const isSelected = isSameDay(date, selectedDate);
+      <View style={styles.legend}>
+        {(['period', 'follicular', 'ovulation', 'luteal'] as Phase[]).map(p => (
+          <View key={p} style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: PHASE_COLORS[p] }, p === 'follicular' && styles.legendDotBorder]} />
+            <Text style={styles.legendText}>{PHASE_LABELS[p]}</Text>
+          </View>
+        ))}
+      </View>
 
-          return (
-            <TouchableOpacity key={d} style={[styles.dayCell, isSelected && styles.selectedCell]} onPress={() => onDayPress(date)}>
-              <Text style={[styles.dayNum, isSelected && styles.selectedText]}>{d}</Text>
-              {isPeriod && <View style={styles.periodDot} />}
-              {isOvulation && <Text style={styles.flower}>{'🌸'}</Text>}
-            </TouchableOpacity>
-          );
-        })}
+      <View style={styles.grid}>
+        {rows.map((row, rowIdx) => (
+          <View key={rowIdx} style={styles.gridRow}>
+            {row.map((d, colIdx) => {
+              if (d === null) return <View key={`e${rowIdx}-${colIdx}`} style={styles.dayCell} />;
+              const date = new Date(year, month, d);
+              const dateStr = formatDate(date);
+              const info = phaseMap.get(dateStr);
+              const isToday = dateStr === todayStr;
+              const isSelected = isSameDay(date, selectedDate);
+
+              const bgColor = info ? PHASE_COLORS[info.phase] : 'transparent';
+
+              return (
+                <PressableScale
+                  key={d}
+                  style={[styles.dayCell, { backgroundColor: bgColor }, isSelected && styles.selectedCell, isToday && styles.todayCell]}
+                  onPress={() => onDayPress(date)}
+                >
+                  <Text style={[styles.dayNum, isSelected && styles.selectedText, isToday && styles.todayText]}>
+                    {d}
+                  </Text>
+                </PressableScale>
+              );
+            })}
+          </View>
+        ))}
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { backgroundColor: '#FFF', borderRadius: 16, padding: 16 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  nav: { fontSize: 28, color: '#FF69B4', paddingHorizontal: 8 },
-  monthLabel: { fontSize: 17, fontWeight: '700', color: '#333' },
-  weekRow: { flexDirection: 'row', marginBottom: 8 },
-  weekday: { flex: 1, textAlign: 'center', fontSize: 13, color: '#999', fontWeight: '600' },
-  grid: { flexDirection: 'row', flexWrap: 'wrap' },
-  dayCell: { width: '14.28%', aspectRatio: 1, alignItems: 'center', justifyContent: 'center' },
-  dayNum: { fontSize: 15, color: '#333' },
-  selectedCell: { backgroundColor: '#FFB6C1', borderRadius: 20 },
-  selectedText: { color: '#FFF', fontWeight: '700' },
-  periodDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#FF69B4', marginTop: 2 },
-  flower: { position: 'absolute', bottom: 4, fontSize: 10 },
+  container: {
+    backgroundColor: Colors.cardBg, borderRadius: Radius.lg, padding: Spacing.lg, marginBottom: Spacing.cardGap,
+    ...Shadow.card,
+  },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.md },
+  nav: { fontSize: FontSize.xxl, color: Colors.primary, paddingHorizontal: Spacing.sm },
+  monthLabel: { fontSize: FontSize.subtitle, fontWeight: '700', color: Colors.text },
+  weekRow: { flexDirection: 'row', marginBottom: Spacing.xs },
+  weekday: { flex: 1, textAlign: 'center', fontSize: FontSize.sm, color: Colors.textMuted, fontWeight: '600' },
+  legend: { flexDirection: 'row', justifyContent: 'center', gap: Spacing.md, marginBottom: Spacing.sm },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs },
+  legendDot: { width: 10, height: 10, borderRadius: 5 },
+  legendDotBorder: { borderWidth: 1, borderColor: Colors.divider },
+  legendText: { fontSize: FontSize.xs, color: Colors.textMuted },
+  grid: { gap: 3 },
+  gridRow: { flexDirection: 'row', gap: 3 },
+  dayCell: {
+    flex: 1, aspectRatio: 1, alignItems: 'center', justifyContent: 'center',
+    borderRadius: Radius.sm,
+  },
+  dayNum: { fontSize: 14, color: Colors.ink },
+  selectedCell: { borderWidth: 2, borderColor: Colors.primary },
+  selectedText: { color: Colors.primary, fontWeight: '700' },
+  todayCell: { borderWidth: 2, borderColor: Colors.ink },
+  todayText: { fontWeight: '700', color: Colors.ink },
 });

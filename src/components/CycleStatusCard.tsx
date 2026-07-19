@@ -1,83 +1,154 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { usePeriod } from '../context/PeriodContext';
-import { getNextPredictedStart, getAveragePeriodDays, getAverageCycleLength, getPhaseForDate } from '../services/prediction';
-import { PHASE_LABELS, PHASE_EMOJI, OVULATION_BEFORE_PERIOD, OVULATION_SPAN, DEFAULT_PERIOD_DAYS, DEFAULT_CYCLE_DAYS } from '../constants/phases';
-import { parseDate } from '../utils/date';
+import { useCurrentPhaseOrDefault } from '../hooks/useCurrentPhase';
+import { PHASE_LABELS, PHASE_ICONS, OVULATION_BEFORE_PERIOD, OVULATION_SPAN, DEFAULT_PERIOD_DAYS } from '../constants/phases';
+import { Colors, Spacing, FontSize, Radius, sharedCard } from '../constants/theme';
+import { todayStr } from '../utils/date';
+import Icon from './Icon';
+import PressableScale from './PressableScale';
+
+function computeCountdowns(phaseInfo: { phase: string; dayOffset: number; daysUntilPeriod: number }) {
+  const OV_START = OVULATION_BEFORE_PERIOD + Math.floor(OVULATION_SPAN / 2);
+  const daysUntilPeriod = phaseInfo.daysUntilPeriod;
+  let daysUntilOvulation: number | null = null;
+  switch (phaseInfo.phase) {
+    case 'period':
+    case 'follicular':
+      daysUntilOvulation = daysUntilPeriod > OV_START ? daysUntilPeriod - OV_START : 0;
+      break;
+    case 'ovulation':
+      daysUntilOvulation = 0;
+      break;
+    case 'luteal':
+      daysUntilOvulation = null;
+      break;
+  }
+  return { daysUntilPeriod, daysUntilOvulation };
+}
 
 export default function CycleStatusCard() {
-  const { records, loading } = usePeriod();
+  const { records, loading, addRecord } = usePeriod();
+  const phaseInfo = useCurrentPhaseOrDefault();
+  const today = todayStr();
+  const alreadyRecorded = records.some(r => r.start_date === today);
 
   if (loading || records.length === 0) {
     return (
-      <View style={styles.card}>
-        <Text style={styles.emoji}>📝</Text>
+      <View style={sharedCard.prominent}>
+        <Icon name="clipboard" size={36} color={Colors.primaryLight} />
         <Text style={styles.emptyText}>还没有经期记录</Text>
         <Text style={styles.hint}>去日历页录入你的第一次经期吧~</Text>
       </View>
     );
   }
 
-  const nextStart = getNextPredictedStart(records);
-  const avgDays = getAveragePeriodDays(records);
-  const cycleLength = getAverageCycleLength(records);
-  const today = new Date();
-
-  let phaseInfo;
-  if (nextStart) {
-    phaseInfo = getPhaseForDate(today, parseDate(nextStart), avgDays);
-  } else {
-    phaseInfo = { phase: 'follicular' as const, dayOffset: 1 };
-  }
-
-  // Compute phase duration for progress bar
   const phaseDuration = (() => {
     switch (phaseInfo.phase) {
-      case 'period': return avgDays;
+      case 'period': return DEFAULT_PERIOD_DAYS;
       case 'ovulation': return OVULATION_SPAN;
       case 'luteal': return OVULATION_BEFORE_PERIOD - Math.floor(OVULATION_SPAN / 2);
       case 'follicular': {
-        const cl = cycleLength || DEFAULT_CYCLE_DAYS;
-        const lutealDays = OVULATION_BEFORE_PERIOD - Math.floor(OVULATION_SPAN / 2);
-        return Math.max(1, cl - avgDays - OVULATION_SPAN - lutealDays);
+        const afterPeriod = OVULATION_BEFORE_PERIOD + Math.floor(OVULATION_SPAN / 2);
+        return Math.max(1, afterPeriod - DEFAULT_PERIOD_DAYS);
       }
     }
   })();
 
+  const { daysUntilPeriod, daysUntilOvulation } = computeCountdowns(phaseInfo);
+
   return (
-    <View style={styles.card}>
+    <View style={[sharedCard.prominent, styles.prominentCard]}>
       <View style={styles.row}>
-        <Text style={styles.emoji}>{PHASE_EMOJI[phaseInfo.phase]}</Text>
+        <Icon name={PHASE_ICONS[phaseInfo.phase]} size={36} color={Colors.primary} />
         <View style={{ flex: 1 }}>
           <Text style={styles.phaseLabel}>
             {PHASE_LABELS[phaseInfo.phase]} · 第{phaseInfo.dayOffset}天
           </Text>
-          {nextStart && (
-            <Text style={styles.nextText}>
-              预计下次经期：{nextStart}
-            </Text>
-          )}
+          <Text style={styles.nextText}>
+            预计下次经期：{phaseInfo.nextPeriodDate}
+          </Text>
         </View>
       </View>
       <View style={styles.progressBar}>
         <View style={[styles.progress, { width: `${Math.min(100, (phaseInfo.dayOffset / phaseDuration) * 100)}%` }]} />
       </View>
+
+      <View style={styles.countdownRow}>
+        {daysUntilPeriod > 0 && (
+          <View style={styles.countdownItem}>
+            <Icon name="blood" size={22} color={Colors.primary} />
+            <View>
+              <Text style={styles.countdownNumber}>{daysUntilPeriod}</Text>
+              <Text style={styles.countdownLabel}>天后经期</Text>
+            </View>
+          </View>
+        )}
+        {daysUntilPeriod <= 0 && daysUntilPeriod > -DEFAULT_PERIOD_DAYS && (
+          <View style={styles.countdownItem}>
+            <Icon name="blood" size={22} color={Colors.danger} />
+            <View>
+              <Text style={styles.countdownNumber}>进行中</Text>
+              <Text style={styles.countdownLabel}>经期第{-daysUntilPeriod + 1}天</Text>
+            </View>
+          </View>
+        )}
+
+        {daysUntilOvulation !== null && daysUntilOvulation > 0 && (
+          <View style={styles.countdownItem}>
+            <Icon name="egg" size={22} color={Colors.primaryLight} />
+            <View>
+              <Text style={styles.countdownNumber}>{daysUntilOvulation}</Text>
+              <Text style={styles.countdownLabel}>天后排卵</Text>
+            </View>
+          </View>
+        )}
+        {daysUntilOvulation === 0 && (
+          <View style={styles.countdownItem}>
+            <Icon name="egg" size={22} color={Colors.accentWarm} />
+            <View>
+              <Text style={styles.countdownNumber}>进行中</Text>
+              <Text style={styles.countdownLabel}>排卵期</Text>
+            </View>
+          </View>
+        )}
+      </View>
+
+      {/* Quick mark: one-tap period start when not in period and not already recorded today */}
+      {!alreadyRecorded && phaseInfo.phase !== 'period' && (
+        <PressableScale
+          style={styles.quickMarkBtn}
+          onPress={() => addRecord(today)}
+        >
+          <Icon name="blood" size={18} color={Colors.white} />
+          <Text style={styles.quickMarkText}>今天来了</Text>
+        </PressableScale>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#FFF', borderRadius: 16, padding: 20,
-    shadowColor: '#FFB6C1', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15, shadowRadius: 8, elevation: 3, marginBottom: 14,
+  prominentCard: { backgroundColor: Colors.cardBg, borderColor: Colors.primaryLight, borderWidth: 2 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  phaseLabel: { fontSize: FontSize.title, fontWeight: '700', color: Colors.ink },
+  nextText: { fontSize: FontSize.sm, color: Colors.textSecondary, marginTop: 4 },
+  emptyText: { fontSize: FontSize.md, color: Colors.textSecondary, textAlign: 'center', marginTop: Spacing.sm },
+  hint: { fontSize: FontSize.sm, color: Colors.textHint, textAlign: 'center', marginTop: Spacing.xs },
+  progressBar: { height: 6, backgroundColor: Colors.primaryBg, borderRadius: 3, marginTop: 14 },
+  progress: { height: 6, backgroundColor: Colors.primary, borderRadius: 3 },
+  countdownRow: { flexDirection: 'row', marginTop: 14, gap: Spacing.md },
+  countdownItem: {
+    flex: 1, flexDirection: 'row', alignItems: 'center',
+    backgroundColor: Colors.primaryBg, borderRadius: Radius.md, padding: Spacing.md, gap: 10,
   },
-  row: { flexDirection: 'row', alignItems: 'center' },
-  emoji: { fontSize: 36, marginRight: 14 },
-  phaseLabel: { fontSize: 20, fontWeight: '700', color: '#FF69B4' },
-  nextText: { fontSize: 13, color: '#999', marginTop: 4 },
-  emptyText: { fontSize: 16, color: '#999', textAlign: 'center', marginTop: 8 },
-  hint: { fontSize: 13, color: '#BBB', textAlign: 'center', marginTop: 4 },
-  progressBar: { height: 4, backgroundColor: '#FFF0F3', borderRadius: 2, marginTop: 14 },
-  progress: { height: 4, backgroundColor: '#FFB6C1', borderRadius: 2 },
+  countdownNumber: { fontSize: FontSize.lg, fontWeight: '800', color: Colors.ink },
+  countdownLabel: { fontSize: FontSize.xs, color: Colors.textSecondary, marginTop: 1 },
+  quickMarkBtn: {
+    marginTop: Spacing.md,
+    backgroundColor: Colors.primary, borderRadius: Radius.md,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    paddingVertical: 12, gap: Spacing.sm,
+  },
+  quickMarkText: { color: Colors.white, fontWeight: '700', fontSize: FontSize.base },
 });

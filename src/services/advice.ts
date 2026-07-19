@@ -1,5 +1,12 @@
 import { Phase, PHASE_LABELS } from '../constants/phases';
-import { WeatherData } from './weather';
+
+// Lightweight weather subset for advice — avoids coupling to the full WeatherData type
+interface WeatherForAdvice {
+  temperature: number;
+  weatherCode: number;
+  condition: string;
+  advice: string;
+}
 
 const PHASE_WEATHER_ADVICE: Record<Phase, Record<string, string>> = {
   period: {
@@ -19,7 +26,7 @@ const PHASE_WEATHER_ADVICE: Record<Phase, Record<string, string>> = {
   },
 };
 
-export function getLifeAdvice(phase: Phase, weather: WeatherData): string {
+export function getLifeAdvice(phase: Phase, weather: WeatherForAdvice): string {
   let extra = '';
 
   if (weather.temperature < 10) {
