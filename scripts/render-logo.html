@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FayeTide — Lunar Tidal Logo</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300&family=DM+Mono:ital@0;1&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 1200px; height: 1200px;
+    background: #F7F2EA;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Mono', monospace;
+    overflow: hidden;
+  }
+
+  .plate {
+    width: 1200px; height: 1200px;
+    position: relative;
+  }
+
+  /* ── Reference crosshair grid ── */
+  .grid { position: absolute; inset: 0; pointer-events: none; }
+  .grid-line {
+    position: absolute;
+    background: rgba(160,150,140,0.12);
+  }
+
+  /* ── Corner registration marks ── */
+  .reg-mark {
+    position: absolute;
+    width: 50px; height: 50px;
+    border-color: rgba(120,110,100,0.5);
+    border-style: solid;
+    border-width: 0;
+  }
+  .reg-mark.tl { top: 40px; left: 40px; border-top-width: 1px; border-left-width: 1px; }
+  .reg-mark.tr { top: 40px; right: 40px; border-top-width: 1px; border-right-width: 1px; }
+  .reg-mark.bl { bottom: 40px; left: 40px; border-bottom-width: 1px; border-left-width: 1px; }
+  .reg-mark.br { bottom: 40px; right: 40px; border-bottom-width: 1px; border-right-width: 1px; }
+
+  .corner-label {
+    position: absolute; top: 48px; left: 98px;
+    font-size: 11px; color: rgba(120,110,100,0.45); letter-spacing: 2px;
+  }
+  .corner-label.tr { left: auto; right: 92px; }
+  .corner-label.bl { top: auto; bottom: 48px; left: 98px; }
+  .corner-label.br { top: auto; bottom: 48px; left: auto; right: 92px; }
+
+  /* ── Typography ── */
+  .title-group {
+    position: absolute;
+    top: 110px; left: 50%; transform: translateX(-50%);
+    text-align: center;
+  }
+  .title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px; font-weight: 300;
+    letter-spacing: 12px;
+    color: #2D2A30;
+    text-transform: uppercase;
+  }
+  .subtitle {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px; letter-spacing: 5px;
+    color: rgba(120,110,100,0.55);
+    margin-top: 8px;
+    text-transform: uppercase;
+  }
+
+  /* ── Main Logo Container ── */
+  .logo-container {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 420px; height: 420px;
+  }
+
+  .logo-svg {
+    width: 100%; height: 100%;
+    filter: drop-shadow(0 8px 32px rgba(27,27,58,0.18));
+  }
+
+  /* ── Orbital markers ── */
+  .orbit-dot {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(160,140,110,0.5);
+  }
+
+  /* ── Tidal measurement bar ── */
+  .tide-bar {
+    position: absolute;
+    top: calc(50% + 280px); left: 50%;
+    transform: translateX(-50%);
+    width: 370px;
+  }
+  .tide-marks {
+    display: flex; justify-content: space-between;
+    align-items: flex-end;
+    height: 36px;
+  }
+  .tide-mark {
+    background: rgba(120,110,100,0.35);
+    width: 1px;
+  }
+  .tide-baseline {
+    height: 1px;
+    background: rgba(120,110,100,0.3);
+  }
+
+  /* ── Moon phase strip ── */
+  .phase-strip {
+    position: absolute;
+    top: calc(50% + 370px); left: 50%;
+    transform: translateX(-50%);
+    display: flex; gap: 8px;
+    align-items: center;
+  }
+  .phase-label {
+    font-size: 8px; letter-spacing: 2px;
+    color: rgba(120,110,100,0.45);
+    text-transform: uppercase;
+    position: absolute;
+  }
+  .phase-label.new  { top: -22px; left: 0px; color: #FF69B4; }
+  .phase-label.q1   { top: -22px; left: 248px; }
+  .phase-label.full { bottom: -18px; left: 500px; }
+  .phase-label.q3   { bottom: -18px; left: 752px; }
+
+  /* ── Annotation callouts ── */
+  .annotation {
+    position: absolute;
+    font-size: 9px; color: rgba(120,110,100,0.5);
+    letter-spacing: 1.5px;
+    line-height: 1.6;
+  }
+  .annotation .ref { font-weight: 600; color: rgba(100,90,80,0.7); }
+  .annotation .val { color: rgba(140,130,120,0.5); }
+  .annotation .lbl { font-size: 8px; letter-spacing: 2px; }
+
+  .ann-left  { top: calc(50% - 10px); left: 80px; text-align: right; }
+  .ann-top   { top: 220px; left: calc(50% - 60px); text-align: center; }
+  .ann-right { top: calc(50% + 90px); right: 80px; text-align: left; }
+
+  /* ── Star field ── */
+  .star {
+    position: absolute;
+    width: 3px; height: 3px;
+    border-radius: 50%;
+    background: rgba(170,150,120,0.5);
+  }
+  .star-line {
+    position: absolute;
+    height: 1px;
+    background: rgba(160,140,115,0.12);
+    transform-origin: left center;
+  }
+
+  /* ── Footer ── */
+  .footer {
+    position: absolute;
+    bottom: 110px; left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    font-size: 9px; letter-spacing: 4px;
+    color: rgba(120,110,100,0.4);
+    text-transform: uppercase;
+  }
+  .footer .line2 {
+    font-size: 8px; letter-spacing: 3px;
+    margin-top: 6px;
+    color: rgba(120,110,100,0.3);
+  }
+</style>
+</head>
+<body>
+<div class="plate">
+
+  <!-- Registration marks -->
+  <div class="reg-mark tl"></div>
+  <div class="reg-mark tr"></div>
+  <div class="reg-mark bl"></div>
+  <div class="reg-mark br"></div>
+  <span class="corner-label" style="top:48px;left:98px;">↻</span>
+  <span class="corner-label tr">↺</span>
+  <span class="corner-label bl">I</span>
+  <span class="corner-label br">II</span>
+
+  <!-- Title -->
+  <div class="title-group">
+    <div class="title">F A Y E T I D E</div>
+    <div class="subtitle">Lunar Tidal Observatory</div>
+  </div>
+
+  <!-- Annotations -->
+  <div class="annotation ann-left">
+    <span class="ref">R1</span><br>
+    <span class="val">29.530</span><br>
+    <span class="lbl">SYNODIC</span>
+  </div>
+  <div class="annotation ann-top">
+    <span class="ref">P1</span><br>
+    <span class="val">14.765</span><br>
+    <span class="lbl">QUADRATURE</span>
+  </div>
+  <div class="annotation ann-right">
+    <span class="ref">T1</span><br>
+    <span class="val">12.420</span><br>
+    <span class="lbl">SEMIDIURNAL</span>
+  </div>
+
+  <!-- Main Logo -->
+  <div class="logo-container">
+    <svg class="logo-svg" viewBox="0 0 420 420" xmlns="http://www.w3.org/2000/svg">
+
+      <defs>
+        <!-- Atmospheric glow -->
+        <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+          <stop offset="70%" stop-color="transparent"/>
+          <stop offset="95%" stop-color="rgba(180,160,140,0.08)"/>
+          <stop offset="100%" stop-color="rgba(180,160,140,0.15)"/>
+        </radialGradient>
+
+        <!-- Rose gradient for lower half -->
+        <linearGradient id="roseGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#FFB6C1" stop-opacity="0.5"/>
+          <stop offset="40%" stop-color="#FF69B4" stop-opacity="0.7"/>
+          <stop offset="100%" stop-color="#FF69B4" stop-opacity="0.95"/>
+        </linearGradient>
+
+        <!-- Indigo atmosphere gradient -->
+        <linearGradient id="indigoGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#252550"/>
+          <stop offset="100%" stop-color="#1B1B3A"/>
+        </linearGradient>
+
+        <!-- Wave clip path -->
+        <clipPath id="circleClip">
+          <circle cx="210" cy="210" r="180"/>
+        </clipPath>
+
+        <!-- Crescent mask -->
+        <mask id="crescentMask">
+          <circle cx="273" cy="147" r="40" fill="white"/>
+          <circle cx="289" cy="141" r="31" fill="black"/>
+        </mask>
+      </defs>
+
+      <!-- Outer glow rings -->
+      <circle cx="210" cy="210" r="188" fill="none" stroke="rgba(180,160,140,0.1)" stroke-width="1"/>
+      <circle cx="210" cy="210" r="192" fill="none" stroke="rgba(180,160,140,0.06)" stroke-width="0.5"/>
+      <circle cx="210" cy="210" r="196" fill="none" stroke="rgba(180,160,140,0.04)" stroke-width="0.5"/>
+
+      <!-- Background circle -->
+      <circle cx="210" cy="210" r="180" fill="#1B1B3A"/>
+
+      <!-- Upper atmosphere: slightly lighter indigo -->
+      <circle cx="210" cy="210" r="180" fill="url(#indigoGrad)" clip-path="url(#circleClip)" opacity="0.6"/>
+
+      <!-- Wave form — a precise sine wave cutting through the circle -->
+      <path d="M 30,210
+               C 47,190 63,230 80,210
+               C 97,190 113,230 130,210
+               C 147,190 163,230 180,210
+               C 197,190 213,230 230,210
+               C 247,190 263,230 280,210
+               C 297,190 313,230 330,210
+               C 347,190 363,230 380,210
+               C 390,200 390,220 390,220"
+            fill="none" stroke="#FFB6C1" stroke-width="2.5" stroke-linecap="round"
+            clip-path="url(#circleClip)" opacity="0.9"/>
+
+      <!-- Lower half: rose tint -->
+      <rect x="30" y="210" width="360" height="180" fill="url(#roseGrad)" clip-path="url(#circleClip)"/>
+
+      <!-- Wave edge highlight -->
+      <path d="M 30,210
+               C 47,192 63,232 80,212
+               C 97,192 113,232 130,212
+               C 147,192 163,232 180,212
+               C 197,192 213,232 230,212
+               C 247,192 263,232 280,212
+               C 297,192 313,232 330,212
+               C 347,192 363,232 380,212
+               C 388,204 388,216 388,216"
+            fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="0.8"
+            clip-path="url(#circleClip)"/>
+
+      <!-- Subtle wave reflection below -->
+      <path d="M 30,230
+               C 80,245 130,215 180,230
+               C 230,245 280,215 330,230
+               C 360,238 380,225 390,225"
+            fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8"
+            clip-path="url(#circleClip)"/>
+
+      <!-- Crescent moon in upper portion -->
+      <g mask="url(#crescentMask)">
+        <circle cx="273" cy="147" r="40" fill="#FFB6C1" opacity="0.85"/>
+      </g>
+
+      <!-- Small star near crescent -->
+      <circle cx="255" cy="180" r="2.5" fill="rgba(255,255,255,0.6)"/>
+      <circle cx="295" cy="125" r="1.5" fill="rgba(255,255,255,0.4)"/>
+      <circle cx="180" cy="135" r="2" fill="rgba(255,255,255,0.35)"/>
+      <circle cx="160" cy="170" r="1.5" fill="rgba(255,255,255,0.3)"/>
+      <circle cx="310" cy="200" r="1.8" fill="rgba(255,255,255,0.35)"/>
+
+      <!-- Circle border — crisp -->
+      <circle cx="210" cy="210" r="179" fill="none" stroke="#3D3A45" stroke-width="0.8" opacity="0.6"/>
+
+      <!-- Inner edge highlight -->
+      <circle cx="210" cy="210" r="178" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>
+    </svg>
+  </div>
+
+  <!-- Orbital dots -->
+  <div class="orbit-dot" style="width:6px;height:6px;top:calc(50% + 54px);left:calc(50% + 224px);background:rgba(180,150,120,0.5)"></div>
+  <div class="orbit-dot" style="width:8px;height:8px;top:calc(50% - 230px);left:calc(50% - 6px);background:rgba(255,105,180,0.35)"></div>
+  <div class="orbit-dot" style="width:5px;height:5px;top:calc(50% + 60px);left:calc(50% - 228px)"></div>
+  <div class="orbit-dot" style="width:7px;height:7px;top:calc(50% - 50px);left:calc(50% + 228px)"></div>
+  <div class="orbit-dot" style="width:5px;height:5px;top:calc(50% - 185px);left:calc(50% - 140px)"></div>
+  <div class="orbit-dot" style="width:6px;height:6px;top:calc(50% + 175px);left:calc(50% + 148px)"></div>
+  <div class="orbit-dot" style="width:5px;height:5px;top:calc(50% + 170px);left:calc(50% - 155px)"></div>
+  <div class="orbit-dot" style="width:7px;height:7px;top:calc(50% - 145px);left:calc(50% + 170px);background:rgba(255,105,180,0.35)"></div>
+
+  <!-- Tidal measurement bar -->
+  <div class="tide-bar">
+    <div class="tide-marks">
+      <div class="tide-mark" style="height:8px"></div>
+      <div class="tide-mark" style="height:14px"></div>
+      <div class="tide-mark" style="height:20px"></div>
+      <div class="tide-mark" style="height:26px"></div>
+      <div class="tide-mark" style="height:32px"></div>
+      <div class="tide-mark" style="height:26px"></div>
+      <div class="tide-mark" style="height:20px"></div>
+      <div class="tide-mark" style="height:14px"></div>
+      <div class="tide-mark" style="height:8px"></div>
+      <div class="tide-mark" style="height:14px"></div>
+      <div class="tide-mark" style="height:20px"></div>
+      <div class="tide-mark" style="height:26px"></div>
+      <div class="tide-mark" style="height:20px"></div>
+    </div>
+    <div class="tide-baseline"></div>
+  </div>
+
+  <!-- Moon phase strip (lunation diagram) -->
+  <div class="phase-strip">
+    <span class="phase-label new">NEW</span>
+    <span class="phase-label q1">Q1</span>
+    <span class="phase-label full">FULL</span>
+    <span class="phase-label q3">Q3</span>
+    <svg width="980" height="48" viewBox="0 0 980 48" style="position:relative">
+      <!-- 29 phase circles -->
+      <g id="phases">
+      </g>
+    </svg>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div>PLATE NO. 001</div>
+    <div class="line2">OBS. DATE — SOL III / LUNA / SYNODIC CYCLE</div>
+  </div>
+
+  <!-- Subtle star field -->
+  <div class="star" style="top:160px;left:150px;"></div>
+  <div class="star" style="top:140px;left:1050px;width:4px;height:4px;"></div>
+  <div class="star" style="top:1000px;left:200px;"></div>
+  <div class="star" style="top:950px;left:1000px;width:4px;height:4px;"></div>
+  <div class="star" style="top:300px;left:80px;width:2px;height:2px;"></div>
+  <div class="star" style="top:280px;left:1100px;"></div>
+  <div class="star" style="top:900px;left:60px;"></div>
+  <div class="star" style="top:850px;left:1120px;width:2px;height:2px;"></div>
+
+</div>
+
+<script>
+  // Generate moon phase circles dynamically
+  const phasesGroup = document.getElementById('phases');
+  const totalPhases = 29;
+  const r = 10;
+  const spacing = 26;
+  const startX = 40;
+  const y = 24;
+
+  for (let i = 0; i < totalPhases; i++) {
+    const cx = startX + i * spacing;
+    const illum = Math.abs(14.5 - i) / 14.5; // 0 = new, 1 = full
+
+    // Outer circle
+    const outer = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    outer.setAttribute('cx', cx);
+    outer.setAttribute('cy', y);
+    outer.setAttribute('r', r);
+    outer.setAttribute('fill', 'none');
+    outer.setAttribute('stroke', 'rgba(120,110,100,0.28)');
+    outer.setAttribute('stroke-width', '0.8');
+    phasesGroup.appendChild(outer);
+
+    // Illuminated portion
+    if (i < 14.5) {
+      // Waning: light on right side
+      const lightR = r * illum;
+      if (lightR > 0.5) {
+        const light = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+        light.setAttribute('cx', cx);
+        light.setAttribute('cy', y);
+        light.setAttribute('rx', lightR);
+        light.setAttribute('ry', r);
+        light.setAttribute('fill', 'rgba(120,110,100,0.35)');
+        phasesGroup.appendChild(light);
+      }
+    } else {
+      // Waxing: light on left side
+      const lightR = r * illum;
+      if (lightR > 0.5) {
+        const light = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+        light.setAttribute('cx', cx);
+        light.setAttribute('cy', y);
+        light.setAttribute('rx', lightR);
+        light.setAttribute('ry', r);
+        light.setAttribute('fill', 'rgba(120,110,100,0.35)');
+        phasesGroup.appendChild(light);
+      }
+    }
+
+    // New moon marker
+    if (i === 0) {
+      outer.setAttribute('stroke', '#FF69B4');
+      outer.setAttribute('stroke-width', '1.2');
+    }
+    // Full moon marker
+    if (i === 14) {
+      const full = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      full.setAttribute('cx', cx);
+      full.setAttribute('cy', y);
+      full.setAttribute('r', r);
+      full.setAttribute('fill', 'rgba(120,110,100,0.4)');
+      phasesGroup.appendChild(full);
+    }
+  }
+</script>
+
+</body>
+</html>

@@ -2,6 +2,10 @@ import React, { createContext, useContext, useState, useEffect, useCallback, typ
 import { getDatabase } from '../db/database';
 import { PeriodRecord, getAllPeriodRecords, insertPeriodRecord, deletePeriodRecord, clearAllPeriodRecords } from '../db/period-records';
 import { schedulePeriodReminders } from '../services/notifications';
+import { parseDate, diffDays } from '../utils/date';
+
+/** Minimum plausible cycle length — prevents accidental multi-marking within one month */
+const MIN_CYCLE_DAYS = 21;
 
 interface PeriodCtx {
   records: PeriodRecord[];
@@ -42,10 +46,23 @@ export function PeriodProvider({ children }: { children: ReactNode }) {
   const addRecord = async (startDate: string) => {
     const db = await getDatabase();
     try {
+      // Validate minimum cycle gap before inserting — prevents accidental
+      // multi-marking within one month that breaks prediction entirely.
+      const all = await getAllPeriodRecords(db);
+      const newDate = parseDate(startDate);
+      for (const rec of all) {
+        const dist = Math.abs(diffDays(parseDate(rec.start_date), newDate));
+        if (dist > 0 && dist < MIN_CYCLE_DAYS) {
+          throw new Error(
+            `与已有经期记录（${rec.start_date}）仅相隔 ${dist} 天。` +
+            `正常周期至少 ${MIN_CYCLE_DAYS} 天，请确认日期是否正确。`
+          );
+        }
+      }
       await insertPeriodRecord(db, startDate);
     } catch (e: any) {
       // Only treat genuine UNIQUE constraint violations as toggle-off.
-      // All other errors (DB locked, disk full, etc.) must surface.
+      // All other errors (DB locked, disk full, validation, etc.) must surface.
       const msg = e?.message || '';
       if (msg.includes('UNIQUE') || msg.includes('unique')) {
         const all = await getAllPeriodRecords(db);

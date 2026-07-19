@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Alert } from 'react-native';
 import { usePeriod } from '../context/PeriodContext';
 import { useCurrentPhaseOrDefault } from '../hooks/useCurrentPhase';
 import { PHASE_LABELS, PHASE_ICONS, OVULATION_BEFORE_PERIOD, OVULATION_SPAN, DEFAULT_PERIOD_DAYS } from '../constants/phases';
@@ -118,7 +118,9 @@ export default function CycleStatusCard() {
       {!alreadyRecorded && phaseInfo.phase !== 'period' && (
         <PressableScale
           style={styles.quickMarkBtn}
-          onPress={() => addRecord(today)}
+          onPress={async () => {
+            try { await addRecord(today); } catch (e: any) { Alert.alert('无法标记', e.message); }
+          }}
         >
           <Icon name="blood" size={18} color={Colors.white} />
           <Text style={styles.quickMarkText}>今天来了</Text>

@@ -1,24 +1,52 @@
 {
   "expo": {
-    "name": "经期助手",
+    "name": "FayeTide",
     "slug": "period-tracker",
     "version": "1.0.0",
     "orientation": "portrait",
-    "scheme": "period-tracker",
+    "icon": "./assets/icon.png",
+    "scheme": "faye-tide",
     "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FAF5F3"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
     "plugins": [
       "expo-router",
       "expo-sqlite",
       [
         "expo-notifications",
-        { "icon": "./assets/images/notification-icon.png", "color": "#FFB6C1" }
-      ],
-      [
-        "expo-location",
-        { "locationWhenInUsePermission": "用于获取当前位置的天气信息" }
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#FFB6C1"
+        }
       ]
     ],
-    "ios": { "supportsTablet": false, "bundleIdentifier": "com.periodtracker.app" },
-    "android": { "package": "com.periodtracker.app", "adaptiveIcon": { "backgroundColor": "#FFB6C1" } }
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.periodtracker.app"
+    },
+    "android": {
+      "package": "com.periodtracker.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundColor": "#1B1B3A"
+      },
+      "permissions": [
+        "android.permission.POST_NOTIFICATIONS"
+      ]
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "24afc54a-8086-48cd-bb4d-0c24cad0a848"
+      },
+      "amapApiKey": "db1451c008d9d0615616b92b12622e65"
+    },
+    "owner": "y-y"
   }
 }

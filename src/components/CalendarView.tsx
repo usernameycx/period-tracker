@@ -46,6 +46,11 @@ export default function CalendarView({ onDayPress, selectedDate, currentMonth, o
     return map;
   }, [records, currentMonth]);
 
+  // Set of dates that have a period-start record (for dot markers)
+  const recordDateSet = useMemo(() => {
+    return new Set(records.map(r => r.start_date));
+  }, [records]);
+
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
   const firstDay = new Date(year, month, 1).getDay();
@@ -97,6 +102,7 @@ export default function CalendarView({ onDayPress, selectedDate, currentMonth, o
               const isSelected = isSameDay(date, selectedDate);
 
               const bgColor = info ? PHASE_COLORS[info.phase] : 'transparent';
+              const isRecorded = recordDateSet.has(dateStr);
 
               return (
                 <PressableScale
@@ -107,6 +113,7 @@ export default function CalendarView({ onDayPress, selectedDate, currentMonth, o
                   <Text style={[styles.dayNum, isSelected && styles.selectedText, isToday && styles.todayText]}>
                     {d}
                   </Text>
+                  {isRecorded && <View style={[styles.recordDot, isSelected && styles.recordDotSelected]} />}
                 </PressableScale>
               );
             })}
@@ -143,4 +150,13 @@ const styles = StyleSheet.create({
   selectedText: { color: Colors.primary, fontWeight: '700' },
   todayCell: { borderWidth: 2, borderColor: Colors.ink },
   todayText: { fontWeight: '700', color: Colors.ink },
+  recordDot: {
+    position: 'absolute',
+    bottom: 3,
+    width: 5, height: 5, borderRadius: 3,
+    backgroundColor: Colors.primary,
+  },
+  recordDotSelected: {
+    backgroundColor: Colors.primary,
+  },
 });

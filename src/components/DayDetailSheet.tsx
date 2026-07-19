@@ -75,8 +75,12 @@ export default function DayDetailSheet({ visible, date, onClose }: Props) {
         },
       ]);
     } else {
-      // Adding — perform immediately and keep sheet open so user can log symptoms next
-      await addRecord(dateStr);
+      // Adding — validate cycle gap; surface clear error if too close to existing records
+      try {
+        await addRecord(dateStr);
+      } catch (e: any) {
+        Alert.alert('无法标记', e.message || '标记失败，请稍后再试');
+      }
     }
   };
 

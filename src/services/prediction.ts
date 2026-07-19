@@ -2,13 +2,34 @@ import { PeriodRecord } from '../db/period-records';
 import { Phase, DEFAULT_PERIOD_DAYS, DEFAULT_CYCLE_DAYS, OVULATION_BEFORE_PERIOD, OVULATION_SPAN, MIN_RECORDS_FOR_PREDICTION } from '../constants/phases';
 import { parseDate, diffDays, addDays, formatDate } from '../utils/date';
 
+/** Minimum plausible cycle length — skip records closer than this when computing phases */
+const MIN_CYCLE = 21;
+
+/** Filter out records that are implausibly close together before phase computation.
+ *  This keeps existing "bad" data from breaking the calendar display while
+ *  the entry-point validation (PeriodContext.addRecord) prevents new bad data. */
+function getValidCycleStarts(records: PeriodRecord[]): PeriodRecord[] {
+  if (records.length <= 1) return records;
+  const sorted = [...records].sort((a, b) => a.start_date.localeCompare(b.start_date));
+  const valid: PeriodRecord[] = [sorted[0]];
+  for (let i = 1; i < sorted.length; i++) {
+    const dist = diffDays(parseDate(sorted[i].start_date), parseDate(valid[valid.length - 1].start_date));
+    if (dist >= MIN_CYCLE) {
+      valid.push(sorted[i]);
+    }
+  }
+  return valid;
+}
+
 export function getAveragePeriodDays(_records?: PeriodRecord[]): number {
   return DEFAULT_PERIOD_DAYS;
 }
 
 export function getAverageCycleLength(records: PeriodRecord[]): number | null {
   if (records.length < MIN_RECORDS_FOR_PREDICTION) return null;
-  const sorted = [...records].sort((a, b) => a.start_date.localeCompare(b.start_date));
+  const valid = getValidCycleStarts(records);
+  if (valid.length < MIN_RECORDS_FOR_PREDICTION) return null;
+  const sorted = [...valid].sort((a, b) => a.start_date.localeCompare(b.start_date));
   const lengths: number[] = [];
   for (let i = 1; i < sorted.length; i++) {
     const len = diffDays(parseDate(sorted[i].start_date), parseDate(sorted[i - 1].start_date));
@@ -27,7 +48,8 @@ export function getAverageCycleLength(records: PeriodRecord[]): number | null {
 }
 
 export function predictNextPeriod(records: PeriodRecord[]): Date | null {
-  const sorted = [...records].sort((a, b) => b.start_date.localeCompare(a.start_date));
+  const valid = getValidCycleStarts(records);
+  const sorted = [...valid].sort((a, b) => b.start_date.localeCompare(a.start_date));
   if (sorted.length === 0) return null;
   const lastStart = parseDate(sorted[0].start_date);
   const cycleLength = getAverageCycleLength(records) || DEFAULT_CYCLE_DAYS;
@@ -99,7 +121,14 @@ export function getPhaseForCalendarDay(
 ): CalendarPhaseInfo | null {
   if (records.length === 0) return null;
 
-  const sorted = [...records].sort((a, b) => a.start_date.localeCompare(b.start_date));
+  // Normalize to midnight — input may carry current time (new Date()),
+  // but cycleStart from parseDate is always midnight. Without normalization,
+  // Math.round in diffDays skews the dayOffset by +1 in the afternoon.
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+  // Use only valid cycle starts to avoid implausibly-short "cycles"
+  const valid = getValidCycleStarts(records);
+  const sorted = [...valid].sort((a, b) => a.start_date.localeCompare(b.start_date));
   const PERIOD_DAYS = DEFAULT_PERIOD_DAYS;
 
   // Find which cycle this date belongs to
@@ -107,7 +136,7 @@ export function getPhaseForCalendarDay(
     const cycleStart = parseDate(sorted[i].start_date);
 
     // Date is before this cycle → not in any cycle yet
-    if (date < cycleStart) return null;
+    if (d < cycleStart) return null;
 
     // Determine cycle end (next recorded start, or predicted)
     let cycleEnd: Date;
@@ -120,9 +149,9 @@ export function getPhaseForCalendarDay(
     }
 
     // Date is within this cycle?
-    if (date < cycleEnd) {
-      const daysFromStart = diffDays(date, cycleStart) + 1;
-      const daysUntilEnd = diffDays(cycleEnd, date);
+    if (d < cycleEnd) {
+      const daysFromStart = diffDays(d, cycleStart) + 1;
+      const daysUntilEnd = diffDays(cycleEnd, d);
       const nextDate = formatDate(cycleEnd);
 
       // Period: days 1..PERIOD_DAYS

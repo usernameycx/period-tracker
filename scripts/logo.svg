@@ -1,0 +1,330 @@
+<svg width="1200" height="1200" viewBox="0 0 1200 1200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Outer atmospheric glow around the logo -->
+    <radialGradient id="outerGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="72%" stop-color="transparent"/>
+      <stop offset="90%" stop-color="rgba(180,160,140,0.04)"/>
+      <stop offset="100%" stop-color="rgba(180,160,140,0.08)"/>
+    </radialGradient>
+
+    <!-- Indigo upper hemisphere -->
+    <linearGradient id="indigoGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#22224D"/>
+      <stop offset="100%" stop-color="#1B1B3A"/>
+    </linearGradient>
+
+    <!-- Rose lower hemisphere -->
+    <linearGradient id="roseGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFB6C1" stop-opacity="0.25"/>
+      <stop offset="15%" stop-color="#FF69B4" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#E85D9C" stop-opacity="0.80"/>
+    </linearGradient>
+
+    <!-- Crescent glow -->
+    <radialGradient id="crescentGlow" cx="38%" cy="32%" r="62%">
+      <stop offset="0%" stop-color="#FFE0E8"/>
+      <stop offset="100%" stop-color="#FFB6C1"/>
+    </radialGradient>
+
+    <!-- Circle clip -->
+    <clipPath id="circleMask">
+      <circle cx="600" cy="600" r="180"/>
+    </clipPath>
+
+    <!-- Crescent mask: outer circle minus offset inner circle -->
+    <mask id="crescentMask">
+      <circle cx="658" cy="540" r="38" fill="white"/>
+      <circle cx="674" cy="534" r="29.5" fill="black"/>
+    </mask>
+
+    <!-- Subtle paper grain -->
+    <filter id="paperGrain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="5" result="noise"/>
+      <feColorMatrix type="saturate" values="0" in="noise" result="gray"/>
+      <feComponentTransfer in="gray" result="faded">
+        <feFuncA type="linear" slope="0.025"/>
+      </feComponentTransfer>
+      <feBlend in="SourceGraphic" in2="faded" mode="multiply"/>
+    </filter>
+  </defs>
+
+  <!-- ═════════════════════════════════════════════════════════ -->
+  <!-- BACKGROUND — warm parchment                             -->
+  <!-- ═════════════════════════════════════════════════════════ -->
+  <rect width="1200" height="1200" fill="#F6F1E9"/>
+
+  <!-- ═════════════════════════════════════════════════════════ -->
+  <!-- REGISTRATION MARKS — scientific plate framing           -->
+  <!-- ═════════════════════════════════════════════════════════ -->
+  <g stroke="rgba(115,105,95,0.42)" stroke-width="0.8" fill="none">
+    <line x1="42" y1="42" x2="88" y2="42"/>
+    <line x1="42" y1="42" x2="42" y2="88"/>
+    <line x1="1158" y1="42" x2="1112" y2="42"/>
+    <line x1="1158" y1="42" x2="1158" y2="88"/>
+    <line x1="42" y1="1158" x2="88" y2="1158"/>
+    <line x1="42" y1="1158" x2="42" y2="1112"/>
+    <line x1="1158" y1="1158" x2="1112" y2="1158"/>
+    <line x1="1158" y1="1158" x2="1158" y2="1112"/>
+  </g>
+  <text x="96" y="54" font-family="monospace" font-size="9" fill="rgba(115,105,95,0.38)" letter-spacing="2">↻</text>
+  <text x="1094" y="54" font-family="monospace" font-size="9" fill="rgba(115,105,95,0.38)" letter-spacing="2">↺</text>
+  <text x="96" y="1154" font-family="monospace" font-size="9" fill="rgba(115,105,95,0.38)" letter-spacing="2">I</text>
+  <text x="1096" y="1154" font-family="monospace" font-size="9" fill="rgba(115,105,95,0.38)" letter-spacing="2">II</text>
+
+  <!-- ═════════════════════════════════════════════════════════ -->
+  <!-- REFERENCE GRID — faint concentric circles               -->
+  <!-- ═════════════════════════════════════════════════════════ -->
+  <g stroke="rgba(145,135,120,0.07)" fill="none" stroke-width="0.5">
+    <circle cx="600" cy="600" r="250"/>
+    <circle cx="600" cy="600" r="310"/>
+    <circle cx="600" cy="600" r="370"/>
+    <circle cx="600" cy="600" r="430"/>
+    <circle cx="600" cy="600" r="490"/>
+  </g>
+  <line x1="110" y1="600" x2="1090" y2="600" stroke="rgba(145,135,120,0.05)" stroke-width="0.5"/>
+  <line x1="600" y1="110" x2="600" y2="1090" stroke="rgba(145,135,120,0.05)" stroke-width="0.5"/>
+
+  <!-- ═════════════════════════════════════════════════════════ -->
+  <!-- TITLE                                                  -->
+  <!-- ═════════════════════════════════════════════════════════ -->
+  <text x="600" y="148" text-anchor="middle" font-family="Georgia, serif" font-size="27" fill="#2C2930" letter-spacing="12" font-style="italic" font-weight="300">FAYETIDE</text>
+  <text x="600" y="174" text-anchor="middle" font-family="monospace" font-size="8.5" fill="rgba(115,105,95,0.48)" letter-spacing="5">LUNAR TIDAL OBSERVATORY</text>
+
+  <!-- Title divider — delicate horizontal rule -->
+  <line x1="540" y1="186" x2="660" y2="186" stroke="rgba(115,105,95,0.18)" stroke-width="0.5"/>
+
+  <!-- ═════════════════════════════════════════════════════════ -->
+  <!-- MAIN LOGO MARK — The Tidal Moon                        -->
+  <!-- ═════════════════════════════════════════════════════════ -->
+
+  <!-- Outer atmospheric halo ring -->
+  <circle cx="600" cy="600" r="190" fill="url(#outerGlow)"/>
+
+  <!-- Glow rings (precise, restrained) -->
+  <circle cx="600" cy="600" r="183" fill="none" stroke="rgba(180,160,140,0.06)" stroke-width="0.4"/>
+  <circle cx="600" cy="600" r="186" fill="none" stroke="rgba(180,160,140,0.04)" stroke-width="0.3"/>
+  <circle cx="600" cy="600" r="189" fill="none" stroke="rgba(180,160,140,0.03)" stroke-width="0.3"/>
+
+  <!-- Background disc -->
+  <circle cx="600" cy="600" r="180" fill="#1B1B3A"/>
+
+  <!-- Upper indigo gradient overlay -->
+  <rect x="420" y="420" width="360" height="182" fill="url(#indigoGrad)" clip-path="url(#circleMask)"/>
+
+  <!-- Lower rose gradient -->
+  <rect x="420" y="600" width="360" height="180" fill="url(#roseGrad)" clip-path="url(#circleMask)"/>
+
+  <!-- The Wave — mathematically precise sine curve across the diameter -->
+  <!-- Generated as: y = 600 + 12 * sin(2π * 3.0 * x/360) -->
+  <path d="M 420,600
+           C 430,596  440,612  450,600
+           C 460,588  470,612  480,600
+           C 490,588  500,612  510,600
+           C 520,588  530,612  540,600
+           C 550,588  560,612  570,600
+           C 580,588  590,612  600,600
+           C 610,588  620,612  630,600
+           C 640,588  650,612  660,600
+           C 670,588  680,612  690,600
+           C 700,588  710,612  720,600
+           C 730,588  740,612  750,600
+           C 760,588  770,612  780,600"
+        fill="none" stroke="#FFB6C1" stroke-width="1.8" stroke-linecap="round"
+        clip-path="url(#circleMask)" opacity="0.82"/>
+
+  <!-- Wave crest highlight (offset 1px above) -->
+  <path d="M 420,598
+           C 430,594  440,610  450,598
+           C 460,586  470,610  480,598
+           C 490,586  500,610  510,598
+           C 520,586  530,610  540,598
+           C 550,586  560,610  570,598
+           C 580,586  590,610  600,598
+           C 610,586  620,610  630,598
+           C 640,586  650,610  660,598
+           C 670,586  680,610  690,598
+           C 700,586  710,610  720,598
+           C 730,586  740,610  750,598
+           C 760,586  770,610  780,598"
+        fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="0.5"
+        clip-path="url(#circleMask)"/>
+
+  <!-- Subtle under-wave echo -->
+  <path d="M 420,616
+           C 480,628  540,604  600,616
+           C 660,628  720,604  780,616"
+        fill="none" stroke="rgba(255,255,255,0.045)" stroke-width="10"
+        clip-path="url(#circleMask)"/>
+
+  <!-- Crescent Moon — upper right of the disc -->
+  <g mask="url(#crescentMask)">
+    <circle cx="658" cy="540" r="38" fill="url(#crescentGlow)" opacity="0.88"/>
+  </g>
+
+  <!-- Stars — restrained, precise -->
+  <g fill="rgba(255,255,255,0.55)">
+    <circle cx="632" cy="572" r="2.0"/>
+    <circle cx="680" cy="518" r="1.2"/>
+    <circle cx="565" cy="530" r="1.6"/>
+    <circle cx="546" cy="560" r="1.2"/>
+    <circle cx="700" cy="582" r="1.4"/>
+    <circle cx="518" cy="506" r="0.9"/>
+    <circle cx="668" cy="496" r="0.9"/>
+    <circle cx="590" cy="505" r="1.1"/>
+  </g>
+
+  <!-- Disc border — crisp, refined -->
+  <circle cx="600" cy="600" r="179.5" fill="none" stroke="#3C3844" stroke-width="0.6" opacity="0.48"/>
+  <circle cx="600" cy="600" r="178.5" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="0.3"/>
+
+  <!-- ═════════════════════════════════════════════════════════ -->
+  <!-- ORBITAL MARKERS — phase positions around the disc       -->
+  <!-- ═════════════════════════════════════════════════════════ -->
+  <g>
+    <!-- Top — first quarter equivalent -->
+    <circle cx="600" cy="378" r="3.5" fill="rgba(255,105,180,0.28)"/>
+    <!-- Bottom -->
+    <circle cx="600" cy="826" r="4.5" fill="rgba(175,145,115,0.32)"/>
+    <!-- Left -->
+    <circle cx="380" cy="600" r="3" fill="rgba(175,145,115,0.32)"/>
+    <!-- Right -->
+    <circle cx="820" cy="600" r="4" fill="rgba(175,145,115,0.38)"/>
+    <!-- Diagonals -->
+    <circle cx="444" cy="444" r="2.8" fill="rgba(175,145,115,0.28)"/>
+    <circle cx="756" cy="444" r="4.5" fill="rgba(255,105,180,0.22)"/>
+    <circle cx="444" cy="756" r="3" fill="rgba(175,145,115,0.28)"/>
+    <circle cx="756" cy="756" r="3.5" fill="rgba(175,145,115,0.32)"/>
+  </g>
+
+  <!-- ═════════════════════════════════════════════════════════ -->
+  <!-- ANNOTATION CALLOUTS — scientific reference marks        -->
+  <!-- ═════════════════════════════════════════════════════════ -->
+  <g font-family="monospace" font-size="7.5" fill="rgba(115,105,95,0.48)" letter-spacing="1.8">
+    <!-- Left -->
+    <line x1="345" y1="600" x2="375" y2="600" stroke="rgba(115,105,95,0.22)" stroke-width="0.5"/>
+    <circle cx="375" cy="600" r="1.8" fill="rgba(115,105,95,0.35)"/>
+    <text x="340" y="582" text-anchor="end" font-weight="600" fill="rgba(85,75,68,0.58)">R1</text>
+    <text x="340" y="594" text-anchor="end">29.530</text>
+    <text x="340" y="606" text-anchor="end" font-size="6.5" letter-spacing="1.2">SYNODIC</text>
+
+    <!-- Top -->
+    <line x1="600" y1="388" x2="600" y2="412" stroke="rgba(115,105,95,0.22)" stroke-width="0.5"/>
+    <circle cx="600" cy="412" r="1.8" fill="rgba(115,105,95,0.35)"/>
+    <text x="600" y="378" text-anchor="middle" font-weight="600" fill="rgba(85,75,68,0.58)">P1</text>
+    <text x="600" y="390" text-anchor="middle">14.765</text>
+    <text x="600" y="402" text-anchor="middle" font-size="6.5" letter-spacing="1.2">QUADRATURE</text>
+
+    <!-- Right -->
+    <line x1="855" y1="686" x2="825" y2="686" stroke="rgba(115,105,95,0.22)" stroke-width="0.5"/>
+    <circle cx="825" cy="686" r="1.8" fill="rgba(115,105,95,0.35)"/>
+    <text x="860" y="670" font-weight="600" fill="rgba(85,75,68,0.58)">T1</text>
+    <text x="860" y="682">12.420</text>
+    <text x="860" y="694" font-size="6.5" letter-spacing="1.2">SEMIDIURNAL</text>
+  </g>
+
+  <!-- ═════════════════════════════════════════════════════════ -->
+  <!-- TIDAL MEASUREMENT BAR                                   -->
+  <!-- ═════════════════════════════════════════════════════════ -->
+  <g transform="translate(420, 875)">
+    <!-- Baseline -->
+    <line x1="0" y1="40" x2="360" y2="40" stroke="rgba(115,105,95,0.20)" stroke-width="0.6"/>
+
+    <!-- V-shaped tidal amplitude marks -->
+    <line x1="6"   y1="40" x2="6"   y2="32" stroke="rgba(115,105,95,0.28)" stroke-width="0.7"/>
+    <line x1="50"  y1="40" x2="50"  y2="26" stroke="rgba(115,105,95,0.28)" stroke-width="0.7"/>
+    <line x1="94"  y1="40" x2="94"  y2="20" stroke="rgba(115,105,95,0.28)" stroke-width="0.7"/>
+    <line x1="138" y1="40" x2="138" y2="14" stroke="rgba(115,105,95,0.28)" stroke-width="0.7"/>
+    <line x1="180" y1="40" x2="180" y2="8"  stroke="rgba(115,105,95,0.32)" stroke-width="0.8"/>
+    <line x1="222" y1="40" x2="222" y2="12" stroke="rgba(115,105,95,0.28)" stroke-width="0.7"/>
+    <line x1="266" y1="40" x2="266" y2="22" stroke="rgba(115,105,95,0.28)" stroke-width="0.7"/>
+    <line x1="310" y1="40" x2="310" y2="28" stroke="rgba(115,105,95,0.28)" stroke-width="0.7"/>
+    <line x1="354" y1="40" x2="354" y2="34" stroke="rgba(115,105,95,0.28)" stroke-width="0.7"/>
+
+    <!-- Scale labels -->
+    <text x="0"   y="54" text-anchor="middle" font-family="monospace" font-size="6.5" fill="rgba(115,105,95,0.35)" letter-spacing="1">0h</text>
+    <text x="90"  y="54" text-anchor="middle" font-family="monospace" font-size="6.5" fill="rgba(115,105,95,0.30)" letter-spacing="1">6h</text>
+    <text x="180" y="54" text-anchor="middle" font-family="monospace" font-size="6.5" fill="rgba(115,105,95,0.35)" letter-spacing="1">12h</text>
+    <text x="270" y="54" text-anchor="middle" font-family="monospace" font-size="6.5" fill="rgba(115,105,95,0.30)" letter-spacing="1">18h</text>
+    <text x="360" y="54" text-anchor="middle" font-family="monospace" font-size="6.5" fill="rgba(115,105,95,0.35)" letter-spacing="1">24h</text>
+  </g>
+
+  <!-- ═════════════════════════════════════════════════════════ -->
+  <!-- MOON PHASE STRIP — 29 lunation markers                  -->
+  <!-- ═════════════════════════════════════════════════════════ -->
+  <g transform="translate(100, 958)">
+    <!-- Phase circles: 29 for the full synodic month -->
+    <g fill="none" stroke="rgba(115,105,95,0.22)" stroke-width="0.6">
+      <circle cx="20"  cy="20" r="9" stroke="#FF69B4" stroke-width="0.9" fill="rgba(255,105,180,0.06)"/>
+      <circle cx="55"  cy="20" r="9"/>
+      <circle cx="90"  cy="20" r="9"/>
+      <circle cx="125" cy="20" r="9"/>
+      <circle cx="160" cy="20" r="9"/>
+      <circle cx="195" cy="20" r="9"/>
+      <circle cx="230" cy="20" r="9"/>
+      <circle cx="265" cy="20" r="9" stroke="rgba(115,105,95,0.35)"/>
+      <circle cx="300" cy="20" r="9"/>
+      <circle cx="335" cy="20" r="9"/>
+      <circle cx="370" cy="20" r="9"/>
+      <circle cx="405" cy="20" r="9"/>
+      <circle cx="440" cy="20" r="9"/>
+      <circle cx="475" cy="20" r="9"/>
+      <!-- Full moon (day 15) — filled -->
+      <circle cx="510" cy="20" r="9" fill="rgba(115,105,95,0.32)" stroke="rgba(115,105,95,0.32)"/>
+      <circle cx="545" cy="20" r="9"/>
+      <circle cx="580" cy="20" r="9"/>
+      <circle cx="615" cy="20" r="9"/>
+      <circle cx="650" cy="20" r="9"/>
+      <circle cx="685" cy="20" r="9"/>
+      <circle cx="720" cy="20" r="9"/>
+      <circle cx="755" cy="20" r="9" stroke="rgba(115,105,95,0.35)"/>
+      <circle cx="790" cy="20" r="9"/>
+      <circle cx="825" cy="20" r="9"/>
+      <circle cx="860" cy="20" r="9"/>
+      <circle cx="895" cy="20" r="9"/>
+      <circle cx="930" cy="20" r="9"/>
+      <circle cx="965" cy="20" r="9"/>
+      <circle cx="1000" cy="20" r="9"/>
+    </g>
+
+    <!-- Labels -->
+    <text x="20"  y="6"  text-anchor="middle" font-family="monospace" font-size="7" fill="#FF69B4" letter-spacing="1.5">NEW</text>
+    <text x="265" y="6"  text-anchor="middle" font-family="monospace" font-size="6.5" fill="rgba(115,105,95,0.42)" letter-spacing="1">Q1</text>
+    <text x="510" y="42" text-anchor="middle" font-family="monospace" font-size="7" fill="rgba(115,105,95,0.42)" letter-spacing="1.5">FULL</text>
+    <text x="755" y="6"  text-anchor="middle" font-family="monospace" font-size="6.5" fill="rgba(115,105,95,0.42)" letter-spacing="1">Q3</text>
+    <text x="1000" y="42" text-anchor="middle" font-family="monospace" font-size="7" fill="rgba(115,105,95,0.42)" letter-spacing="1.5">NEW</text>
+  </g>
+
+  <!-- ═════════════════════════════════════════════════════════ -->
+  <!-- FOOTER                                                  -->
+  <!-- ═════════════════════════════════════════════════════════ -->
+  <text x="600" y="1050" text-anchor="middle" font-family="monospace" font-size="8.5" fill="rgba(115,105,95,0.32)" letter-spacing="4">PLATE NO. 001</text>
+  <text x="600" y="1068" text-anchor="middle" font-family="monospace" font-size="6.5" fill="rgba(115,105,95,0.22)" letter-spacing="2.5">OBS. DATE — SOL III / LUNA / SYNODIC CYCLE 29.530 D</text>
+
+  <!-- ═════════════════════════════════════════════════════════ -->
+  <!-- BACKGROUND STAR FIELD — subtle, dispersed               -->
+  <!-- ═════════════════════════════════════════════════════════ -->
+  <g fill="rgba(165,145,118,0.30)">
+    <circle cx="185" cy="195" r="1.8"/>
+    <circle cx="1030" cy="175" r="2.2"/>
+    <circle cx="135" cy="890" r="1.5"/>
+    <circle cx="1065" cy="910" r="1.8"/>
+    <circle cx="205" cy="405" r="1.3"/>
+    <circle cx="1005" cy="385" r="1.5"/>
+    <circle cx="165" cy="650" r="2.0"/>
+    <circle cx="1045" cy="695" r="1.3"/>
+    <circle cx="248" cy="145" r="1.0"/>
+    <circle cx="960" cy="140" r="0.9"/>
+    <circle cx="890" cy="1015" r="1.6"/>
+    <circle cx="305" cy="1045" r="1.4"/>
+    <circle cx="880" cy="240" r="1.2"/>
+    <circle cx="320" cy="250" r="1.0"/>
+  </g>
+
+  <!-- Faint constellation lines -->
+  <g stroke="rgba(155,138,115,0.10)" stroke-width="0.4">
+    <line x1="185" y1="195" x2="248" y2="145"/>
+    <line x1="1030" y1="175" x2="1005" y2="385"/>
+    <line x1="135" y1="890" x2="165" y2="650"/>
+    <line x1="1065" y1="910" x2="1045" y2="695"/>
+  </g>
+</svg>

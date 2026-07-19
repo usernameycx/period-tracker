@@ -75,17 +75,31 @@ export default function WeatherCard() {
         </View>
       )}
 
-      {/* Detail chips */}
-      <View style={styles.detailsRow}>
-        <View style={styles.chip}>
-          <Icon name="sun" size={13} color={Colors.warning} />
-          <Text style={styles.chipText}>UV {weather.uvIndex}</Text>
-          <Text style={styles.chipSub}>{weather.uvAdvice}</Text>
+      {/* Detail rows — stacked vertically so long text is never clipped */}
+      <View style={styles.detailsSection}>
+        <View style={styles.detailRow}>
+          <View style={styles.detailIconWrap}>
+            <Icon name="sun" size={16} color={Colors.warning} />
+          </View>
+          <View style={styles.detailBody}>
+            <View style={styles.detailHead}>
+              <Text style={styles.detailLabel}>紫外线</Text>
+              <Text style={styles.detailValue}>UV {weather.uvIndex}</Text>
+            </View>
+            <Text style={styles.detailSub}>{weather.uvAdvice}</Text>
+          </View>
         </View>
-        <View style={styles.chip}>
-          <Icon name="drop" size={13} color={Colors.accentWarm} />
-          <Text style={styles.chipText}>{weather.humidity}%</Text>
-          <Text style={styles.chipSub}>湿度</Text>
+        <View style={styles.detailDivider} />
+        <View style={styles.detailRow}>
+          <View style={styles.detailIconWrap}>
+            <Icon name="drop" size={16} color={Colors.accentWarm} />
+          </View>
+          <View style={styles.detailBody}>
+            <View style={styles.detailHead}>
+              <Text style={styles.detailLabel}>湿度</Text>
+              <Text style={styles.detailValue}>{weather.humidity}%</Text>
+            </View>
+          </View>
         </View>
       </View>
     </View>
@@ -211,32 +225,55 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  /* Detail chips */
-  detailsRow: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-  },
-  chip: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
+  /* Detail section — vertical stack, full width, no text clipping */
+  detailsSection: {
     backgroundColor: Colors.cardBg,
     borderRadius: Radius.md,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
     borderWidth: 1,
     borderColor: Colors.divider,
+    overflow: 'hidden',
   },
-  chipText: {
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    gap: Spacing.md,
+  },
+  detailIconWrap: {
+    width: 32, height: 32, borderRadius: Radius.sm,
+    backgroundColor: Colors.surfaceWarm,
+    alignItems: 'center', justifyContent: 'center',
+    marginTop: 1,
+  },
+  detailBody: {
+    flex: 1,
+  },
+  detailHead: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: Spacing.sm,
+  },
+  detailLabel: {
+    fontSize: FontSize.sm,
+    color: Colors.textSecondary,
+    fontWeight: '500',
+  },
+  detailValue: {
     fontSize: FontSize.sm,
     fontWeight: '700',
-    color: Colors.text,
+    color: Colors.ink,
   },
-  chipSub: {
+  detailSub: {
     fontSize: FontSize.xs,
-    color: Colors.textSecondary,
-    marginLeft: 2,
+    color: Colors.textMuted,
+    marginTop: 3,
+    lineHeight: 18,
+  },
+  detailDivider: {
+    height: 1,
+    backgroundColor: Colors.divider,
+    marginHorizontal: Spacing.md,
   },
 
   loadingText: { marginTop: Spacing.sm, color: Colors.textMuted, fontSize: FontSize.sm },
