@@ -161,12 +161,18 @@ export default function DayDetailSheet({ visible, date, onClose }: Props) {
 
                 <SymptomPicker date={dateStr} visible={visible} />
 
-                {weather && phaseInfo && (
-                  <View style={styles.adviceBox}>
-                    <Icon name="bulb" size={16} color={Colors.warning} />
-                    <Text style={styles.adviceText}>{getLifeAdvice(phaseInfo.phase, weather)}</Text>
-                  </View>
-                )}
+                {weather && phaseInfo && (() => {
+                    const adv = getLifeAdvice(phaseInfo.phase, weather);
+                    return (
+                      <View style={styles.adviceBox}>
+                        <Icon name="bulb" size={16} color={Colors.warning} />
+                        <View style={styles.adviceContent}>
+                          <Text style={styles.adviceWeather}>{adv.weatherAdvice}</Text>
+                          <Text style={styles.advicePhase}>{adv.phaseAdvice}</Text>
+                        </View>
+                      </View>
+                    );
+                  })()}
 
                 <PressableScale style={styles.closeBtn} onPress={onClose}>
                   <Text style={styles.closeText}>关闭</Text>
@@ -246,7 +252,9 @@ const styles = StyleSheet.create({
     borderRadius: Radius.lg, padding: Spacing.lg,
     flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.sm,
   },
-  adviceText: { fontSize: FontSize.sm, color: Colors.text, lineHeight: LineHeight.sm2, flex: 1 },
+  adviceContent: { flex: 1, gap: Spacing.xs },
+  adviceWeather: { fontSize: FontSize.sm, color: Colors.textSecondary, lineHeight: LineHeight.sm2 },
+  advicePhase: { fontSize: FontSize.sm, color: Colors.text, fontWeight: Weight.semibold, lineHeight: LineHeight.sm2 },
 
   dietPlaceholder: {
     backgroundColor: Colors.primaryBg, borderRadius: Radius.md,
