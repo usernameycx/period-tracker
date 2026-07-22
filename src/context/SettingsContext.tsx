@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { scheduleDailyNotification } from '../services/notifications';
 
 interface Settings {
   city: string;
@@ -16,6 +15,18 @@ interface Settings {
 const Ctx = createContext<Settings>({} as Settings);
 export const useSettings = () => useContext(Ctx);
 
+function loadSettings(): Promise<{ city: string; notifyHour: number; notifyMinute: number }> {
+  return Promise.all([
+    AsyncStorage.getItem('city'),
+    AsyncStorage.getItem('notifyHour'),
+    AsyncStorage.getItem('notifyMinute'),
+  ]).then(([city, h, m]) => ({
+    city: city || '南昌',
+    notifyHour: h ? Number(h) : 8,
+    notifyMinute: m ? Number(m) : 0,
+  }));
+}
+
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [city, setCityState] = useState('南昌');
   const [notifyHour, setNotifyHourState] = useState(8);
@@ -23,11 +34,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    AsyncStorage.getMany(['city', 'notifyHour', 'notifyMinute'])
-      .then(m => {
-        if (m.city) setCityState(m.city);
-        if (m.notifyHour) setNotifyHourState(Number(m.notifyHour));
-        if (m.notifyMinute) setNotifyMinuteState(Number(m.notifyMinute));
+    loadSettings()
+      .then(s => {
+        setCityState(s.city);
+        setNotifyHourState(s.notifyHour);
+        setNotifyMinuteState(s.notifyMinute);
       })
       .catch(e => { console.warn('SettingsContext: failed to load settings', e); })
       .finally(() => { setReady(true); });
@@ -41,21 +52,19 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const setNotifyHour = useCallback((h: number) => {
     setNotifyHourState(h);
     AsyncStorage.setItem('notifyHour', String(h)).catch(e => console.warn('setNotifyHour failed:', e));
-    setNotifyMinuteState(m => { scheduleDailyNotification(h, m); return m; });
   }, []);
 
   const setNotifyMinute = useCallback((m: number) => {
     setNotifyMinuteState(m);
     AsyncStorage.setItem('notifyMinute', String(m)).catch(e => console.warn('setNotifyMinute failed:', e));
-    setNotifyHourState(h => { scheduleDailyNotification(h, m); return h; });
   }, []);
 
   const refresh = useCallback(async () => {
     try {
-      const m = await AsyncStorage.getMany(['city', 'notifyHour', 'notifyMinute']);
-      if (m.city) setCityState(m.city);
-      if (m.notifyHour) setNotifyHourState(Number(m.notifyHour));
-      if (m.notifyMinute) setNotifyMinuteState(Number(m.notifyMinute));
+      const s = await loadSettings();
+      setCityState(s.city);
+      setNotifyHourState(s.notifyHour);
+      setNotifyMinuteState(s.notifyMinute);
     } catch (e) {
       console.warn('SettingsContext.refresh failed:', e);
     }

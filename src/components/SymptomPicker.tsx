@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { getDatabase } from '../db/database';
 import { getSymptomByDate, upsertSymptom } from '../db/symptoms';
 import { SymptomRecord } from '../constants/symptoms';
-import { Colors, Spacing, Radius, FontSize } from '../constants/theme';
+import { Colors, Spacing, Radius, FontSize, Weight, } from '../constants/theme';
 import PressableScale from './PressableScale';
 import Icon from './Icon';
 import type { IconName } from './Icon';
@@ -18,7 +18,7 @@ const CATEGORIES = [
     key: 'flow' as const,
     label: '经血量',
     options: [
-      { key: 'light', label: '少量', icon: 'blood' as IconName, iconColor: Colors.textHint },
+      { key: 'light', label: '少量', icon: 'drop' as IconName, iconColor: Colors.textHint },
       { key: 'medium', label: '正常', icon: 'blood' as IconName, iconColor: Colors.primary },
       { key: 'heavy', label: '较多', icon: 'blood' as IconName, iconColor: Colors.danger },
     ],
@@ -28,7 +28,7 @@ const CATEGORIES = [
     label: '痛经',
     options: [
       { key: 'none', label: '无', icon: 'check' as IconName, iconColor: Colors.success },
-      { key: 'mild', label: '轻微', icon: 'dot' as IconName, iconColor: Colors.warning },
+      { key: 'mild', label: '轻微', icon: 'leaf' as IconName, iconColor: Colors.warning },
       { key: 'moderate', label: '中等', icon: 'warning' as IconName, iconColor: Colors.warning },
       { key: 'severe', label: '严重', icon: 'close' as IconName, iconColor: Colors.danger },
     ],
@@ -38,7 +38,7 @@ const CATEGORIES = [
     label: '心情',
     options: [
       { key: 'happy', label: '开心', icon: 'sparkle' as IconName, iconColor: Colors.success },
-      { key: 'calm', label: '平静', icon: 'dot' as IconName, iconColor: Colors.primary },
+      { key: 'calm', label: '平静', icon: 'moon' as IconName, iconColor: Colors.primary },
       { key: 'irritable', label: '烦躁', icon: 'warning' as IconName, iconColor: Colors.warning },
       { key: 'sad', label: '难过', icon: 'drop' as IconName, iconColor: Colors.primaryLight },
       { key: 'anxious', label: '焦虑', icon: 'lightning' as IconName, iconColor: Colors.warning },
@@ -50,14 +50,14 @@ const CATEGORIES = [
     options: [
       { key: 'high', label: '充沛', icon: 'lightning' as IconName, iconColor: Colors.warning },
       { key: 'normal', label: '正常', icon: 'battery' as IconName, iconColor: Colors.success },
-      { key: 'low', label: '疲惫', icon: 'dot' as IconName, iconColor: Colors.textHint },
+      { key: 'low', label: '疲惫', icon: 'moon' as IconName, iconColor: Colors.textHint },
     ],
   },
 ];
 
 const TOGGLES = [
   { key: 'headache' as const, label: '头痛', icon: 'warning' as IconName, iconColor: Colors.warning },
-  { key: 'bloating' as const, label: '腹胀', icon: 'dot' as IconName, iconColor: Colors.primary },
+  { key: 'bloating' as const, label: '腹胀', icon: 'drop' as IconName, iconColor: Colors.primary },
   { key: 'cravings' as const, label: '嘴馋', icon: 'diet' as IconName, iconColor: Colors.primary },
 ];
 
@@ -107,30 +107,34 @@ export default function SymptomPicker({ date, visible }: Props) {
         <Text style={styles.title}>记录症状</Text>
       </View>
 
-      {CATEGORIES.map(cat => {
+      {CATEGORIES.map((cat, idx) => {
         const currentVal = data?.[cat.key] as string | null;
         return (
-          <View key={cat.key} style={styles.category}>
-            <Text style={styles.catLabel}>{cat.label}</Text>
-            <View style={styles.optionRow}>
-              {cat.options.map(opt => (
-                <PressableScale
-                  key={opt.key}
-                  style={[styles.option, currentVal === opt.key && styles.optionActive]}
-                  onPress={() => update(cat.key, opt.key)}
-                >
-                  <Icon name={opt.icon} size={18} color={opt.iconColor} />
-                  <Text style={[styles.optionLabel, currentVal === opt.key && styles.optionLabelActive]}>
-                    {opt.label}
-                  </Text>
-                </PressableScale>
-              ))}
+          <View key={cat.key}>
+            {idx > 0 && <View style={styles.catDivider} />}
+            <View style={styles.category}>
+              <Text style={styles.catLabel}>{cat.label}</Text>
+              <View style={styles.optionRow}>
+                {cat.options.map(opt => (
+                  <PressableScale
+                    key={opt.key}
+                    style={[styles.option, currentVal === opt.key && styles.optionActive]}
+                    onPress={() => update(cat.key, opt.key)}
+                  >
+                    <Icon name={opt.icon} size={18} color={currentVal === opt.key ? Colors.primary : opt.iconColor} />
+                    <Text style={[styles.optionLabel, currentVal === opt.key && styles.optionLabelActive]}>
+                      {opt.label}
+                    </Text>
+                  </PressableScale>
+                ))}
+              </View>
             </View>
           </View>
         );
       })}
 
-      {/* Toggles */}
+      {/* Toggles section */}
+      <View style={styles.catDivider} />
       <View style={styles.category}>
         <Text style={styles.catLabel}>其他</Text>
         <View style={styles.toggleRow}>
@@ -154,27 +158,28 @@ export default function SymptomPicker({ date, visible }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { marginTop: 14 },
+  container: { marginTop: Spacing.lg },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: Spacing.md },
-  title: { fontSize: FontSize.lg, fontWeight: '700', color: Colors.primary },
-  category: { marginBottom: 10 },
-  catLabel: { fontSize: FontSize.sm, fontWeight: '600', color: Colors.textSecondary, marginBottom: 6 },
+  title: { fontSize: FontSize.lg, fontWeight: Weight.bold, color: Colors.primary },
+  category: { marginBottom: Spacing.md },
+  catDivider: { height: 1, backgroundColor: Colors.divider, marginBottom: Spacing.md },
+  catLabel: { fontSize: FontSize.sm, fontWeight: Weight.semibold, color: Colors.textSecondary, marginBottom: Spacing.xs },
   optionRow: { flexDirection: 'row', gap: Spacing.sm },
   option: {
-    flex: 1, alignItems: 'center', paddingVertical: 10, paddingHorizontal: 4,
-    borderRadius: Radius.md, backgroundColor: Colors.surfaceMuted,
+    flex: 1, alignItems: 'center', paddingVertical: Spacing.md, paddingHorizontal: Spacing.xs,
+    borderRadius: Radius.md, backgroundColor: Colors.cardBg,
   },
-  optionActive: { backgroundColor: Colors.primaryBg, borderWidth: 1, borderColor: Colors.primaryLight },
+  optionActive: { backgroundColor: Colors.primaryBg, borderWidth: 1, borderColor: Colors.primary },
   optionIcon: { marginBottom: 2 },
-  optionLabel: { fontSize: FontSize.xs, color: Colors.textMuted, fontWeight: '500' },
-  optionLabelActive: { color: Colors.primary, fontWeight: '700' },
+  optionLabel: { fontSize: FontSize.xs, color: Colors.textMuted, fontWeight: Weight.medium },
+  optionLabelActive: { color: Colors.primary, fontWeight: Weight.bold },
 
-  toggleRow: { flexDirection: 'row', gap: 10 },
+  toggleRow: { flexDirection: 'row', gap: Spacing.sm },
   toggle: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    paddingVertical: 10, borderRadius: Radius.md, backgroundColor: Colors.surfaceMuted, gap: 6,
+    paddingVertical: Spacing.md, borderRadius: Radius.md, backgroundColor: Colors.cardBg, gap: Spacing.xs,
   },
-  toggleActive: { backgroundColor: Colors.primaryBg, borderWidth: 1, borderColor: Colors.primaryLight },
-  toggleLabel: { fontSize: FontSize.sm, color: Colors.textMuted, fontWeight: '500' },
-  toggleLabelActive: { color: Colors.primary, fontWeight: '700' },
+  toggleActive: { backgroundColor: Colors.primaryBg, borderWidth: 1, borderColor: Colors.primary },
+  toggleLabel: { fontSize: FontSize.sm, color: Colors.textMuted, fontWeight: Weight.medium },
+  toggleLabelActive: { color: Colors.primary, fontWeight: Weight.bold },
 });

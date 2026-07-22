@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { getLunarData, LunarData } from '../services/lunar';
-import { LunarColors, Radius, Spacing, FontSize } from '../constants/theme';
+import { LunarColors, Radius, Spacing, FontSize, Weight, } from '../constants/theme';
 import PressableScale from './PressableScale';
 import Icon from './Icon';
 
@@ -94,12 +94,12 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.cardGap, borderWidth: 1, borderColor: LunarColors.border,
   },
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.md, gap: Spacing.sm },
-  headerTitle: { fontSize: FontSize.base, fontWeight: '700', color: LunarColors.text, flex: 1 },
+  headerTitle: { fontSize: FontSize.base, fontWeight: Weight.bold, color: LunarColors.text, flex: 1 },
   jieQiBadge: {
-    backgroundColor: LunarColors.jieQiBg, borderRadius: Radius.sm2,
-    paddingHorizontal: 10, paddingVertical: 3,
+    backgroundColor: LunarColors.jieQiBg, borderRadius: Radius.sm,
+    paddingHorizontal: Spacing.md, paddingVertical: 3,
   },
-  jieQiText: { color: LunarColors.jieQiText, fontSize: FontSize.xs, fontWeight: '700' },
+  jieQiText: { color: LunarColors.jieQiText, fontSize: FontSize.xs, fontWeight: Weight.bold },
 
   dateRow: {
     flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.md,
@@ -107,34 +107,34 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: LunarColors.innerBorder,
   },
   dateBlock: { flexDirection: 'row', alignItems: 'baseline', gap: Spacing.xs },
-  lunarMonth: { fontSize: FontSize.base, color: LunarColors.text, fontWeight: '500' },
-  lunarDay: { fontSize: FontSize.xxl, fontWeight: '900', color: LunarColors.dayNumber },
+  lunarMonth: { fontSize: FontSize.base, color: LunarColors.text, fontWeight: Weight.medium },
+  lunarDay: { fontSize: FontSize.xxl, fontWeight: Weight.extrabold, color: LunarColors.dayNumber },
   dateDivider: {
     width: 1, height: 36, backgroundColor: LunarColors.border,
     marginHorizontal: Spacing.md,
   },
   ganzhiBlock: { flex: 1 },
-  ganzhiYear: { fontSize: FontSize.sm2, color: LunarColors.text, fontWeight: '600' },
+  ganzhiYear: { fontSize: FontSize.sm2, color: LunarColors.text, fontWeight: Weight.semibold },
   ganzhiDetail: { fontSize: FontSize.sm, color: LunarColors.textSecondary, marginTop: 2 },
 
   yiJiRow: { gap: Spacing.md },
   yiSection: {},
   jiSection: {},
   sectionLabel: { marginBottom: Spacing.xs },
-  yiLabel: { fontSize: FontSize.sm, fontWeight: '700', color: LunarColors.yiText },
-  jiLabel: { fontSize: FontSize.sm, fontWeight: '700', color: LunarColors.jiText },
+  yiLabel: { fontSize: FontSize.sm, fontWeight: Weight.bold, color: LunarColors.yiText },
+  jiLabel: { fontSize: FontSize.sm, fontWeight: Weight.bold, color: LunarColors.jiText },
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.xs, alignItems: 'center' },
   yiTag: {
-    backgroundColor: LunarColors.yiBg, borderRadius: Radius.md2,
-    paddingHorizontal: 10, paddingVertical: 5,
+    backgroundColor: LunarColors.yiBg, borderRadius: Radius.lg,
+    paddingHorizontal: Spacing.md, paddingVertical: Spacing.xs,
     borderWidth: 1, borderColor: LunarColors.yiBorder,
   },
-  yiTagText: { fontSize: FontSize.xs, color: LunarColors.yiText, fontWeight: '500' },
+  yiTagText: { fontSize: FontSize.xs, color: LunarColors.yiText, fontWeight: Weight.medium },
   jiTag: {
-    backgroundColor: LunarColors.jiBg, borderRadius: Radius.md2,
-    paddingHorizontal: 10, paddingVertical: 5,
+    backgroundColor: LunarColors.jiBg, borderRadius: Radius.lg,
+    paddingHorizontal: Spacing.md, paddingVertical: Spacing.xs,
     borderWidth: 1, borderColor: LunarColors.jiBorder,
   },
-  jiTagText: { fontSize: FontSize.xs, color: LunarColors.jiText, fontWeight: '500' },
-  moreBtn: { fontSize: FontSize.xs, color: LunarColors.moreBtn, fontWeight: '600', paddingHorizontal: Spacing.xs },
+  jiTagText: { fontSize: FontSize.xs, color: LunarColors.jiText, fontWeight: Weight.medium },
+  moreBtn: { fontSize: FontSize.xs, color: LunarColors.moreBtn, fontWeight: Weight.semibold, paddingHorizontal: Spacing.xs },
 });

@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useMemo, useCallback } from 'react';
 import { View, Text, StyleSheet, PanResponder, Animated } from 'react-native';
-import { Colors, FontSize, Radius, Spacing } from '../constants/theme';
+import { Colors, FontSize, Radius, Spacing, Weight, } from '../constants/theme';
 
 const ITEM_HEIGHT = 44;
 const VISIBLE_COUNT = 5;
@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: Colors.textMuted,
     marginBottom: Spacing.sm,
-    fontWeight: '600',
+    fontWeight: Weight.semibold,
   },
   pickerWrapper: {
     height: PICKER_HEIGHT,
@@ -154,11 +154,11 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: ITEM_HEIGHT,
-    backgroundColor: Colors.primary + '14',
+    backgroundColor: Colors.primaryBg,
     borderRadius: Radius.sm,
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: Colors.primaryLight + '60',
+    borderColor: Colors.primaryLight,
     zIndex: 1,
   },
   fadeTop: {
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     top: 0, left: 0, right: 0,
     height: ITEM_HEIGHT * HALF,
     backgroundColor: Colors.cardBg,
-    opacity: 0.88,
+    opacity: 0.55,
     zIndex: 1,
   },
   fadeBottom: {
@@ -174,11 +174,11 @@ const styles = StyleSheet.create({
     bottom: 0, left: 0, right: 0,
     height: ITEM_HEIGHT * HALF,
     backgroundColor: Colors.cardBg,
-    opacity: 0.88,
+    opacity: 0.55,
     zIndex: 1,
   },
   itemsContainer: {
-    // paddingVertical is set inline
+    zIndex: 2,
   },
   item: {
     height: ITEM_HEIGHT,
@@ -186,14 +186,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   itemText: {
-    fontSize: 26,
+    fontSize: FontSize.xxl,
     color: Colors.textHint,
-    fontWeight: '500',
+    fontWeight: Weight.medium,
     fontVariant: ['tabular-nums'],
   },
   colon: {
-    fontSize: 32,
-    fontWeight: '700',
+    fontSize: FontSize.display,
+    fontWeight: Weight.bold,
     color: Colors.primary,
     marginHorizontal: Spacing.md,
     marginTop: 20,

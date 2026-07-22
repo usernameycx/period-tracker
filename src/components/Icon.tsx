@@ -39,7 +39,8 @@ export type IconName =
   | 'battery'     // Battery for energy/normal
   | 'location'    // Map pin for city/location
   | 'edit'        // Pencil/edit
-  | 'moon';       // Crescent moon for evening
+  | 'moon'        // Crescent moon for evening
+  | 'wind';       // Wind lines for weather
 
 // Ellipse helper — SVG <ellipse> with center coordinates
 function Ellipse2({ cx, cy, rx, ry, ...rest }: { cx: number; cy: number; rx: number; ry: number; [key: string]: any }) {
@@ -384,6 +385,12 @@ const PATHS: Record<IconName, (color: string) => React.ReactElement> = {
     <Path
       d="M 20,14 A 8,8 0 0,1 6,6 A 8.5,8.5 0 1,0 20,14 Z"
       fill="none" stroke={c} strokeWidth="1.5" strokeLinejoin="round"
+    />
+  ),
+  wind: (c) => (
+    <Path
+      d="M 3,8 C 7,6 13,9 16,8 M 3,12 C 8,10 14,13 18,12 M 3,16 C 6,15 11,17 14,16"
+      fill="none" stroke={c} strokeWidth="1.5" strokeLinecap="round"
     />
   ),
 };

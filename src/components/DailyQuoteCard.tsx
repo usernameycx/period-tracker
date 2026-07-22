@@ -4,7 +4,7 @@ import { usePeriod } from '../context/PeriodContext';
 import { useCurrentPhase } from '../hooks/useCurrentPhase';
 import { getDailyQuote } from '../services/quotes';
 import { Phase, PHASE_ICONS } from '../constants/phases';
-import { Colors, Spacing, FontSize, Radius, Shadow } from '../constants/theme';
+import { Colors, Spacing, FontSize, Weight, Radius, LineHeight } from '../constants/theme';
 import Icon from './Icon';
 import type { IconName } from './Icon';
 
@@ -20,52 +20,51 @@ export default function DailyQuoteCard({ refreshKey = 0, date }: { refreshKey?: 
         phaseIcon: 'leaf' as IconName,
       };
     }
-
     const phase: Phase = phaseInfo?.phase || 'follicular';
     const quote = getDailyQuote(today, phase, refreshKey);
     return { quote, phaseIcon: PHASE_ICONS[phase] };
   }, [records, phaseInfo, refreshKey, today]);
 
-  if (loading) return null;
+  if (loading) {
+    return (
+      <View style={[styles.row, styles.skeleton]}>
+        <View style={{ marginTop: 3 }}><Icon name="leaf" size={14} color={Colors.primaryLight} /></View>
+        <View style={styles.skeletonBar} />
+      </View>
+    );
+  }
 
   return (
-    <View style={styles.card}>
-      <Text style={styles.quoteMark}>"</Text>
-      <View style={styles.content}>
-        <Icon name={phaseIcon} size={22} color={Colors.primary} />
-        <Text style={styles.text}>{quote.text}</Text>
-      </View>
+    <View style={styles.row}>
+      <View style={{ marginTop: 3 }}><Icon name={phaseIcon} size={14} color={Colors.primary} /></View>
+      <Text style={styles.text} numberOfLines={2}>{quote.text}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: Colors.surfaceWarm,
-    borderRadius: Radius.lg,
-    paddingVertical: Spacing.lg,
-    paddingHorizontal: Spacing.lg,
-    marginBottom: Spacing.cardGap,
+  row: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: Spacing.sm,
-    borderWidth: 1,
-    borderColor: Colors.inkBg,
-    ...Shadow.raised,
+    backgroundColor: Colors.primaryBg,
+    borderRadius: Radius.md,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.md,
   },
-  quoteMark: {
-    fontSize: 40,
-    fontWeight: '300',
-    color: Colors.accentWarm,
-    opacity: 0.25,
-    lineHeight: 36,
-    marginTop: -2,
-  },
-  content: {
+  text: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
+    fontSize: FontSize.sm,
+    color: Colors.textSecondary,
+    lineHeight: LineHeight.sm2,
+    fontWeight: Weight.regular,
   },
-  text: { flex: 1, fontSize: FontSize.md, color: Colors.textSecondary, lineHeight: 22, fontWeight: '500' },
+  skeleton: { opacity: 0.5 },
+  skeletonBar: {
+    flex: 1,
+    height: 14,
+    backgroundColor: Colors.primaryLight,
+    borderRadius: Radius.xs,
+    opacity: 0.3,
+  },
 });

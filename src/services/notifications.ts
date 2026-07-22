@@ -74,8 +74,8 @@ export async function schedulePeriodReminders(): Promise<void> {
 
     // Schedule reminders: 3 days before, 1 day before
     const reminderDays = [
-      { daysBefore: 3, title: '⏰ 经期临近', body: '预计3天后经期到来，记得准备卫生用品哦~' },
-      { daysBefore: 1, title: '🌸 经期将至', body: '预计明天是经期第一天，今天注意保暖和休息~' },
+      { daysBefore: 3, title: '⏰ 经期临近', body: '预计3天后经期到来，记得准备卫生用品哦' },
+      { daysBefore: 1, title: '🌸 经期将至', body: '预计明天是经期第一天，今天注意保暖和休息' },
     ];
 
     const newIds: string[] = [];
@@ -110,7 +110,7 @@ async function buildNotificationContent(): Promise<{ title: string; body: string
     if (records.length === 0) {
       return {
         title: '🌸 FayeTide',
-        body: '打开 App 录入你的经期记录吧~',
+        body: '打开 App 录入你的经期记录吧',
       };
     }
 
@@ -133,21 +133,24 @@ async function buildNotificationContent(): Promise<{ title: string; body: string
     const title = `${PHASE_LABELS[phase]} · 第${dayOffset}天`;
 
     let body = '';
-    if (weather) {
+    if (weather && rule) {
       const wa = getWeatherAdvice(weather.weatherCode);
-      body += `${wa.icon} ${weather.temperature}° ${wa.condition}`;
+      const foods = rule.recommend.slice(0, 3).join('、');
+      body = `今天${wa.condition}${weather.temperature}°，适合吃${foods}`;
+    } else if (weather) {
+      const wa = getWeatherAdvice(weather.weatherCode);
+      body = `今天${wa.condition}${weather.temperature}°`;
+    } else if (rule) {
+      const foods = rule.recommend.slice(0, 3).join('、');
+      body = `推荐${foods}`;
     }
-    if (rule) {
-      if (body) body += ' | ';
-      body += `✅${rule.recommend.slice(0, 3).join('、')}`;
-    }
-    if (!body) body = '打开 App 查看今日详情~';
+    if (!body) body = '打开 App 查看今日详情';
 
     return { title, body };
   } catch {
     return {
       title: '🌸 FayeTide',
-      body: '打开 App 查看今日的天气和饮食建议吧~',
+      body: '打开 App 查看今日的天气和饮食建议吧',
     };
   }
 }
@@ -155,7 +158,7 @@ async function buildNotificationContent(): Promise<{ title: string; body: string
 /** Retrieves cached weather using the user's city setting. */
 async function getCachedWeatherForNotification() {
   try {
-    const cityKey = (await AsyncStorage.getMany(['city'])).city || '南昌';
+    const cityKey = (await AsyncStorage.getItem('city')) || '南昌';
     const geo = await geocodeCity(cityKey);
     if (geo) {
       return await getCachedWeather(geo.lat, geo.lon);

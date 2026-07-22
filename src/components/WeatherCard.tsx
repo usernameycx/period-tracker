@@ -1,281 +1,199 @@
-import React from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Modal, TextInput } from 'react-native';
 import { useWeather } from '../context/WeatherContext';
 import { useSettings } from '../context/SettingsContext';
 import { useCurrentPhase } from '../hooks/useCurrentPhase';
 import { getLifeAdvice } from '../services/advice';
-import { Colors, Spacing, FontSize, Radius, Shadow } from '../constants/theme';
+import PressableScale from './PressableScale';
+import { Colors, Spacing, FontSize, Radius, Shadow, Weight, LineHeight } from '../constants/theme';
 import Icon from './Icon';
 
-const WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六'];
-
 export default function WeatherCard() {
-  const { weather, loading, error } = useWeather();
-  const { city } = useSettings();
+  const { weather, loading, error, refresh } = useWeather();
+  const { city, setCity } = useSettings();
   const phaseInfo = useCurrentPhase();
-
-  const d = new Date();
-  const todayStr = `${d.getMonth() + 1}月${d.getDate()}日 星期${WEEKDAYS[d.getDay()]}`;
+  const [cityModal, setCityModal] = useState(false);
+  const [cityInput, setCityInput] = useState('');
 
   if (loading) {
     return (
-      <View style={[styles.card, { alignItems: 'center', paddingVertical: 30 }]}>
-        <ActivityIndicator color={Colors.accentWarm} />
-        <Text style={styles.loadingText}>获取天气中...</Text>
+      <View style={styles.card}>
+        <View style={styles.hero}>
+          <View style={styles.skeletonIcon} />
+          <View style={{ flex: 1, gap: 6 }}>
+            <View style={[styles.skeletonBar, { width: '40%', height: 28 }]} />
+            <View style={[styles.skeletonBar, { width: '60%', height: 14 }]} />
+          </View>
+        </View>
+        <View style={styles.metrics}>
+          {[1,2,3].map(i => <View key={i} style={[styles.skeletonBar, { flex: 1, height: 32 }]} />)}
+        </View>
       </View>
     );
   }
 
   if (!weather) {
     return (
-      <View style={[styles.card, { alignItems: 'center', paddingVertical: 30 }]}>
-        <Text style={styles.errorText}>{error ?? '暂无天气数据'}</Text>
+      <View style={styles.card}>
+        <View style={styles.emptyWrap}>
+          <Icon name="weather" size={28} color={Colors.textHint} />
+          <Text style={styles.emptyText}>{error ?? '暂无天气数据'}</Text>
+        </View>
       </View>
     );
   }
 
+  const feelsDiff = Math.abs(weather.feelsLike - weather.temperature);
+  const showFeelsLike = feelsDiff >= 2;
+
+  // Wind level (Beaufort scale, km/h)
+  const windKmh = weather.windSpeed ?? 0;
+  const windLevel = windKmh < 2 ? 0 : windKmh < 6 ? 1 : windKmh < 12 ? 2 : windKmh < 20 ? 3 : windKmh < 29 ? 4 : windKmh < 39 ? 5 : 6;
+  const windColor = windLevel <= 1 ? Colors.success : windLevel <= 3 ? Colors.primary : Colors.warning;
+  const windLabel = windLevel === 0 ? '微风' : windLevel <= 2 ? '轻风' : windLevel <= 4 ? '和风' : '强风';
+
   return (
     <View style={styles.card}>
-      {/* Hero: big emoji + temp */}
+      {/* Hero: emoji + temp + city/date */}
       <View style={styles.hero}>
-        <Text style={styles.weatherEmoji}>{weather.icon}</Text>
-        <View style={styles.heroText}>
-          <Text style={styles.temp}>{weather.temperature}°</Text>
+        <Text style={styles.emoji}>{weather.icon}</Text>
+        <View style={{ flex: 1 }}>
+          <View style={styles.tempRow}>
+            <Text style={styles.temp}>{weather.temperature}°</Text>
+            {showFeelsLike && <Text style={styles.feels}>体感 {weather.feelsLike}°</Text>}
+          </View>
           <Text style={styles.condition}>{weather.condition}</Text>
         </View>
-        <View style={styles.heroRight}>
-          <View style={styles.cityBadge}>
+        <PressableScale style={styles.locBox} onPress={() => { setCityInput(city); setCityModal(true); }}>
+          <View style={styles.locPill}>
             <Icon name="location" size={10} color={Colors.primary} />
-            <Text style={styles.cityText}>{city}</Text>
+            <Text style={styles.locText}>{city}</Text>
           </View>
-          <Text style={styles.dateText}>{todayStr}</Text>
-        </View>
+          <Text style={styles.dateText}>{new Date().getMonth() + 1}月{new Date().getDate()}日</Text>
+        </PressableScale>
       </View>
 
-      {/* Divider with accent dot */}
-      <View style={styles.dividerRow}>
-        <View style={styles.dividerLine} />
-        <View style={styles.dividerDot} />
-        <View style={styles.dividerLine} />
+      {/* Advice */}
+      <View style={styles.advice}>
+        <Icon name={phaseInfo ? 'sparkle' : 'bulb'} size={14} color={phaseInfo ? Colors.primary : Colors.textHint} />
+        {phaseInfo ? (
+          <Text style={styles.adviceText}>{getLifeAdvice(phaseInfo.phase, weather)}</Text>
+        ) : (
+          <Text style={styles.advicePlaceholder}>记录经期后查看阶段生活建议</Text>
+        )}
       </View>
 
-      {/* Weather advice */}
-      <View style={styles.adviceRow}>
-        <View style={styles.adviceIconWrap}>
-          <Icon name="bulb" size={14} color={Colors.warning} />
-        </View>
-        <Text style={styles.advice}>{weather.advice}</Text>
-      </View>
-
-      {/* Phase life advice */}
-      {phaseInfo && (
-        <View style={styles.phaseAdvice}>
-          <Icon name="sparkle" size={14} color={Colors.accentWarm} />
-          <Text style={styles.phaseAdviceText}>{getLifeAdvice(phaseInfo.phase, weather)}</Text>
-        </View>
-      )}
-
-      {/* Detail rows — stacked vertically so long text is never clipped */}
-      <View style={styles.detailsSection}>
-        <View style={styles.detailRow}>
-          <View style={styles.detailIconWrap}>
+      {/* Metrics */}
+      <View style={styles.metrics}>
+        <View style={styles.metric}>
+          <View style={[styles.metricIcon, { backgroundColor: Colors.warning + '18' }]}>
             <Icon name="sun" size={16} color={Colors.warning} />
           </View>
-          <View style={styles.detailBody}>
-            <View style={styles.detailHead}>
-              <Text style={styles.detailLabel}>紫外线</Text>
-              <Text style={styles.detailValue}>UV {weather.uvIndex}</Text>
-            </View>
-            <Text style={styles.detailSub}>{weather.uvAdvice}</Text>
-          </View>
+          <Text style={styles.metricVal}>UV{weather.uvIndex}</Text>
+          <Text style={styles.metricLabel}>紫外线</Text>
         </View>
-        <View style={styles.detailDivider} />
-        <View style={styles.detailRow}>
-          <View style={styles.detailIconWrap}>
-            <Icon name="drop" size={16} color={Colors.accentWarm} />
+        <View style={styles.metric}>
+          <View style={[styles.metricIcon, { backgroundColor: Colors.primary + '18' }]}>
+            <Icon name="drop" size={16} color={Colors.primary} />
           </View>
-          <View style={styles.detailBody}>
-            <View style={styles.detailHead}>
-              <Text style={styles.detailLabel}>湿度</Text>
-              <Text style={styles.detailValue}>{weather.humidity}%</Text>
-            </View>
+          <Text style={styles.metricVal}>{weather.humidity}%</Text>
+          <Text style={styles.metricLabel}>湿度</Text>
+        </View>
+        <View style={styles.metric}>
+          <View style={[styles.metricIcon, { backgroundColor: windColor + '22' }]}>
+            <Icon name="wind" size={16} color={windColor} />
           </View>
+          <Text style={styles.metricVal}>{windLevel}级</Text>
+          <Text style={styles.metricLabel}>{windLabel}</Text>
         </View>
       </View>
+
+      {/* City edit modal */}
+      <Modal visible={cityModal} transparent animationType="fade" onRequestClose={() => setCityModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>切换城市</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={cityInput}
+              onChangeText={setCityInput}
+              placeholder="输入城市名"
+              placeholderTextColor={Colors.textHint}
+              autoFocus
+            />
+            <View style={styles.modalBtns}>
+              <PressableScale style={styles.modalCancel} onPress={() => setCityModal(false)}>
+                <Text style={styles.modalCancelT}>取消</Text>
+              </PressableScale>
+              <PressableScale style={styles.modalConfirm} onPress={() => {
+                const t = cityInput.trim();
+                if (t) { setCity(t); refresh(); }
+                setCityModal(false);
+              }}>
+                <Text style={styles.modalConfirmT}>确认</Text>
+              </PressableScale>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.surfaceWarm,
-    borderRadius: Radius.lg,
-    padding: Spacing.xl,
-    marginBottom: Spacing.cardGap,
-    borderWidth: 1,
-    borderColor: Colors.inkBg,
-    ...Shadow.raised,
-  },
-
-  /* Hero */
-  hero: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  weatherEmoji: {
-    fontSize: 48,
-    lineHeight: 52,
-    marginRight: Spacing.md,
-  },
-  heroText: {
-    flex: 1,
-  },
-  temp: {
-    fontSize: 30,
-    fontWeight: '800',
-    color: Colors.accentWarm,
-    letterSpacing: -1,
-  },
-  condition: {
-    fontSize: FontSize.sm,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
-  heroRight: {
-    alignItems: 'flex-end',
-    gap: Spacing.xs,
-  },
-  cityBadge: {
-    backgroundColor: Colors.primaryBg,
-    borderRadius: Radius.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    borderWidth: 1,
-    borderColor: Colors.primaryLight,
-  },
-  cityText: {
-    fontSize: FontSize.sm,
-    color: Colors.primary,
-    fontWeight: '600',
-  },
-  dateText: {
-    fontSize: FontSize.xs,
-    color: Colors.textSecondary,
-  },
-
-  /* Divider */
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: Spacing.md,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: Colors.inkBg,
-  },
-  dividerDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: Colors.accentWarm,
-    marginHorizontal: Spacing.sm,
-  },
-
-  /* Advice */
-  adviceRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Spacing.sm,
-    marginBottom: Spacing.sm,
-  },
-  adviceIconWrap: {
-    backgroundColor: Colors.warning + '18',
-    borderRadius: Radius.sm,
-    padding: Spacing.xs,
-    marginTop: 1,
-  },
-  advice: {
-    fontSize: FontSize.sm2,
-    color: Colors.textSecondary,
-    lineHeight: 20,
-    flex: 1,
-  },
-
-  /* Phase advice */
-  phaseAdvice: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Spacing.sm,
-    backgroundColor: Colors.primaryBg,
-    borderRadius: Radius.sm,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-    marginBottom: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.primaryLight,
-  },
-  phaseAdviceText: {
-    fontSize: FontSize.sm,
-    color: Colors.ink,
-    lineHeight: 20,
-    flex: 1,
-  },
-
-  /* Detail section — vertical stack, full width, no text clipping */
-  detailsSection: {
     backgroundColor: Colors.cardBg,
-    borderRadius: Radius.md,
-    borderWidth: 1,
-    borderColor: Colors.divider,
-    overflow: 'hidden',
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.md,
-    gap: Spacing.md,
-  },
-  detailIconWrap: {
-    width: 32, height: 32, borderRadius: Radius.sm,
-    backgroundColor: Colors.surfaceWarm,
-    alignItems: 'center', justifyContent: 'center',
-    marginTop: 1,
-  },
-  detailBody: {
-    flex: 1,
-  },
-  detailHead: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: Spacing.sm,
-  },
-  detailLabel: {
-    fontSize: FontSize.sm,
-    color: Colors.textSecondary,
-    fontWeight: '500',
-  },
-  detailValue: {
-    fontSize: FontSize.sm,
-    fontWeight: '700',
-    color: Colors.ink,
-  },
-  detailSub: {
-    fontSize: FontSize.xs,
-    color: Colors.textMuted,
-    marginTop: 3,
-    lineHeight: 18,
-  },
-  detailDivider: {
-    height: 1,
-    backgroundColor: Colors.divider,
-    marginHorizontal: Spacing.md,
+    borderRadius: Radius.xl,
+    padding: Spacing.lg,
+    marginBottom: Spacing.cardGap,
+    ...Shadow.card,
   },
 
-  loadingText: { marginTop: Spacing.sm, color: Colors.textMuted, fontSize: FontSize.sm },
-  errorText: { color: Colors.textMuted, fontSize: FontSize.sm2 },
+  /* ── Location ── */
+  locBox: { alignItems: 'flex-end', gap: Spacing.xs },
+  locPill: { backgroundColor: Colors.primaryBg, borderRadius: Radius.full, paddingHorizontal: Spacing.sm, paddingVertical: 3, flexDirection: 'row', alignItems: 'center', gap: 4 },
+  locText: { fontSize: FontSize.xs, color: Colors.primary, fontWeight: Weight.semibold },
+  dateText: { fontSize: FontSize.xs, color: Colors.textMuted },
+
+  /* ── Hero ── */
+  hero: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, marginBottom: Spacing.lg },
+  emoji: { fontSize: 52 },
+  tempRow: { flexDirection: 'row', alignItems: 'baseline', gap: Spacing.sm },
+  temp: { fontSize: 40, fontWeight: Weight.extrabold, color: Colors.primary, letterSpacing: -2 },
+  feels: { fontSize: FontSize.xs, color: Colors.textMuted },
+  condition: { fontSize: FontSize.sm2, color: Colors.textSecondary, marginTop: 2 },
+
+  /* ── Advice ── */
+  advice: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.sm,
+    backgroundColor: Colors.primaryBg, borderRadius: Radius.md,
+    padding: Spacing.md, marginBottom: Spacing.lg,
+    borderLeftWidth: 3, borderLeftColor: Colors.primary,
+  },
+  adviceText: { flex: 1, fontSize: FontSize.sm, color: Colors.text, lineHeight: LineHeight.sm2 },
+  advicePlaceholder: { flex: 1, fontSize: FontSize.sm, color: Colors.textHint },
+
+  /* ── Metrics ── */
+  metrics: { flexDirection: 'row', gap: Spacing.sm },
+  metric: { flex: 1, alignItems: 'center', gap: Spacing.xs },
+  metricIcon: { width: 36, height: 36, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
+  metricVal: { fontSize: FontSize.md, fontWeight: Weight.bold, color: Colors.ink },
+  metricLabel: { fontSize: FontSize.xs, color: Colors.textMuted },
+
+  /* ── Empty / Loading ── */
+  emptyWrap: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.md, paddingVertical: Spacing.lg },
+  emptyText: { color: Colors.textMuted, fontSize: FontSize.sm2 },
+  skeletonIcon: { width: 44, height: 44, borderRadius: Radius.md, backgroundColor: Colors.inkBg },
+  skeletonBar: { backgroundColor: Colors.inkBg, borderRadius: Radius.xs, opacity: 0.5 },
+
+  /* ── City modal ── */
+  modalOverlay: { flex: 1, backgroundColor: Colors.overlay, justifyContent: 'center', alignItems: 'center', padding: Spacing.xxxl },
+  modalCard: { backgroundColor: Colors.cardBg, borderRadius: Radius.xxl, padding: Spacing.xxl, width: '100%', maxWidth: 300, ...Shadow.prominent },
+  modalTitle: { fontSize: FontSize.lg, fontWeight: Weight.extrabold, color: Colors.text, marginBottom: Spacing.lg, textAlign: 'center' },
+  modalInput: { borderWidth: 1, borderColor: Colors.primaryLight, borderRadius: Radius.md, padding: Spacing.md, fontSize: FontSize.base, color: Colors.text, marginBottom: Spacing.lg, textAlign: 'center' },
+  modalBtns: { flexDirection: 'row', gap: Spacing.md, justifyContent: 'center' },
+  modalCancel: { paddingVertical: Spacing.sm, paddingHorizontal: Spacing.xl },
+  modalCancelT: { fontSize: FontSize.md, color: Colors.textMuted, fontWeight: Weight.semibold },
+  modalConfirm: { backgroundColor: Colors.primary, borderRadius: Radius.md, paddingVertical: Spacing.sm, paddingHorizontal: Spacing.xxl },
+  modalConfirmT: { fontSize: FontSize.md, color: Colors.white, fontWeight: Weight.bold },
 });

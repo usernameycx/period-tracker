@@ -54,8 +54,7 @@ export function PeriodProvider({ children }: { children: ReactNode }) {
         const dist = Math.abs(diffDays(parseDate(rec.start_date), newDate));
         if (dist > 0 && dist < MIN_CYCLE_DAYS) {
           throw new Error(
-            `与已有经期记录（${rec.start_date}）仅相隔 ${dist} 天。` +
-            `正常周期至少 ${MIN_CYCLE_DAYS} 天，请确认日期是否正确。`
+            `两次经期间隔太近（仅${dist}天），一般至少需要${MIN_CYCLE_DAYS}天。是不是点错了日期？`
           );
         }
       }

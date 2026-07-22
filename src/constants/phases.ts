@@ -25,8 +25,8 @@ export const MIN_RECORDS_FOR_PREDICTION = 2;
 
 /** Calendar cell background colors for each phase */
 export const PHASE_COLORS: Record<Phase, string> = {
-  period: '#FFB6C1',
-  follicular: '#80CBC4',
-  ovulation: '#B39DDB',
-  luteal: '#FFD54F',
+  period: '#F2D5C5',
+  follicular: '#D6E4D0',
+  ovulation: '#EDE0C8',
+  luteal: '#E6DBD5',
 };

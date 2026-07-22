@@ -21,12 +21,20 @@ interface BackupData {
 export async function exportData(): Promise<string> {
   const db = await getDatabase();
 
-  const [records, dietRules, symptoms, settingsKeys] = await Promise.all([
+  const [records, dietRules, symptoms, cityVal, hourVal, minVal] = await Promise.all([
     getAllPeriodRecords(db),
     getAllDietRules(db),
     getAllSymptoms(db),
-    AsyncStorage.getMany(['city', 'notifyHour', 'notifyMinute']),
+    AsyncStorage.getItem('city'),
+    AsyncStorage.getItem('notifyHour'),
+    AsyncStorage.getItem('notifyMinute'),
   ]);
+
+  const settingsKeys: Record<string, string | null> = {
+    city: cityVal,
+    notifyHour: hourVal,
+    notifyMinute: minVal,
+  };
 
   const backup: BackupData = {
     version: 1,

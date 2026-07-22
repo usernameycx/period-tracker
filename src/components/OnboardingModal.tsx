@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSettings } from '../context/SettingsContext';
-import { Colors, Spacing, FontSize, Radius, Shadow } from '../constants/theme';
+import { Colors, Spacing, FontSize, Radius, Shadow, Weight, LineHeight } from '../constants/theme';
 import PressableScale from './PressableScale';
 import Icon from './Icon';
 import type { IconName } from './Icon';
@@ -110,17 +110,17 @@ export default function OnboardingModal() {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1, backgroundColor: Colors.overlay,
-    justifyContent: 'center', alignItems: 'center', padding: 32,
+    justifyContent: 'center', alignItems: 'center', padding: Spacing.xxxl,
   },
   card: {
     backgroundColor: Colors.cardBg, borderRadius: Radius.xl,
-    padding: 32, alignItems: 'center', width: '100%', maxWidth: 320,
+    padding: Spacing.xxxl, alignItems: 'center', width: '100%', maxWidth: 320,
     ...Shadow.card,
   },
-  iconWrap: { marginBottom: 16 },
-  title: { fontSize: FontSize.xl, fontWeight: '800', color: Colors.text, marginBottom: 8 },
-  desc: { fontSize: FontSize.md, color: Colors.textSecondary, textAlign: 'center', lineHeight: 24 },
-  dots: { flexDirection: 'row', gap: 8, marginTop: 24 },
+  iconWrap: { marginBottom: Spacing.lg },
+  title: { fontSize: FontSize.xl, fontWeight: Weight.extrabold, color: Colors.text, marginBottom: Spacing.sm },
+  desc: { fontSize: FontSize.md, color: Colors.textSecondary, textAlign: 'center', lineHeight: LineHeight.base },
+  dots: { flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.xxl },
   cityInput: {
     width: '100%', borderWidth: 2, borderColor: Colors.primaryLight, borderRadius: Radius.md,
     padding: Spacing.md, fontSize: FontSize.base, textAlign: 'center', color: Colors.text,
@@ -129,10 +129,10 @@ const styles = StyleSheet.create({
   dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.divider },
   dotActive: { backgroundColor: Colors.primary, width: 20 },
   btn: {
-    marginTop: 24, backgroundColor: Colors.primary, borderRadius: Radius.full,
-    paddingVertical: 14, paddingHorizontal: 40,
+    marginTop: Spacing.xxl, backgroundColor: Colors.primary, borderRadius: Radius.full,
+    paddingVertical: Spacing.lg, paddingHorizontal: 40,
   },
-  btnText: { color: Colors.white, fontSize: FontSize.md, fontWeight: '700' },
-  skipBtn: { marginTop: 12, padding: 8 },
+  btnText: { color: Colors.white, fontSize: FontSize.md, fontWeight: Weight.bold },
+  skipBtn: { marginTop: Spacing.md, padding: Spacing.sm },
   skipText: { color: Colors.textHint, fontSize: FontSize.sm },
 });

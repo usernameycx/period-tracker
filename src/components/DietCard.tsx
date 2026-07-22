@@ -5,7 +5,7 @@ import { useCurrentPhase } from '../hooks/useCurrentPhase';
 import { getDatabase } from '../db/database';
 import { getDietRules, DietRule } from '../db/diet-rules';
 import { Phase, PHASE_LABELS } from '../constants/phases';
-import { Colors, Spacing, FontSize, Radius, sharedCard } from '../constants/theme';
+import { Colors, Spacing, FontSize, Radius, sharedCard, Weight, LineHeight } from '../constants/theme';
 import Icon from './Icon';
 
 export default function DietCard() {
@@ -28,10 +28,13 @@ export default function DietCard() {
     return (
       <View style={sharedCard.base}>
         <View style={styles.titleRow}>
-          <Icon name="diet" size={18} color={Colors.accentWarm} />
+          <Icon name="diet" size={18} color={Colors.primary} />
           <Text style={styles.title}>今日饮食</Text>
         </View>
-        <Text style={styles.empty}>暂无推荐数据，录入经期后可查看</Text>
+        <View style={styles.placeholderWrap}>
+          <Icon name="leaf" size={24} color={Colors.primaryLight} />
+          <Text style={styles.placeholderText}>记录经期后，这里会显示{'\n'}适合当天的饮食建议</Text>
+        </View>
       </View>
     );
   }
@@ -39,7 +42,7 @@ export default function DietCard() {
   return (
     <View style={sharedCard.base}>
       <View style={styles.titleRow}>
-        <Icon name="diet" size={18} color={Colors.accentWarm} />
+        <Icon name="diet" size={18} color={Colors.primary} />
         <Text style={styles.title}>{PHASE_LABELS[diet.phase]} · 第{diet.day_offset}天 饮食建议</Text>
       </View>
       <View style={styles.section}>
@@ -70,18 +73,22 @@ export default function DietCard() {
 
 const styles = StyleSheet.create({
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: Spacing.md },
-  title: { fontSize: FontSize.lg, fontWeight: '700', color: Colors.text, flex: 1 },
+  title: { fontSize: FontSize.lg, fontWeight: Weight.bold, color: Colors.text, flex: 1 },
   section: { marginBottom: Spacing.md },
   labelRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, marginBottom: Spacing.sm },
-  label: { fontSize: FontSize.sm2, fontWeight: '600', color: Colors.textSecondary },
+  label: { fontSize: FontSize.sm2, fontWeight: Weight.semibold, color: Colors.textSecondary },
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
   recTag: {
-    backgroundColor: Colors.primaryBg, borderRadius: Radius.full,
+    backgroundColor: Colors.botanicalBg, borderRadius: Radius.full,
     paddingHorizontal: Spacing.md, paddingVertical: Spacing.xs,
-    borderWidth: 1, borderColor: Colors.primaryLight,
   },
-  recText: { fontSize: FontSize.sm, color: Colors.primary, fontWeight: '600' },
+  recText: { fontSize: FontSize.sm, color: Colors.botanical, fontWeight: Weight.semibold },
   avoidTag: { backgroundColor: Colors.dangerBg, borderRadius: Radius.full, paddingHorizontal: Spacing.md, paddingVertical: Spacing.xs },
-  avoidText: { fontSize: FontSize.sm, color: Colors.danger, fontWeight: '500' },
+  avoidText: { fontSize: FontSize.sm, color: Colors.danger, fontWeight: Weight.medium },
   empty: { color: Colors.textHint, fontSize: FontSize.sm2, textAlign: 'center', marginTop: Spacing.sm },
+  placeholderWrap: {
+    backgroundColor: Colors.primaryBg, borderRadius: Radius.md,
+    padding: Spacing.xl, alignItems: 'center', gap: Spacing.sm,
+  },
+  placeholderText: { fontSize: FontSize.sm, color: Colors.textMuted, textAlign: 'center', lineHeight: LineHeight.sm2 },
 });

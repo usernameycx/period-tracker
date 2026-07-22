@@ -8,6 +8,7 @@ export interface DisplayWeather {
   weatherCode: number;
   uvIndex: number;
   humidity: number;
+  windSpeed: number;
   condition: string;
   advice: string;
   uvAdvice: string;

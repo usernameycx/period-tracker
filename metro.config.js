@@ -2,6 +2,9 @@ const { getDefaultConfig } = require('expo/metro-config');
 
 const config = getDefaultConfig(__dirname);
 
+// lucide-react-native ships .mjs/.cjs — Metro needs these in its resolver extensions
+config.resolver.sourceExts = [...config.resolver.sourceExts, 'mjs', 'cjs'];
+
 // Add WASM asset support for expo-sqlite on web
 config.resolver.assetExts.push('wasm');
 

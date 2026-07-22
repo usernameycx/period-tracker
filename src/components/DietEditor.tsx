@@ -3,7 +3,7 @@ import { View, Text, TextInput, StyleSheet, ScrollView, Alert } from 'react-nati
 import { getDatabase } from '../db/database';
 import { getAllDietRules, updateDietRule, resetDietRulesToDefault, DietRule } from '../db/diet-rules';
 import { PHASE_LABELS, Phase } from '../constants/phases';
-import { Colors, Spacing, FontSize, Radius } from '../constants/theme';
+import { Colors, Spacing, FontSize, Radius, Weight, } from '../constants/theme';
 import PressableScale from './PressableScale';
 import Icon from './Icon';
 
@@ -111,22 +111,22 @@ const styles = StyleSheet.create({
   card: { backgroundColor: Colors.cardBg, borderRadius: Radius.lg, padding: Spacing.xl, marginBottom: Spacing.cardGap },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: Spacing.md },
-  title: { fontSize: FontSize.subtitle, fontWeight: '700', color: Colors.primary },
-  reset: { fontSize: FontSize.sm, color: Colors.danger, fontWeight: '600' },
+  title: { fontSize: FontSize.subtitle, fontWeight: Weight.bold, color: Colors.primary },
+  reset: { fontSize: FontSize.sm, color: Colors.danger, fontWeight: Weight.semibold },
   group: { marginBottom: Spacing.md },
-  phaseTitle: { fontSize: FontSize.md, fontWeight: '600', color: Colors.primary, marginBottom: Spacing.sm },
+  phaseTitle: { fontSize: FontSize.md, fontWeight: Weight.semibold, color: Colors.primary, marginBottom: Spacing.sm },
   ruleRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: Spacing.sm, borderBottomWidth: 1, borderBottomColor: Colors.primaryBg },
-  dayLabel: { width: 50, fontSize: FontSize.sm, color: Colors.textMuted, fontWeight: '600' },
+  dayLabel: { width: 50, fontSize: FontSize.sm, color: Colors.textMuted, fontWeight: Weight.semibold },
   rec: { fontSize: FontSize.xs, color: Colors.primary },
   av: { fontSize: FontSize.xs, color: Colors.danger, marginTop: 2 },
   dietInlineRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   editPanel: { backgroundColor: Colors.bg, borderRadius: Radius.md, padding: Spacing.lg, marginTop: Spacing.sm },
-  editTitle: { fontSize: FontSize.lg, fontWeight: '700', color: Colors.primary, marginBottom: Spacing.md },
+  editTitle: { fontSize: FontSize.lg, fontWeight: Weight.bold, color: Colors.primary, marginBottom: Spacing.md },
   inputLabel: { fontSize: FontSize.sm, color: Colors.textSecondary, marginBottom: Spacing.xs, marginTop: Spacing.sm },
-  input: { borderWidth: 1, borderColor: Colors.primaryLight, borderRadius: Radius.sm, padding: Spacing.md, fontSize: 14, color: Colors.text, minHeight: 50, textAlignVertical: 'top' },
+  input: { borderWidth: 1, borderColor: Colors.primaryLight, borderRadius: Radius.sm, padding: Spacing.md, fontSize: FontSize.sm2, color: Colors.text, minHeight: 50, textAlignVertical: 'top' },
   btnRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: Spacing.md, marginTop: Spacing.md },
   cancelBtn: { paddingVertical: Spacing.sm, paddingHorizontal: Spacing.xl },
-  cancelText: { color: Colors.textMuted, fontWeight: '600' },
+  cancelText: { color: Colors.textMuted, fontWeight: Weight.semibold },
   saveBtn: { backgroundColor: Colors.primary, borderRadius: Radius.sm, paddingVertical: Spacing.sm, paddingHorizontal: Spacing.xxl },
-  saveText: { color: Colors.white, fontWeight: '700' },
+  saveText: { color: Colors.white, fontWeight: Weight.bold },
 });

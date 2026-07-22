@@ -14,39 +14,38 @@ export interface CycleStats {
 export function computeCycleStats(records: PeriodRecord[]): CycleStats {
   const sorted = [...records].sort((a, b) => a.start_date.localeCompare(b.start_date));
 
-  const cycles: { start: string; length: number }[] = [];
+  const intervals: number[] = [];
   for (let i = 1; i < sorted.length; i++) {
-    const len = diffDays(parseDate(sorted[i].start_date), parseDate(sorted[i - 1].start_date));
-    if (len >= 21 && len <= 35) {
-      cycles.push({ start: sorted[i - 1].start_date, length: len });
-    }
+    intervals.push(diffDays(parseDate(sorted[i].start_date), parseDate(sorted[i - 1].start_date)));
   }
 
-  const totalCycles = cycles.length;
+  const totalCycles = intervals.length;
 
   if (totalCycles === 0) {
     return { totalCycles: 0, avgCycleLength: null, minCycleLength: null, maxCycleLength: null, regularity: null, regularityLabel: '暂无数据', cycles: [] };
   }
 
-  const lengths = cycles.map(c => c.length);
-  const avgCycleLength = Math.round(lengths.reduce((a, b) => a + b, 0) / totalCycles);
-  const minCycleLength = Math.min(...lengths);
-  const maxCycleLength = Math.max(...lengths);
+  const minCycleLength = Math.min(...intervals);
+  const maxCycleLength = Math.max(...intervals);
 
-  // Regularity: based on range (max - min)
-  const range = maxCycleLength - minCycleLength;
-  let regularity: CycleStats['regularity'];
-  let regularityLabel: string;
-  if (range <= 2) {
-    regularity = 'regular';
-    regularityLabel = '非常规律';
-  } else if (range <= 5) {
-    regularity = 'slightly_irregular';
-    regularityLabel = '基本规律';
+  // Average: use only biologically plausible intervals (21-35 days)
+  const valid = intervals.filter(n => n >= 21 && n <= 35);
+  const avgSource = valid.length > 0 ? valid : intervals;
+  const avgCycleLength = Math.round(avgSource.reduce((a, b) => a + b, 0) / avgSource.length);
+
+  // Regularity: need ≥2 intervals, use only valid ones
+  let regularity: CycleStats['regularity'] = null;
+  let regularityLabel = '';
+  if (valid.length >= 2) {
+    const range = Math.max(...valid) - Math.min(...valid);
+    if (range <= 2) { regularity = 'regular'; regularityLabel = '非常规律'; }
+    else if (range <= 5) { regularity = 'slightly_irregular'; regularityLabel = '基本规律'; }
+    else { regularity = 'irregular'; regularityLabel = '不太规律'; }
+  } else if (totalCycles >= 1) {
+    regularityLabel = '需要更多数据';
   } else {
-    regularity = 'irregular';
-    regularityLabel = '不太规律';
+    regularityLabel = '暂无数据';
   }
 
-  return { totalCycles, avgCycleLength, minCycleLength, maxCycleLength, regularity, regularityLabel, cycles };
+  return { totalCycles, avgCycleLength, minCycleLength, maxCycleLength, regularity, regularityLabel, cycles: [] };
 }

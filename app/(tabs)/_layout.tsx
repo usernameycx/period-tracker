@@ -4,16 +4,16 @@ import { Animated, Pressable } from 'react-native';
 import { SelectedDateProvider } from '../../src/context/SelectedDateContext';
 import OnboardingModal from '../../src/components/OnboardingModal';
 import Icon, { IconName } from '../../src/components/Icon';
-import { Colors, Radius, Spacing, FontSize } from '../../src/constants/theme';
+import { Colors, Radius, Spacing, FontSize, Weight } from '../../src/constants/theme';
 
 function TabIcon({ name, focused, color }: { name: IconName; focused: boolean; color: string }) {
   const scale = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     Animated.spring(scale, {
-      toValue: focused ? 1.15 : 1,
+      toValue: focused ? 1.12 : 1,
       speed: 14,
-      bounciness: 6,
+      bounciness: 0,
       useNativeDriver: true,
     }).start();
   }, [focused, scale]);
@@ -25,7 +25,6 @@ function TabIcon({ name, focused, color }: { name: IconName; focused: boolean; c
   );
 }
 
-/** Custom tab button that suppresses the default Android ripple for a clean feel. */
 function TabButton(props: any) {
   return (
     <Pressable
@@ -48,17 +47,21 @@ export default function TabLayout() {
         tabBarActiveTintColor: Colors.primary,
         tabBarInactiveTintColor: Colors.textHint,
         tabBarStyle: {
-          borderTopLeftRadius: Radius.xl, borderTopRightRadius: Radius.xl,
-          height: 62, paddingBottom: Spacing.sm, paddingTop: 6,
+          borderTopLeftRadius: Radius.xxl,
+          borderTopRightRadius: Radius.xxl,
+          height: 64,
+          paddingBottom: Spacing.sm,
+          paddingTop: 6,
           backgroundColor: Colors.white,
-          shadowColor: Colors.ink,
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.06,
-          shadowRadius: 12,
-          elevation: 4,
-          borderTopWidth: 0,
+          shadowColor: 'transparent',
+          elevation: 0,
+          borderTopWidth: 1,
+          borderTopColor: Colors.divider,
         },
-        tabBarLabelStyle: { fontSize: FontSize.xs, fontWeight: '700' },
+        tabBarLabelStyle: {
+          fontSize: FontSize.xs,
+          fontWeight: Weight.bold,
+        },
       }}>
         <Tabs.Screen name="index" options={{ tabBarLabel: '今日', tabBarIcon: ({ focused, color }) => <TabIcon name="today" focused={focused} color={String(color)} />, tabBarButton: (props: any) => <TabButton {...props} /> }} />
         <Tabs.Screen name="calendar" options={{ tabBarLabel: '日历', tabBarIcon: ({ focused, color }) => <TabIcon name="calendar" focused={focused} color={String(color)} />, tabBarButton: (props: any) => <TabButton {...props} /> }} />

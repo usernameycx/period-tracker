@@ -2,8 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet, Alert } from 'react-native';
 import { usePeriod } from '../context/PeriodContext';
 import { useCurrentPhaseOrDefault } from '../hooks/useCurrentPhase';
-import { PHASE_LABELS, PHASE_ICONS, OVULATION_BEFORE_PERIOD, OVULATION_SPAN, DEFAULT_PERIOD_DAYS } from '../constants/phases';
-import { Colors, Spacing, FontSize, Radius, sharedCard } from '../constants/theme';
+import { PHASE_LABELS, PHASE_ICONS, OVULATION_BEFORE_PERIOD, OVULATION_SPAN, DEFAULT_PERIOD_DAYS, PHASE_COLORS } from '../constants/phases';
+import { Colors, Spacing, FontSize, Radius, Shadow, Weight, LineHeight } from '../constants/theme';
 import { todayStr } from '../utils/date';
 import Icon from './Icon';
 import PressableScale from './PressableScale';
@@ -34,13 +34,7 @@ export default function CycleStatusCard() {
   const alreadyRecorded = records.some(r => r.start_date === today);
 
   if (loading || records.length === 0) {
-    return (
-      <View style={sharedCard.prominent}>
-        <Icon name="clipboard" size={36} color={Colors.primaryLight} />
-        <Text style={styles.emptyText}>还没有经期记录</Text>
-        <Text style={styles.hint}>去日历页录入你的第一次经期吧~</Text>
-      </View>
-    );
+    return null;
   }
 
   const phaseDuration = (() => {
@@ -58,9 +52,14 @@ export default function CycleStatusCard() {
   const { daysUntilPeriod, daysUntilOvulation } = computeCountdowns(phaseInfo);
 
   return (
-    <View style={[sharedCard.prominent, styles.prominentCard]}>
-      <View style={styles.row}>
-        <Icon name={PHASE_ICONS[phaseInfo.phase]} size={36} color={Colors.primary} />
+    <View style={styles.card}>
+      {/* Top accent bar */}
+      <View style={[styles.accentBar, { backgroundColor: PHASE_COLORS[phaseInfo.phase] }]} />
+
+      <View style={styles.heroRow}>
+        <View style={styles.heroIconWrap}>
+          <Icon name={PHASE_ICONS[phaseInfo.phase]} size={38} color={Colors.primary} />
+        </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.phaseLabel}>
             {PHASE_LABELS[phaseInfo.phase]} · 第{phaseInfo.dayOffset}天
@@ -70,60 +69,54 @@ export default function CycleStatusCard() {
           </Text>
         </View>
       </View>
-      <View style={styles.progressBar}>
-        <View style={[styles.progress, { width: `${Math.min(100, (phaseInfo.dayOffset / phaseDuration) * 100)}%` }]} />
-      </View>
 
+      {/* Progress */}
+      <View style={styles.progressTrack}>
+        <View style={[styles.progressFill, { width: `${Math.min(100, (phaseInfo.dayOffset / phaseDuration) * 100)}%` }]} />
+      </View>
+      <Text style={styles.progressHint}>本阶段已过 {Math.round((phaseInfo.dayOffset / phaseDuration) * 100)}%</Text>
+
+      {/* Countdown */}
       <View style={styles.countdownRow}>
         {daysUntilPeriod > 0 && (
-          <View style={styles.countdownItem}>
-            <Icon name="blood" size={22} color={Colors.primary} />
-            <View>
-              <Text style={styles.countdownNumber}>{daysUntilPeriod}</Text>
-              <Text style={styles.countdownLabel}>天后经期</Text>
-            </View>
+          <View style={styles.countdownBox}>
+            <Text style={styles.countdownNum}>{daysUntilPeriod}</Text>
+            <Text style={styles.countdownLbl}>天后经期</Text>
           </View>
         )}
         {daysUntilPeriod <= 0 && daysUntilPeriod > -DEFAULT_PERIOD_DAYS && (
-          <View style={styles.countdownItem}>
-            <Icon name="blood" size={22} color={Colors.danger} />
-            <View>
-              <Text style={styles.countdownNumber}>进行中</Text>
-              <Text style={styles.countdownLabel}>经期第{-daysUntilPeriod + 1}天</Text>
-            </View>
+          <View style={[styles.countdownBox, { backgroundColor: Colors.dangerBg }]}>
+            <Text style={[styles.countdownNum, { color: Colors.danger }]}>进行中</Text>
+            <Text style={styles.countdownLbl}>经期第{-daysUntilPeriod + 1}天</Text>
           </View>
         )}
 
         {daysUntilOvulation !== null && daysUntilOvulation > 0 && (
-          <View style={styles.countdownItem}>
-            <Icon name="egg" size={22} color={Colors.primaryLight} />
-            <View>
-              <Text style={styles.countdownNumber}>{daysUntilOvulation}</Text>
-              <Text style={styles.countdownLabel}>天后排卵</Text>
+          <>
+            <View style={styles.cdDivider} />
+            <View style={styles.countdownBox}>
+              <Text style={styles.countdownNum}>{daysUntilOvulation}</Text>
+              <Text style={styles.countdownLbl}>天后排卵</Text>
             </View>
-          </View>
+          </>
         )}
         {daysUntilOvulation === 0 && (
-          <View style={styles.countdownItem}>
-            <Icon name="egg" size={22} color={Colors.accentWarm} />
-            <View>
-              <Text style={styles.countdownNumber}>进行中</Text>
-              <Text style={styles.countdownLabel}>排卵期</Text>
+          <>
+            <View style={styles.cdDivider} />
+            <View style={[styles.countdownBox, { backgroundColor: Colors.botanicalBg }]}>
+              <Text style={[styles.countdownNum, { color: Colors.success }]}>进行中</Text>
+              <Text style={styles.countdownLbl}>排卵期</Text>
             </View>
-          </View>
+          </>
         )}
       </View>
 
-      {/* Quick mark: one-tap period start when not in period and not already recorded today */}
       {!alreadyRecorded && phaseInfo.phase !== 'period' && (
-        <PressableScale
-          style={styles.quickMarkBtn}
-          onPress={async () => {
-            try { await addRecord(today); } catch (e: any) { Alert.alert('无法标记', e.message); }
-          }}
-        >
+        <PressableScale style={styles.quickBtn} onPress={async () => {
+          try { await addRecord(today); } catch (e: any) { Alert.alert('无法标记', e.message); }
+        }}>
           <Icon name="blood" size={18} color={Colors.white} />
-          <Text style={styles.quickMarkText}>今天来了</Text>
+          <Text style={styles.quickBtnText}>今天来了</Text>
         </PressableScale>
       )}
     </View>
@@ -131,26 +124,69 @@ export default function CycleStatusCard() {
 }
 
 const styles = StyleSheet.create({
-  prominentCard: { backgroundColor: Colors.cardBg, borderColor: Colors.primaryLight, borderWidth: 2 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  phaseLabel: { fontSize: FontSize.title, fontWeight: '700', color: Colors.ink },
-  nextText: { fontSize: FontSize.sm, color: Colors.textSecondary, marginTop: 4 },
+  /* ── Empty state ── */
+  emptyCard: {
+    backgroundColor: Colors.cardBg, borderRadius: Radius.xl,
+    padding: Spacing.xxl, alignItems: 'center', ...Shadow.card,
+  },
+  emptyIconWrap: {
+    width: 64, height: 64, borderRadius: 32,
+    backgroundColor: Colors.primaryBg,
+    alignItems: 'center', justifyContent: 'center', marginBottom: Spacing.md,
+  },
+  emptyTitle: { fontSize: FontSize.base, fontWeight: Weight.semibold, color: Colors.text, marginBottom: Spacing.xs },
+  emptySubtitle: { fontSize: FontSize.sm2, color: Colors.textMuted, textAlign: 'center' },
+  emptyHint: { fontSize: FontSize.sm2, color: Colors.textMuted, textAlign: 'center', lineHeight: LineHeight.md },
+
+  /* ── Card ── */
+  card: {
+    backgroundColor: Colors.cardBg,
+    borderRadius: Radius.xl,
+    padding: Spacing.xl,
+    ...Shadow.raised,
+    overflow: 'hidden',
+  },
+  accentBar: { height: 3, marginHorizontal: -Spacing.xl, marginTop: -Spacing.xl, marginBottom: Spacing.lg },
+  heroRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.lg,
+    marginBottom: Spacing.md,
+  },
+  heroIconWrap: {
+    width: 72, height: 72, borderRadius: 36,
+    backgroundColor: Colors.primaryBg,
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 2, borderColor: Colors.primary + '20',
+  },
+  phaseLabel: { fontSize: FontSize.xl, fontWeight: Weight.extrabold, color: Colors.ink, lineHeight: LineHeight.xl },
+  nextText: { fontSize: FontSize.sm, color: Colors.textSecondary, marginTop: 2 },
+
+  /* ── Empty ── */
   emptyText: { fontSize: FontSize.md, color: Colors.textSecondary, textAlign: 'center', marginTop: Spacing.sm },
   hint: { fontSize: FontSize.sm, color: Colors.textHint, textAlign: 'center', marginTop: Spacing.xs },
-  progressBar: { height: 6, backgroundColor: Colors.primaryBg, borderRadius: 3, marginTop: 14 },
-  progress: { height: 6, backgroundColor: Colors.primary, borderRadius: 3 },
-  countdownRow: { flexDirection: 'row', marginTop: 14, gap: Spacing.md },
-  countdownItem: {
-    flex: 1, flexDirection: 'row', alignItems: 'center',
-    backgroundColor: Colors.primaryBg, borderRadius: Radius.md, padding: Spacing.md, gap: 10,
+
+  /* ── Progress ── */
+  progressTrack: { height: 8, backgroundColor: Colors.primaryBg, borderRadius: 4, overflow: 'hidden' },
+  progressFill: { height: 8, backgroundColor: Colors.primary, borderRadius: 4 },
+  progressHint: { fontSize: FontSize.xs, color: Colors.textMuted, textAlign: 'right', marginTop: 4 },
+
+  /* ── Countdown ── */
+  countdownRow: { flexDirection: 'row', marginTop: Spacing.lg },
+  countdownBox: {
+    flex: 1, alignItems: 'center', paddingVertical: Spacing.lg,
+    backgroundColor: Colors.primaryBg, borderRadius: Radius.md,
   },
-  countdownNumber: { fontSize: FontSize.lg, fontWeight: '800', color: Colors.ink },
-  countdownLabel: { fontSize: FontSize.xs, color: Colors.textSecondary, marginTop: 1 },
-  quickMarkBtn: {
-    marginTop: Spacing.md,
+  cdDivider: { width: Spacing.md, alignSelf: 'stretch' },
+  countdownNum: { fontSize: 36, fontWeight: Weight.extrabold, color: Colors.ink, letterSpacing: -1 },
+  countdownLbl: { fontSize: FontSize.xs, color: Colors.textMuted, marginTop: 2 },
+
+  /* ── Quick mark ── */
+  quickBtn: {
+    marginTop: Spacing.lg,
     backgroundColor: Colors.primary, borderRadius: Radius.md,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    paddingVertical: 12, gap: Spacing.sm,
+    paddingVertical: Spacing.md, gap: Spacing.sm,
   },
-  quickMarkText: { color: Colors.white, fontWeight: '700', fontSize: FontSize.base },
+  quickBtnText: { color: Colors.white, fontWeight: Weight.bold, fontSize: FontSize.base },
 });

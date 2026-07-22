@@ -4,7 +4,7 @@ import Constants from 'expo-constants';
 const CACHE_DURATION_MS = 60 * 60 * 1000; // 1 hour
 
 function cacheKey(lat: number, lon: number): string {
-  return `weather_cache_${lat}_${lon}`;
+  return `weather_cache_v2_${lat}_${lon}`;
 }
 
 /** Raw weather data from API — no derived text (avoids stale cache when mappings change). */
@@ -13,6 +13,7 @@ export interface RawWeather {
   weatherCode: number;
   uvIndex: number;
   humidity: number;
+  windSpeed: number;
   updatedAt: string;
 }
 
@@ -47,7 +48,7 @@ export async function geocodeCity(cityName: string): Promise<{ lat: number; lon:
 }
 
 export async function fetchRawWeather(lat: number, lon: number): Promise<RawWeather> {
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,relative_humidity_2m,uv_index&timezone=auto`;
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,relative_humidity_2m,uv_index,wind_speed_10m&timezone=auto`;
 
   let res: Response;
   try {
@@ -70,6 +71,7 @@ export async function fetchRawWeather(lat: number, lon: number): Promise<RawWeat
     weatherCode: current.weather_code,
     uvIndex: Math.round(current.uv_index ?? 0),
     humidity: current.relative_humidity_2m,
+    windSpeed: Math.round(current.wind_speed_10m ?? 0),
     updatedAt: new Date().toISOString(),
   };
 

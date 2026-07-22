@@ -1,6 +1,6 @@
 import React, { Component, type ReactNode } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Colors, FontSize, Spacing, Radius, Shadow } from '../constants/theme';
+import { Colors, FontSize, Spacing, Radius, Shadow, Weight, LineHeight } from '../constants/theme';
 import PressableScale from './PressableScale';
 import Icon from './Icon';
 
@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: FontSize.xl,
-    fontWeight: '700',
+    fontWeight: Weight.bold,
     color: Colors.ink,
     marginTop: Spacing.lg,
     marginBottom: Spacing.sm,
@@ -76,18 +76,18 @@ const styles = StyleSheet.create({
     fontSize: FontSize.md,
     color: Colors.textMuted,
     textAlign: 'center',
-    lineHeight: 22,
+    lineHeight: LineHeight.md,
     marginBottom: Spacing.xl,
   },
   btn: {
     backgroundColor: Colors.primary,
     borderRadius: Radius.full,
-    paddingVertical: 12,
-    paddingHorizontal: 32,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xxxl,
   },
   btnText: {
     color: Colors.white,
     fontSize: FontSize.md,
-    fontWeight: '700',
+    fontWeight: Weight.bold,
   },
 });

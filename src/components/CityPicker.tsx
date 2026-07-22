@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';
 import { useSettings } from '../context/SettingsContext';
 import PressableScale from './PressableScale';
-import { Colors, Spacing, FontSize, Radius, Shadow } from '../constants/theme';
+import { Colors, Spacing, FontSize, Radius, Shadow, Weight, } from '../constants/theme';
 import Icon from './Icon';
 
 export default function CityPicker() {
@@ -21,7 +21,7 @@ export default function CityPicker() {
     <View style={styles.card}>
       <View style={styles.titleRow}>
         <View style={styles.iconWrap}>
-          <Icon name="location" size={15} color={Colors.accentWarm} />
+          <Icon name="location" size={15} color={Colors.primary} />
         </View>
         <Text style={styles.title}>天气城市</Text>
       </View>
@@ -38,13 +38,11 @@ export default function CityPicker() {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.surfaceWarm,
-    borderRadius: Radius.lg,
+    backgroundColor: Colors.cardBg,
+    borderRadius: Radius.xl,
     padding: Spacing.xl,
     marginBottom: Spacing.cardGap,
-    borderWidth: 1,
-    borderColor: Colors.inkBg,
-    ...Shadow.raised,
+    ...Shadow.card,
   },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: Spacing.md },
   iconWrap: {
@@ -52,18 +50,19 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.inkBg,
     alignItems: 'center', justifyContent: 'center',
   },
-  title: { fontSize: FontSize.subtitle, fontWeight: '700', color: Colors.text, flex: 1 },
+  title: { fontSize: FontSize.subtitle, fontWeight: Weight.bold, color: Colors.text, flex: 1 },
   searchRow: { flexDirection: 'row', gap: Spacing.sm },
   input: {
     flex: 1,
-    borderWidth: 1, borderColor: Colors.inkBg, borderRadius: Radius.sm,
-    padding: Spacing.sm, fontSize: 14, color: Colors.text,
-    backgroundColor: Colors.cardBg,
+    backgroundColor: Colors.bg,
+    borderWidth: 1, borderColor: Colors.divider, borderRadius: Radius.md,
+    paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm,
+    fontSize: FontSize.sm2, color: Colors.text,
   },
   btn: {
-    backgroundColor: Colors.accentWarm, borderRadius: Radius.sm,
+    backgroundColor: Colors.primary, borderRadius: Radius.sm,
     paddingVertical: Spacing.sm, paddingHorizontal: Spacing.xl,
   },
-  btnText: { color: Colors.white, fontWeight: '700', fontSize: 14 },
+  btnText: { color: Colors.white, fontWeight: Weight.bold, fontSize: FontSize.sm2 },
   current: { marginTop: Spacing.sm, fontSize: FontSize.sm, color: Colors.textSecondary },
 });

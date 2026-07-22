@@ -44,7 +44,7 @@ export default function PressableScale({
 
   const handlePressOut = useCallback(() => {
     Animated.parallel([
-      Animated.spring(scale, { toValue: 1, speed: 60, bounciness: 4, useNativeDriver: true }),
+      Animated.spring(scale, { toValue: 1, speed: 60, bounciness: 0, useNativeDriver: true }),
       Animated.timing(opacity, { toValue: 1, duration: 150, useNativeDriver: true }),
     ]).start();
   }, [scale, opacity]);
