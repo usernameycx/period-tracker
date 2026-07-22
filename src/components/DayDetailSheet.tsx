@@ -36,17 +36,12 @@ export default function DayDetailSheet({ visible, date, onClose }: Props) {
   const phaseInfo = getPhaseForCalendarDay(date, records);
 
   useEffect(() => {
-    if (visible) {
-      Animated.parallel([
-        Animated.spring(translateY, { toValue: 0, useNativeDriver: true, tension: 65, friction: 11 }),
-        Animated.timing(overlayOpacity, { toValue: 1, duration: 250, useNativeDriver: true }),
-      ]).start();
-    } else {
-      Animated.parallel([
-        Animated.timing(translateY, { toValue: SCREEN_HEIGHT, duration: 200, useNativeDriver: true }),
-        Animated.timing(overlayOpacity, { toValue: 0, duration: 200, useNativeDriver: true }),
-      ]).start();
-    }
+    const anim = Animated.parallel([
+      Animated.spring(translateY, { toValue: visible ? 0 : SCREEN_HEIGHT, useNativeDriver: true, tension: 65, friction: 11 }),
+      Animated.timing(overlayOpacity, { toValue: visible ? 1 : 0, duration: 250, useNativeDriver: true }),
+    ]);
+    anim.start();
+    return () => anim.stop();
   }, [visible]);
 
   useEffect(() => {

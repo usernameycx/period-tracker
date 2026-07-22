@@ -29,10 +29,9 @@ export function getAverageCycleLength(records: PeriodRecord[]): number | null {
   if (records.length < MIN_RECORDS_FOR_PREDICTION) return null;
   const valid = getValidCycleStarts(records);
   if (valid.length < MIN_RECORDS_FOR_PREDICTION) return null;
-  const sorted = [...valid].sort((a, b) => a.start_date.localeCompare(b.start_date));
   const lengths: number[] = [];
-  for (let i = 1; i < sorted.length; i++) {
-    const len = diffDays(parseDate(sorted[i].start_date), parseDate(sorted[i - 1].start_date));
+  for (let i = 1; i < valid.length; i++) {
+    const len = diffDays(parseDate(valid[i].start_date), parseDate(valid[i - 1].start_date));
     // Clamp to biologically plausible range
     if (len >= 21 && len <= 35) {
       lengths.push(len);
@@ -49,9 +48,8 @@ export function getAverageCycleLength(records: PeriodRecord[]): number | null {
 
 export function predictNextPeriod(records: PeriodRecord[]): Date | null {
   const valid = getValidCycleStarts(records);
-  const sorted = [...valid].sort((a, b) => b.start_date.localeCompare(a.start_date));
-  if (sorted.length === 0) return null;
-  const lastStart = parseDate(sorted[0].start_date);
+  if (valid.length === 0) return null;
+  const lastStart = parseDate(valid[valid.length - 1].start_date);
   const cycleLength = getAverageCycleLength(records) || DEFAULT_CYCLE_DAYS;
   return addDays(lastStart, cycleLength);
 }
@@ -128,20 +126,19 @@ export function getPhaseForCalendarDay(
 
   // Use only valid cycle starts to avoid implausibly-short "cycles"
   const valid = getValidCycleStarts(records);
-  const sorted = [...valid].sort((a, b) => a.start_date.localeCompare(b.start_date));
   const PERIOD_DAYS = DEFAULT_PERIOD_DAYS;
 
   // Find which cycle this date belongs to
-  for (let i = 0; i < sorted.length; i++) {
-    const cycleStart = parseDate(sorted[i].start_date);
+  for (let i = 0; i < valid.length; i++) {
+    const cycleStart = parseDate(valid[i].start_date);
 
     // Date is before this cycle → not in any cycle yet
     if (d < cycleStart) return null;
 
     // Determine cycle end (next recorded start, or predicted)
     let cycleEnd: Date;
-    if (i + 1 < sorted.length) {
-      cycleEnd = parseDate(sorted[i + 1].start_date);
+    if (i + 1 < valid.length) {
+      cycleEnd = parseDate(valid[i + 1].start_date);
     } else {
       // Last cycle: predict next period
       const predicted = predictNextPeriod(records);

@@ -88,8 +88,12 @@ export function WeatherProvider({ children }: { children: ReactNode }) {
 
   const weather = raw ? toDisplay(raw) : null;
 
+  const value = useMemo(() => ({
+    weather, loading, error, refresh
+  }), [weather, loading, error, refresh]);
+
   return (
-    <Ctx.Provider value={{ weather, loading, error, refresh }}>
+    <Ctx.Provider value={value}>
       {children}
     </Ctx.Provider>
   );

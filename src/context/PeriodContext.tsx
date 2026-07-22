@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
 import { getDatabase } from '../db/database';
 import { PeriodRecord, getAllPeriodRecords, insertPeriodRecord, deletePeriodRecord, clearAllPeriodRecords } from '../db/period-records';
 import { schedulePeriodReminders } from '../services/notifications';
@@ -43,7 +43,7 @@ export function PeriodProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => { refresh(); }, [refresh]);
 
-  const addRecord = async (startDate: string) => {
+  const addRecord = useCallback(async (startDate: string) => {
     const db = await getDatabase();
     try {
       // Validate minimum cycle gap before inserting — prevents accidental
@@ -72,22 +72,26 @@ export function PeriodProvider({ children }: { children: ReactNode }) {
       }
     }
     await refresh();
-  };
+  }, [refresh]);
 
-  const removeRecord = async (id: number) => {
+  const removeRecord = useCallback(async (id: number) => {
     const db = await getDatabase();
     await deletePeriodRecord(db, id);
     await refresh();
-  };
+  }, [refresh]);
 
-  const clearAll = async () => {
+  const clearAll = useCallback(async () => {
     const db = await getDatabase();
     await clearAllPeriodRecords(db);
     await refresh();
-  };
+  }, [refresh]);
+
+  const value = useMemo(() => ({
+    records, loading, error, addRecord, removeRecord, clearAll, refresh
+  }), [records, loading, error, addRecord, removeRecord, clearAll, refresh]);
 
   return (
-    <Ctx.Provider value={{ records, loading, error, addRecord, removeRecord, clearAll, refresh }}>
+    <Ctx.Provider value={value}>
       {children}
     </Ctx.Provider>
   );

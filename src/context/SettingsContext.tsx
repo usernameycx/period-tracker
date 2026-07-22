@@ -70,8 +70,12 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const value = useMemo(() => ({
+    city, setCity, notifyHour, setNotifyHour, notifyMinute, setNotifyMinute, ready, refresh
+  }), [city, notifyHour, notifyMinute, ready, refresh]);
+
   return (
-    <Ctx.Provider value={{ city, setCity, notifyHour, setNotifyHour, notifyMinute, setNotifyMinute, ready, refresh }}>
+    <Ctx.Provider value={value}>
       {children}
     </Ctx.Provider>
   );
