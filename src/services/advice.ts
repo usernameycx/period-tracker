@@ -27,14 +27,19 @@ const PHASE_WEATHER_ADVICE: Record<Phase, Record<string, string>> = {
 };
 
 export function getLifeAdvice(phase: Phase, weather: WeatherForAdvice): string {
+  // Weather-conditioned phase advice
   if (weather.temperature < 10) {
-    return PHASE_WEATHER_ADVICE[phase].cold ?? PHASE_WEATHER_ADVICE[phase].default;
+    const phaseAdvice = PHASE_WEATHER_ADVICE[phase].cold ?? PHASE_WEATHER_ADVICE[phase].default;
+    return `${weather.advice}。${phaseAdvice}`;
   }
   if (weather.temperature > 32) {
-    return PHASE_WEATHER_ADVICE[phase].hot ?? PHASE_WEATHER_ADVICE[phase].default;
+    const phaseAdvice = PHASE_WEATHER_ADVICE[phase].hot ?? PHASE_WEATHER_ADVICE[phase].default;
+    return `${weather.advice}。${phaseAdvice}`;
   }
   if (weather.weatherCode >= 51 && weather.weatherCode <= 65) {
-    return PHASE_WEATHER_ADVICE[phase].rain ?? PHASE_WEATHER_ADVICE[phase].default;
+    const phaseAdvice = PHASE_WEATHER_ADVICE[phase].rain ?? PHASE_WEATHER_ADVICE[phase].default;
+    return `${weather.advice}。${phaseAdvice}`;
   }
-  return PHASE_WEATHER_ADVICE[phase].default;
+  const phaseAdvice = PHASE_WEATHER_ADVICE[phase].default;
+  return `${weather.advice}。${phaseAdvice}`;
 }
