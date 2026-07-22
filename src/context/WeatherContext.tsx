@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef, type ReactNode } from 'react';
 import { fetchRawWeather, getCachedWeather, geocodeCity, RawWeather } from '../services/weather';
 import { getWeatherAdvice, getUVAdvice } from '../constants/weather-advice';
 import { useSettings } from './SettingsContext';
