@@ -5,8 +5,8 @@ const path = require('path');
 const ASSETS = path.join(__dirname, '..', 'assets');
 const ANDROID_RES = path.join(__dirname, '..', 'android', 'app', 'src', 'main', 'res');
 const MARK_SVG = path.join(__dirname, 'icon-mark.svg');
-// Dark indigo from the tidal moon mark — matches the mark's own background circle
-const ICON_BG = '#1B1B3A';
+// Warm amber-gold from the Golden Botanical theme
+const ICON_BG = '#F8F2EA';
 
 async function iconMark(size) {
   return sharp(MARK_SVG, { density: 300 })

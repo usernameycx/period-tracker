@@ -1,22 +1,22 @@
 <svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <!-- Indigo upper hemisphere -->
-    <linearGradient id="indigoGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#22224D"/>
-      <stop offset="100%" stop-color="#1B1B3A"/>
+    <!-- Warm amber upper -->
+    <linearGradient id="amberGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#D9B68A"/>
+      <stop offset="100%" stop-color="#C2905A"/>
     </linearGradient>
 
-    <!-- Rose lower hemisphere -->
-    <linearGradient id="roseGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#FFB6C1" stop-opacity="0.25"/>
-      <stop offset="15%" stop-color="#FF69B4" stop-opacity="0.45"/>
-      <stop offset="100%" stop-color="#E85D9C" stop-opacity="0.80"/>
+    <!-- Botanical lower -->
+    <linearGradient id="botanicalGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F8F2EA" stop-opacity="0.60"/>
+      <stop offset="40%" stop-color="#E8DDD0" stop-opacity="0.75"/>
+      <stop offset="100%" stop-color="#D4C5B0" stop-opacity="0.90"/>
     </linearGradient>
 
-    <!-- Crescent glow -->
-    <radialGradient id="crescentGlow" cx="38%" cy="32%" r="62%">
-      <stop offset="0%" stop-color="#FFE0E8"/>
-      <stop offset="100%" stop-color="#FFB6C1"/>
+    <!-- Moon glow -->
+    <radialGradient id="moonGlow" cx="38%" cy="32%" r="62%">
+      <stop offset="0%" stop-color="#FFF8ED"/>
+      <stop offset="100%" stop-color="#F8F2EA"/>
     </radialGradient>
 
     <clipPath id="circleMask">
@@ -30,13 +30,13 @@
   </defs>
 
   <!-- Background disc -->
-  <circle cx="256" cy="256" r="220" fill="#1B1B3A"/>
+  <circle cx="256" cy="256" r="220" fill="#F8F2EA"/>
 
-  <!-- Upper indigo -->
-  <rect x="36" y="36" width="440" height="224" fill="url(#indigoGrad)" clip-path="url(#circleMask)"/>
+  <!-- Upper amber -->
+  <rect x="36" y="36" width="440" height="224" fill="url(#amberGrad)" clip-path="url(#circleMask)"/>
 
-  <!-- Lower rose -->
-  <rect x="36" y="256" width="440" height="220" fill="url(#roseGrad)" clip-path="url(#circleMask)"/>
+  <!-- Lower botanical -->
+  <rect x="36" y="256" width="440" height="220" fill="url(#botanicalGrad)" clip-path="url(#circleMask)"/>
 
   <!-- The Wave — sine curve across diameter -->
   <path d="M 36,256
@@ -53,8 +53,8 @@
            C 412,241 424,271 436,256
            C 448,241 460,271 472,256
            C 476,253 476,259 476,259"
-        fill="none" stroke="#FFB6C1" stroke-width="2.2" stroke-linecap="round"
-        clip-path="url(#circleMask)" opacity="0.82"/>
+        fill="none" stroke="#5D7A5F" stroke-width="2.4" stroke-linecap="round"
+        clip-path="url(#circleMask)" opacity="0.75"/>
 
   <!-- Wave highlight -->
   <path d="M 36,254
@@ -71,23 +71,23 @@
            C 412,239 424,269 436,254
            C 448,239 460,269 472,254
            C 476,252 476,256 476,256"
-        fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="0.6"
+        fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="0.6"
         clip-path="url(#circleMask)"/>
 
   <!-- Under-wave echo -->
   <path d="M 36,276
            C 116,292 196,260 276,276
            C 356,292 416,260 476,276"
-        fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="12"
+        fill="none" stroke="rgba(93,122,95,0.12)" stroke-width="12"
         clip-path="url(#circleMask)"/>
 
   <!-- Crescent Moon -->
   <g mask="url(#crescentMask)">
-    <circle cx="320" cy="188" r="46" fill="url(#crescentGlow)" opacity="0.88"/>
+    <circle cx="320" cy="188" r="46" fill="url(#moonGlow)" opacity="0.92"/>
   </g>
 
   <!-- Stars -->
-  <g fill="rgba(255,255,255,0.55)">
+  <g fill="rgba(194,144,90,0.70)">
     <circle cx="288" cy="226" r="2.4"/>
     <circle cx="345" cy="162" r="1.4"/>
     <circle cx="208" cy="176" r="1.8"/>
@@ -99,6 +99,6 @@
   </g>
 
   <!-- Disc border -->
-  <circle cx="256" cy="256" r="219.5" fill="none" stroke="#3C3844" stroke-width="0.7" opacity="0.48"/>
-  <circle cx="256" cy="256" r="218.5" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="0.4"/>
+  <circle cx="256" cy="256" r="219.5" fill="none" stroke="#C2905A" stroke-width="0.8" opacity="0.35"/>
+  <circle cx="256" cy="256" r="218.5" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="0.4"/>
 </svg>

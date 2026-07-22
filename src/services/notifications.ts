@@ -53,11 +53,10 @@ export async function scheduleDailyNotification(hour: number, minute: number): P
 /** Schedule period-approaching reminders. Call whenever records change. */
 export async function schedulePeriodReminders(): Promise<void> {
   try {
-    // Cancel existing period reminders
     const storedIds = await AsyncStorage.getItem(PERIOD_REMINDER_IDS_KEY);
     if (storedIds) {
       let ids: string[] = [];
-      try { ids = JSON.parse(storedIds); } catch { /* corrupted data — treat as empty */ }
+      try { ids = JSON.parse(storedIds); } catch { /* ignore */ }
       for (const id of ids) {
         await Notifications.cancelScheduledNotificationAsync(id);
       }
@@ -71,30 +70,50 @@ export async function schedulePeriodReminders(): Promise<void> {
     if (!nextStart) return;
 
     const predictedDate = parseDate(nextStart);
-
-    // Schedule reminders: 3 days before, 1 day before
-    const reminderDays = [
-      { daysBefore: 3, title: '⏰ 经期临近', body: '预计3天后经期到来，记得准备卫生用品哦' },
-      { daysBefore: 1, title: '🌸 经期将至', body: '预计明天是经期第一天，今天注意保暖和休息' },
-    ];
+    const avgDays = getAveragePeriodDays(records);
+    const cycleLength = getAverageCycleLength(records) || DEFAULT_CYCLE_DAYS;
 
     const newIds: string[] = [];
-    for (const reminder of reminderDays) {
-      const triggerDate = addDays(predictedDate, -reminder.daysBefore);
-      // Only schedule if the date is in the future
-      if (triggerDate.getTime() > Date.now()) {
-        const id = await Notifications.scheduleNotificationAsync({
-          content: {
-            title: reminder.title,
-            body: reminder.body,
-          },
-          trigger: {
-            type: Notifications.SchedulableTriggerInputTypes.DATE,
-            date: triggerDate,
-          },
-        });
-        newIds.push(id);
-      }
+
+    // 3 days before
+    const day3 = addDays(predictedDate, -3);
+    if (day3.getTime() > Date.now()) {
+      const info3 = getPhaseForDate(day3, predictedDate, avgDays, cycleLength);
+      const id = await Notifications.scheduleNotificationAsync({
+        content: {
+          title: '⏰ 经期临近',
+          body: `当前${PHASE_LABELS[info3.phase]}第${info3.dayOffset}天，预计3天后经期开始`,
+        },
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: day3 },
+      });
+      newIds.push(id);
+    }
+
+    // 1 day before
+    const day1 = addDays(predictedDate, -1);
+    if (day1.getTime() > Date.now()) {
+      const info1 = getPhaseForDate(day1, predictedDate, avgDays, cycleLength);
+      const id = await Notifications.scheduleNotificationAsync({
+        content: {
+          title: '🌸 经期将至',
+          body: `当前${PHASE_LABELS[info1.phase]}第${info1.dayOffset}天，预计明天经期开始，注意保暖`,
+        },
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: day1 },
+      });
+      newIds.push(id);
+    }
+
+    // Ovulation reminder (mid-cycle, if not in period)
+    const ovDay = addDays(predictedDate, -14);
+    if (ovDay.getTime() > Date.now() && records.length >= 2) {
+      const id = await Notifications.scheduleNotificationAsync({
+        content: {
+          title: '🥚 排卵期',
+          body: '今天可能是排卵期，状态通常会比较好',
+        },
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: ovDay },
+      });
+      newIds.push(id);
     }
 
     await AsyncStorage.setItem(PERIOD_REMINDER_IDS_KEY, JSON.stringify(newIds));
