@@ -1,4 +1,4 @@
-import { Phase, PHASE_LABELS } from '../constants/phases';
+import { Phase } from '../constants/phases';
 
 // Lightweight weather subset for advice — avoids coupling to the full WeatherData type
 interface WeatherForAdvice {
@@ -27,17 +27,14 @@ const PHASE_WEATHER_ADVICE: Record<Phase, Record<string, string>> = {
 };
 
 export function getLifeAdvice(phase: Phase, weather: WeatherForAdvice): string {
-  let extra = '';
-
   if (weather.temperature < 10) {
-    extra = PHASE_WEATHER_ADVICE[phase].cold ?? PHASE_WEATHER_ADVICE[phase].default;
-  } else if (weather.temperature > 32) {
-    extra = PHASE_WEATHER_ADVICE[phase].hot ?? PHASE_WEATHER_ADVICE[phase].default;
-  } else if (weather.weatherCode >= 51 && weather.weatherCode <= 65) {
-    extra = PHASE_WEATHER_ADVICE[phase].rain ?? PHASE_WEATHER_ADVICE[phase].default;
-  } else {
-    extra = PHASE_WEATHER_ADVICE[phase].default;
+    return PHASE_WEATHER_ADVICE[phase].cold ?? PHASE_WEATHER_ADVICE[phase].default;
   }
-
-  return `${PHASE_LABELS[phase]} · ${weather.condition}${weather.temperature}°\n${weather.advice}\n${extra}`;
+  if (weather.temperature > 32) {
+    return PHASE_WEATHER_ADVICE[phase].hot ?? PHASE_WEATHER_ADVICE[phase].default;
+  }
+  if (weather.weatherCode >= 51 && weather.weatherCode <= 65) {
+    return PHASE_WEATHER_ADVICE[phase].rain ?? PHASE_WEATHER_ADVICE[phase].default;
+  }
+  return PHASE_WEATHER_ADVICE[phase].default;
 }
