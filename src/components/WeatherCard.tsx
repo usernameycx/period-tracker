@@ -81,11 +81,24 @@ export default function WeatherCard() {
 
       {/* Advice */}
       <View style={styles.advice}>
-        <Icon name={phaseInfo ? 'sparkle' : 'bulb'} size={14} color={phaseInfo ? Colors.primary : Colors.textHint} />
-        {phaseInfo ? (
-          <Text style={styles.adviceText}>{getLifeAdvice(phaseInfo.phase, weather)}</Text>
-        ) : (
-          <Text style={styles.advicePlaceholder}>记录经期后查看阶段生活建议</Text>
+        {phaseInfo ? (() => {
+          const advice = getLifeAdvice(phaseInfo.phase, weather);
+          return (
+            <>
+              <Icon name="cloud" size={14} color={Colors.textMuted} style={{ marginTop: 2 }} />
+              <View style={styles.adviceContent}>
+                <Text style={styles.adviceWeather}>{advice.weatherAdvice}</Text>
+                <Text style={styles.advicePhase}>
+                  <Icon name="sparkle" size={12} color={Colors.primary} /> {advice.phaseAdvice}
+                </Text>
+              </View>
+            </>
+          );
+        })() : (
+          <>
+            <Icon name="bulb" size={14} color={Colors.textHint} style={{ marginTop: 2 }} />
+            <Text style={styles.advicePlaceholder}>记录经期后查看阶段生活建议</Text>
+          </>
         )}
       </View>
 
@@ -178,7 +191,9 @@ const styles = StyleSheet.create({
     padding: Spacing.md, marginBottom: Spacing.lg,
     borderLeftWidth: 3, borderLeftColor: Colors.primary,
   },
-  adviceText: { flex: 1, fontSize: FontSize.sm, color: Colors.text, lineHeight: LineHeight.sm2 },
+  adviceContent: { flex: 1, gap: Spacing.xs },
+  adviceWeather: { fontSize: FontSize.sm, color: Colors.textSecondary, lineHeight: LineHeight.sm2 },
+  advicePhase: { fontSize: FontSize.sm, color: Colors.text, fontWeight: Weight.semibold, lineHeight: LineHeight.sm2 },
   advicePlaceholder: { flex: 1, fontSize: FontSize.sm, color: Colors.textHint },
 
   /* ── Metrics ── */

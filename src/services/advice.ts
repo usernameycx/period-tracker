@@ -26,20 +26,17 @@ const PHASE_WEATHER_ADVICE: Record<Phase, Record<string, string>> = {
   },
 };
 
-export function getLifeAdvice(phase: Phase, weather: WeatherForAdvice): string {
-  // Weather-conditioned phase advice
+export function getLifeAdvice(phase: Phase, weather: WeatherForAdvice): { weatherAdvice: string; phaseAdvice: string } {
+  const weatherTip = weather.advice;
+  let phaseTip = PHASE_WEATHER_ADVICE[phase].default;
+
   if (weather.temperature < 10) {
-    const phaseAdvice = PHASE_WEATHER_ADVICE[phase].cold ?? PHASE_WEATHER_ADVICE[phase].default;
-    return `${weather.advice}。${phaseAdvice}`;
+    phaseTip = PHASE_WEATHER_ADVICE[phase].cold ?? phaseTip;
+  } else if (weather.temperature > 32) {
+    phaseTip = PHASE_WEATHER_ADVICE[phase].hot ?? phaseTip;
+  } else if (weather.weatherCode >= 51 && weather.weatherCode <= 65) {
+    phaseTip = PHASE_WEATHER_ADVICE[phase].rain ?? phaseTip;
   }
-  if (weather.temperature > 32) {
-    const phaseAdvice = PHASE_WEATHER_ADVICE[phase].hot ?? PHASE_WEATHER_ADVICE[phase].default;
-    return `${weather.advice}。${phaseAdvice}`;
-  }
-  if (weather.weatherCode >= 51 && weather.weatherCode <= 65) {
-    const phaseAdvice = PHASE_WEATHER_ADVICE[phase].rain ?? PHASE_WEATHER_ADVICE[phase].default;
-    return `${weather.advice}。${phaseAdvice}`;
-  }
-  const phaseAdvice = PHASE_WEATHER_ADVICE[phase].default;
-  return `${weather.advice}。${phaseAdvice}`;
+
+  return { weatherAdvice: weatherTip, phaseAdvice: phaseTip };
 }
