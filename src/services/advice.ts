@@ -19,10 +19,10 @@ const PHASE_WEATHER_ADVICE: Record<Phase, Record<string, string>> = {
     default: '卵泡期精力充沛，适合运动锻炼',
   },
   ovulation: {
-    default: '排卵期状态最佳，享受好状态',
+    default: '排卵期精力充沛，适合运动和处理重要事务',
   },
   luteal: {
-    default: '黄体期可能会有情绪波动，多给自己一些温柔',
+    default: '黄体期可能会有情绪波动，适当休息不是软弱',
   },
 };
 
