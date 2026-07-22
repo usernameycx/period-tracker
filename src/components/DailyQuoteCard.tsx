@@ -28,7 +28,7 @@ export default function DailyQuoteCard({ refreshKey = 0, date }: { refreshKey?: 
   if (loading) {
     return (
       <View style={[styles.row, styles.skeleton]}>
-        <View style={{ marginTop: 3 }}><Icon name="leaf" size={14} color={Colors.primaryLight} /></View>
+        <View style={styles.iconWrap}><Icon name="leaf" size={14} color={Colors.primaryLight} /></View>
         <View style={styles.skeletonBar} />
       </View>
     );
@@ -36,7 +36,7 @@ export default function DailyQuoteCard({ refreshKey = 0, date }: { refreshKey?: 
 
   return (
     <View style={styles.row}>
-      <View style={{ marginTop: 3 }}><Icon name={phaseIcon} size={14} color={Colors.primary} /></View>
+      <View style={styles.iconWrap}><Icon name={phaseIcon} size={14} color={Colors.primary} /></View>
       <Text style={styles.text} numberOfLines={2}>{quote.text}</Text>
     </View>
   );
@@ -67,4 +67,5 @@ const styles = StyleSheet.create({
     borderRadius: Radius.xs,
     opacity: 0.3,
   },
+  iconWrap: { marginTop: 3 },
 });

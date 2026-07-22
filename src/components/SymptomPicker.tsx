@@ -96,7 +96,7 @@ export default function SymptomPicker({ date, visible }: Props) {
         <Icon name="clipboard" size={18} color={Colors.primary} />
         <Text style={styles.title}>记录症状</Text>
       </View>
-      <ActivityIndicator color={Colors.primary} style={{ marginTop: 16 }} />
+      <ActivityIndicator color={Colors.primary} style={styles.loadingSpinner} />
     </View>
   );
 
@@ -182,4 +182,5 @@ const styles = StyleSheet.create({
   toggleActive: { backgroundColor: Colors.primaryBg, borderWidth: 1, borderColor: Colors.primary },
   toggleLabel: { fontSize: FontSize.sm, color: Colors.textMuted, fontWeight: Weight.medium },
   toggleLabelActive: { color: Colors.primary, fontWeight: Weight.bold },
+  loadingSpinner: { marginTop: Spacing.md },
 });

@@ -136,6 +136,13 @@ export default function SettingsPage() {
         <Text style={styles.disclaimerText}>本应用提供的经期预测和饮食建议仅供参考，不构成医疗建议。如有健康问题，请咨询专业医生。</Text>
       </View>
 
+      {/* ── Legal ── */}
+      <View style={styles.legalLinks}>
+        <Text style={styles.legalLink}>隐私政策</Text>
+        <Text style={styles.legalDivider}>·</Text>
+        <Text style={styles.legalLink}>服务条款</Text>
+      </View>
+
       {/* ── Notification Modal ── */}
       <Modal visible={notifyModal} transparent animationType="fade" onRequestClose={() => setNotifyModal(false)}>
         <View style={styles.modalOverlay}>
@@ -271,4 +278,9 @@ const styles = StyleSheet.create({
   importCancelT: { fontSize: FontSize.md, color: Colors.textMuted, fontWeight: Weight.semibold },
   importConfirm: { backgroundColor: Colors.primary, borderRadius: Radius.md, paddingVertical: Spacing.sm, paddingHorizontal: Spacing.xl },
   importConfirmT: { fontSize: FontSize.md, color: Colors.white, fontWeight: Weight.bold },
+
+  /* Legal */
+  legalLinks: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: Spacing.sm, marginTop: Spacing.sm },
+  legalLink: { fontSize: FontSize.xs, color: Colors.textMuted },
+  legalDivider: { fontSize: FontSize.xs, color: Colors.textMuted },
 });

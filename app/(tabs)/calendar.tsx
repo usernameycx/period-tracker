@@ -89,7 +89,7 @@ export default function CalendarPage() {
         {/* Lunar card */}
         <LunarCard date={selectedDate} />
 
-        <View style={{ height: Spacing.xl }} />
+        <View style={styles.bottomSpacer} />
       </ScrollView>
 
       <DayDetailSheet
@@ -134,4 +134,5 @@ const styles = StyleSheet.create({
     padding: Spacing.md, marginBottom: Spacing.lg,
   },
   emptyHintText: { fontSize: FontSize.sm2, color: Colors.primary, fontWeight: Weight.semibold },
+  bottomSpacer: { height: Spacing.xl },
 });

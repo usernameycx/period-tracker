@@ -11,7 +11,7 @@ export interface Greeting extends GreetingData {
 
 const GREETINGS: Record<TimePeriod, GreetingData[]> = {
   morning: [
-    { emoji: '🌸', text: '早安，今天也要好好爱自己' },
+    { emoji: '🌸', text: '早安，先喝杯温水再开始今天' },
     { emoji: '☀️', text: '早上好，先喝杯温水再开始忙碌' },
     { emoji: '🌿', text: '新的一天，记录身体状态的好时机' },
     { emoji: '🍃', text: '早晨空气好，开窗透透气' },

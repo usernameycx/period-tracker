@@ -11,10 +11,11 @@ export default function CityPicker() {
 
   const handleSetCity = () => {
     const trimmed = query.trim();
-    if (trimmed) {
-      setCity(trimmed);
-      setQuery('');
-    }
+    if (!trimmed) return;
+    if (trimmed.length > 20) { setQuery(trimmed.slice(0, 20)); return; }
+    if (!/^[\u4e00-\u9fa5a-zA-Z\s·]+$/.test(trimmed)) { setQuery(''); return; }
+    setCity(trimmed);
+    setQuery('');
   };
 
   return (

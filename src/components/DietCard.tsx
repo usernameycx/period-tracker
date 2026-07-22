@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { usePeriod } from '../context/PeriodContext';
 import { useCurrentPhase } from '../hooks/useCurrentPhase';
 import { getDatabase } from '../db/database';
@@ -12,17 +12,21 @@ export default function DietCard() {
   const { records } = usePeriod();
   const phaseInfo = useCurrentPhase();
   const [diet, setDiet] = useState<DietRule | null>(null);
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
+  const load = useCallback(() => {
+    if (records.length === 0) return;
+    setError(false);
     (async () => { try {
-      if (records.length === 0) return;
       const db = await getDatabase();
       const phase: Phase = phaseInfo?.phase || 'follicular';
       const dayOffset: number = phaseInfo?.dayOffset || 1;
       const rule = await getDietRules(db, phase, dayOffset);
       setDiet(rule);
-    } catch { /* ignore */ } })();
+    } catch { setError(true); } })();
   }, [records, phaseInfo]);
+
+  useEffect(() => { load(); }, [load]);
 
   if (!diet) {
     return (
@@ -33,7 +37,17 @@ export default function DietCard() {
         </View>
         <View style={styles.placeholderWrap}>
           <Icon name="leaf" size={24} color={Colors.primaryLight} />
-          <Text style={styles.placeholderText}>记录经期后，这里会显示{'\n'}适合当天的饮食建议</Text>
+          {error ? (
+            <>
+              <Text style={styles.placeholderText}>加载失败</Text>
+              <Pressable style={styles.retryBtn} onPress={load}>
+                <Icon name="refresh" size={12} color={Colors.primary} />
+                <Text style={styles.retryText}>重试</Text>
+              </Pressable>
+            </>
+          ) : (
+            <Text style={styles.placeholderText}>记录经期后，这里会显示{'\n'}适合当天的饮食建议</Text>
+          )}
         </View>
       </View>
     );
@@ -91,4 +105,6 @@ const styles = StyleSheet.create({
     padding: Spacing.xl, alignItems: 'center', gap: Spacing.sm,
   },
   placeholderText: { fontSize: FontSize.sm, color: Colors.textMuted, textAlign: 'center', lineHeight: LineHeight.sm2 },
+  retryBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 6, paddingHorizontal: Spacing.md, borderRadius: Radius.full, borderWidth: 1, borderColor: Colors.primaryLight, marginTop: Spacing.xs },
+  retryText: { color: Colors.primary, fontSize: FontSize.xs, fontWeight: Weight.semibold },
 });

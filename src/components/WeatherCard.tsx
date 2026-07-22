@@ -20,7 +20,7 @@ export default function WeatherCard() {
       <View style={styles.card}>
         <View style={styles.hero}>
           <View style={styles.skeletonIcon} />
-          <View style={{ flex: 1, gap: 6 }}>
+          <View style={styles.skeletonContent}>
             <View style={[styles.skeletonBar, { width: '40%', height: 28 }]} />
             <View style={[styles.skeletonBar, { width: '60%', height: 14 }]} />
           </View>
@@ -61,7 +61,7 @@ export default function WeatherCard() {
       {/* Hero: emoji + temp + city/date */}
       <View style={styles.hero}>
         <Text style={styles.emoji}>{weather.icon}</Text>
-        <View style={{ flex: 1 }}>
+        <View style={styles.heroContent}>
           <View style={styles.tempRow}>
             <Text style={styles.temp}>{weather.temperature}°</Text>
             {showFeelsLike && <Text style={styles.feels}>体感 {weather.feelsLike}°</Text>}
@@ -191,6 +191,8 @@ const styles = StyleSheet.create({
   retryText: { color: Colors.primary, fontSize: FontSize.xs, fontWeight: Weight.semibold },
   skeletonIcon: { width: 44, height: 44, borderRadius: Radius.md, backgroundColor: Colors.inkBg },
   skeletonBar: { backgroundColor: Colors.inkBg, borderRadius: Radius.xs, opacity: 0.5 },
+  skeletonContent: { flex: 1, gap: 6 },
+  heroContent: { flex: 1 },
 
   /* ── City modal ── */
   modalOverlay: { flex: 1, backgroundColor: Colors.overlay, justifyContent: 'center', alignItems: 'center', padding: Spacing.xxxl },

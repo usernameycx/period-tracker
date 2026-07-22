@@ -70,7 +70,7 @@ export default function DietEditor() {
           {g.items.map(r => (
             <PressableScale key={r.id} style={styles.ruleRow} onPress={() => startEdit(r)}>
               <Text style={styles.dayLabel}>第{r.day_offset}天</Text>
-              <View style={{ flex: 1 }}>
+              <View style={styles.ruleContent}>
                 <View style={styles.dietInlineRow}>
                   <Icon name="check" size={12} color={Colors.success} />
                   <Text style={styles.rec} numberOfLines={1}>{r.recommend.join('、')}</Text>
@@ -116,6 +116,7 @@ const styles = StyleSheet.create({
   group: { marginBottom: Spacing.md },
   phaseTitle: { fontSize: FontSize.md, fontWeight: Weight.semibold, color: Colors.primary, marginBottom: Spacing.sm },
   ruleRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: Spacing.sm, borderBottomWidth: 1, borderBottomColor: Colors.primaryBg },
+  ruleContent: { flex: 1 },
   dayLabel: { width: 50, fontSize: FontSize.sm, color: Colors.textMuted, fontWeight: Weight.semibold },
   rec: { fontSize: FontSize.xs, color: Colors.primary },
   av: { fontSize: FontSize.xs, color: Colors.danger, marginTop: 2 },

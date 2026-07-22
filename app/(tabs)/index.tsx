@@ -63,7 +63,7 @@ export default function TodayPage() {
       <View style={styles.headerBar}>
         <View style={styles.headerLeft}>
           <Icon name={greetingIcon} size={16} color={Colors.primary} />
-          <View style={{ flex: 1 }}>
+          <View style={styles.greetingContent}>
             <Text style={styles.greetingSm} numberOfLines={1}>{greeting.text}</Text>
             <Text style={styles.dateSm}>{dateStr}</Text>
           </View>
@@ -164,4 +164,5 @@ const styles = StyleSheet.create({
   sectionLabel: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: Spacing.md },
   sectionDot: { width: 8, height: 8, borderRadius: Radius.xs, backgroundColor: Colors.primary },
   sectionLabelText: { fontSize: FontSize.sm, fontWeight: Weight.bold, color: Colors.textMuted },
+  greetingContent: { flex: 1 },
 });
