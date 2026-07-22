@@ -40,7 +40,7 @@ export const Colors = {
   // ── Text ────────────────────────────────────────────────────
   text: '#29211D',
   textSecondary: '#6B5F58',
-  textMuted: '#968B83',
+  textMuted: '#8C8078',
   textHint: '#B5ACA5',
 
   // ── Semantic ────────────────────────────────────────────────

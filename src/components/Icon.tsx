@@ -226,7 +226,7 @@ const PATHS: Record<IconName, (color: string) => React.ReactElement> = {
   info: (c) => (
     <G>
       <Circle cx="12" cy="12" r="10" fill="none" stroke={c} strokeWidth="1.5" />
-      <Line x1="12" y1="8" x2="12" y2="8.5" stroke={c} strokeWidth="2" strokeLinecap="round" />
+      <Line x1="12" y1="8" x2="12" y2="8.5" stroke={c} strokeWidth="1.5" strokeLinecap="round" />
       <Line x1="12" y1="11" x2="12" y2="16" stroke={c} strokeWidth="1.3" strokeLinecap="round" />
       <Circle cx="12" cy="17.5" r="0.6" fill={c} />
     </G>
@@ -328,22 +328,22 @@ const PATHS: Record<IconName, (color: string) => React.ReactElement> = {
   ),
 
   check: (c) => (
-    <Polyline points="4,12 10,18 20,6" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <Polyline points="4,12 10,18 20,6" fill="none" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   ),
 
   chevron: (c) => (
-    <Polyline points="8,5 16,12 8,19" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <Polyline points="8,5 16,12 8,19" fill="none" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   ),
 
   close: (c) => (
     <G>
-      <Line x1="6" y1="6" x2="18" y2="18" stroke={c} strokeWidth="2" strokeLinecap="round" />
-      <Line x1="18" y1="6" x2="6" y2="18" stroke={c} strokeWidth="2" strokeLinecap="round" />
+      <Line x1="6" y1="6" x2="18" y2="18" stroke={c} strokeWidth="1.5" strokeLinecap="round" />
+      <Line x1="18" y1="6" x2="6" y2="18" stroke={c} strokeWidth="1.5" strokeLinecap="round" />
     </G>
   ),
 
   'chevron-down': (c) => (
-    <Polyline points="5,9 12,17 19,9" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <Polyline points="5,9 12,17 19,9" fill="none" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   ),
 
   lightning: (c) => (
@@ -356,7 +356,7 @@ const PATHS: Record<IconName, (color: string) => React.ReactElement> = {
   battery: (c) => (
     <G>
       <Rect x="2" y="7" width="18" height="10" rx="2" fill="none" stroke={c} strokeWidth="1.5" />
-      <Line x1="22" y1="10" x2="22" y2="14" stroke={c} strokeWidth="2" strokeLinecap="round" />
+      <Line x1="22" y1="10" x2="22" y2="14" stroke={c} strokeWidth="1.5" strokeLinecap="round" />
       <Rect x="6" y="10" width="10" height="4" rx="1" fill={c} opacity="0.5" />
     </G>
   ),

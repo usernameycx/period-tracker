@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Modal, TextInput } from 'react-native';
+import { View, Text, StyleSheet, Modal, TextInput, Pressable } from 'react-native';
 import { useWeather } from '../context/WeatherContext';
 import { useSettings } from '../context/SettingsContext';
 import { useCurrentPhase } from '../hooks/useCurrentPhase';
@@ -38,6 +38,10 @@ export default function WeatherCard() {
         <View style={styles.emptyWrap}>
           <Icon name="weather" size={28} color={Colors.textHint} />
           <Text style={styles.emptyText}>{error ?? '暂无天气数据'}</Text>
+          <Pressable style={styles.retryBtn} onPress={refresh}>
+            <Icon name="refresh" size={14} color={Colors.primary} />
+            <Text style={styles.retryText}>重试</Text>
+          </Pressable>
         </View>
       </View>
     );
@@ -181,8 +185,10 @@ const styles = StyleSheet.create({
   metricLabel: { fontSize: FontSize.xs, color: Colors.textMuted },
 
   /* ── Empty / Loading ── */
-  emptyWrap: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.md, paddingVertical: Spacing.lg },
+  emptyWrap: { alignItems: 'center', justifyContent: 'center', gap: Spacing.md, paddingVertical: Spacing.lg },
   emptyText: { color: Colors.textMuted, fontSize: FontSize.sm2 },
+  retryBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 6, paddingHorizontal: Spacing.md, borderRadius: Radius.full, borderWidth: 1, borderColor: Colors.primaryLight },
+  retryText: { color: Colors.primary, fontSize: FontSize.xs, fontWeight: Weight.semibold },
   skeletonIcon: { width: 44, height: 44, borderRadius: Radius.md, backgroundColor: Colors.inkBg },
   skeletonBar: { backgroundColor: Colors.inkBg, borderRadius: Radius.xs, opacity: 0.5 },
 

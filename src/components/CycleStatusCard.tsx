@@ -60,7 +60,7 @@ export default function CycleStatusCard() {
         <View style={styles.heroIconWrap}>
           <Icon name={PHASE_ICONS[phaseInfo.phase]} size={38} color={Colors.primary} />
         </View>
-        <View style={{ flex: 1 }}>
+        <View style={styles.heroTextWrap}>
           <Text style={styles.phaseLabel}>
             {PHASE_LABELS[phaseInfo.phase]} · 第{phaseInfo.dayOffset}天
           </Text>
@@ -147,6 +147,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   accentBar: { height: 3, marginHorizontal: -Spacing.xl, marginTop: -Spacing.xl, marginBottom: Spacing.lg },
+  heroTextWrap: { flex: 1 },
   heroRow: {
     flexDirection: 'row',
     alignItems: 'center',

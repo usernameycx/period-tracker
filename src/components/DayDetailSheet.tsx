@@ -124,7 +124,7 @@ export default function DayDetailSheet({ visible, date, onClose }: Props) {
                       <Text style={styles.dietTitle}>当日饮食</Text>
                     </View>
                     <View style={styles.dietChipRow}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                      <View style={styles.chipIconRow}>
                         <Icon name="check" size={12} color={Colors.botanical} />
                         <Text style={styles.dietChipLabel}>推荐</Text>
                       </View>
@@ -135,9 +135,9 @@ export default function DayDetailSheet({ visible, date, onClose }: Props) {
                       </View>
                     </View>
                     <View style={styles.dietChipRow}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                      <View style={styles.chipIconRow}>
                         <Icon name="close" size={12} color={Colors.danger} />
-                        <Text style={[styles.dietChipLabel, { color: Colors.danger }]}>少吃</Text>
+                        <Text style={[styles.dietChipLabel, styles.dietChipLabelDanger]}>少吃</Text>
                       </View>
                       <View style={styles.chipWrap}>
                         {diet.avoid.map((f, i) => (
@@ -232,6 +232,8 @@ const styles = StyleSheet.create({
   dietTitle: { fontSize: FontSize.base, fontWeight: Weight.bold, color: Colors.ink },
   dietChipRow: { marginBottom: Spacing.sm },
   dietChipLabel: { fontSize: FontSize.sm, fontWeight: Weight.semibold, color: Colors.botanical, marginBottom: Spacing.xs },
+  chipIconRow: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 4 },
+  dietChipLabelDanger: { color: Colors.danger },
   chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
   chipRec: { backgroundColor: Colors.botanicalBg, borderRadius: Radius.full, paddingHorizontal: Spacing.md, paddingVertical: 6, borderWidth: 1, borderColor: Colors.botanical + '30' },
   chipRecT: { fontSize: FontSize.sm, color: Colors.botanical, fontWeight: Weight.semibold },
