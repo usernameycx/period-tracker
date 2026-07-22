@@ -11,8 +11,8 @@ import { getLifeAdvice } from '../services/advice';
 import PressableScale from './PressableScale';
 import { Colors, Spacing, Radius, FontSize, Shadow, Weight, LineHeight } from '../constants/theme';
 import Icon from './Icon';
+import ConfirmModal from './ConfirmModal';
 import SymptomPicker from './SymptomPicker';
-
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface Props {
@@ -25,6 +25,7 @@ export default function DayDetailSheet({ visible, date, onClose }: Props) {
   const { records, addRecord, removeRecord } = usePeriod();
   const { weather } = useWeather();
   const [diet, setDiet] = useState<DietRule | null>(null);
+  const [confirmVisible, setConfirmVisible] = useState(false);
   const translateY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
 
@@ -62,15 +63,17 @@ export default function DayDetailSheet({ visible, date, onClose }: Props) {
 
   const handleToggle = async () => {
     if (recordedStart) {
-      Alert.alert('取消标记', '确定要取消这天的经期标记吗？', [
-        { text: '保留', style: 'cancel' },
-        { text: '确定取消', style: 'destructive', onPress: async () => { await removeRecord(recordedStart.id); } },
-      ]);
+      setConfirmVisible(true);
     } else {
       try { await addRecord(dateStr); } catch (e: any) {
         Alert.alert('无法标记', e.message || '标记失败，请稍后再试');
       }
     }
+  };
+
+  const handleRemoveConfirm = async () => {
+    if (recordedStart) { await removeRecord(recordedStart.id); }
+    setConfirmVisible(false);
   };
 
   const d = date;
@@ -183,6 +186,18 @@ export default function DayDetailSheet({ visible, date, onClose }: Props) {
         </Animated.View>
       </TouchableWithoutFeedback>
     </Modal>
+
+    <ConfirmModal
+      visible={confirmVisible}
+      title="取消标记"
+      message="确定要取消这天的经期标记吗？"
+      icon="close"
+      variant="danger"
+      cancelLabel="保留"
+      confirmLabel="确定取消"
+      onCancel={() => setConfirmVisible(false)}
+      onConfirm={handleRemoveConfirm}
+    />
   );
 }
 
