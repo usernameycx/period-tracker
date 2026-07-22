@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableWithoutFeedback, ScrollView, StyleSheet, Modal, Animated, Dimensions, Alert } from 'react-native';
+import { View, Text, TouchableWithoutFeedback, ScrollView, StyleSheet, Modal, Animated, Dimensions } from 'react-native';
 import { usePeriod } from '../context/PeriodContext';
 import { useWeather } from '../context/WeatherContext';
 import { getDatabase } from '../db/database';
@@ -26,6 +26,8 @@ export default function DayDetailSheet({ visible, date, onClose }: Props) {
   const { weather } = useWeather();
   const [diet, setDiet] = useState<DietRule | null>(null);
   const [confirmVisible, setConfirmVisible] = useState(false);
+  const [errorVisible, setErrorVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('标记失败，请稍后再试');
   const translateY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
 
@@ -66,7 +68,8 @@ export default function DayDetailSheet({ visible, date, onClose }: Props) {
       setConfirmVisible(true);
     } else {
       try { await addRecord(dateStr); } catch (e: any) {
-        Alert.alert('无法标记', e.message || '标记失败，请稍后再试');
+        setErrorMessage(e.message || '标记失败，请稍后再试');
+        setErrorVisible(true);
       }
     }
   };
@@ -197,6 +200,18 @@ export default function DayDetailSheet({ visible, date, onClose }: Props) {
       confirmLabel="确定取消"
       onCancel={() => setConfirmVisible(false)}
       onConfirm={handleRemoveConfirm}
+    />
+
+    <ConfirmModal
+      visible={errorVisible}
+      title="无法标记"
+      message={errorMessage}
+      icon="exclamation"
+      variant="danger"
+      cancelLabel="知道了"
+      confirmLabel="知道了"
+      onCancel={() => setErrorVisible(false)}
+      onConfirm={() => setErrorVisible(false)}
     />
   </>
   );
