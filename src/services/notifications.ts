@@ -160,21 +160,19 @@ async function buildContentForDate(
     }
 
     const rule = await getDietRules(db, phase, dayOffset);
-    const weather = await getCachedWeatherForNotification();
-
     const title = `${PHASE_LABELS[phase]} · 第${dayOffset}天`;
 
+    // Weather: only use for today's notification (not future dates)
+    const isToday = date.toDateString() === new Date().toDateString();
+    const weather = isToday ? await getCachedWeatherForNotification() : null;
+
+    const foods = rule.recommend.slice(0, 3).join('、');
     let body = '';
-    if (weather && rule) {
+    if (weather) {
       const wa = getWeatherAdvice(weather.weatherCode);
-      const foods = rule.recommend.slice(0, 3).join('、');
-      body = `今天${wa.condition}${weather.temperature}°，适合吃${foods}`;
-    } else if (weather) {
-      const wa = getWeatherAdvice(weather.weatherCode);
-      body = `今天${wa.condition}${weather.temperature}°`;
+      body = `${wa.condition}${weather.temperature}° · 推荐${foods}`;
     } else if (rule) {
-      const foods = rule.recommend.slice(0, 3).join('、');
-      body = `推荐${foods}`;
+      body = `推荐饮食：${foods}`;
     }
     if (!body) body = '打开 App 查看今日详情';
 

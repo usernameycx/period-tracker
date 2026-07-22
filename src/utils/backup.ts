@@ -64,6 +64,15 @@ export async function importData(json: string): Promise<void> {
     throw new Error('无效的备份数据');
   }
 
+  // Prevent importing excessively large datasets
+  const MAX_RECORDS = 500;
+  if (Array.isArray(data.periodRecords) && data.periodRecords.length > MAX_RECORDS) {
+    throw new Error(`经期记录过多（${data.periodRecords.length}条），最多允许${MAX_RECORDS}条`);
+  }
+  if (Array.isArray(data.symptoms) && data.symptoms.length > MAX_RECORDS) {
+    throw new Error(`症状记录过多（${data.symptoms.length}条），最多允许${MAX_RECORDS}条`);
+  }
+
   const db = await getDatabase();
 
   await db.withTransactionAsync(async () => {

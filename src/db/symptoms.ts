@@ -41,7 +41,7 @@ export async function upsertSymptom(
 }
 
 export async function getAllSymptoms(db: SQLiteDatabase): Promise<SymptomRecord[]> {
-  return db.getAllAsync<SymptomRecord>('SELECT * FROM symptoms ORDER BY date DESC');
+  return db.getAllAsync<SymptomRecord>('SELECT * FROM symptoms ORDER BY date DESC LIMIT 500');
 }
 
 export async function getSymptomCount(db: SQLiteDatabase): Promise<number> {

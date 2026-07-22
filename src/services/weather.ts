@@ -10,6 +10,7 @@ function cacheKey(lat: number, lon: number): string {
 /** Raw weather data from API — no derived text (avoids stale cache when mappings change). */
 export interface RawWeather {
   temperature: number;
+  feelsLike: number;
   weatherCode: number;
   uvIndex: number;
   humidity: number;
@@ -48,11 +49,14 @@ export async function geocodeCity(cityName: string): Promise<{ lat: number; lon:
 }
 
 export async function fetchRawWeather(lat: number, lon: number): Promise<RawWeather> {
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,relative_humidity_2m,uv_index,wind_speed_10m&timezone=auto`;
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,weather_code,relative_humidity_2m,uv_index,wind_speed_10m&timezone=auto`;
 
   let res: Response;
   try {
-    res = await fetch(url);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
   } catch (e) {
     throw new Error(`网络请求失败: ${(e as Error).message}`);
   }
@@ -68,6 +72,7 @@ export async function fetchRawWeather(lat: number, lon: number): Promise<RawWeat
   const current = json.current;
   const data: RawWeather = {
     temperature: Math.round(current.temperature_2m),
+    feelsLike: Math.round(current.apparent_temperature ?? current.temperature_2m),
     weatherCode: current.weather_code,
     uvIndex: Math.round(current.uv_index ?? 0),
     humidity: current.relative_humidity_2m,

@@ -8,7 +8,7 @@ export interface PeriodRecord {
 
 export async function getAllPeriodRecords(db: SQLiteDatabase): Promise<PeriodRecord[]> {
   return await db.getAllAsync<PeriodRecord>(
-    'SELECT * FROM period_records ORDER BY start_date DESC'
+    'SELECT * FROM period_records ORDER BY start_date DESC LIMIT 500'
   );
 }
 

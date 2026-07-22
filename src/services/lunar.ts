@@ -26,20 +26,23 @@ export interface LunarData {
 }
 
 export function getLunarData(date: Date): LunarData {
-  const solar = Solar.fromYmd(date.getFullYear(), date.getMonth() + 1, date.getDate());
-  const lunar = solar.getLunar();
-
-  return {
-    yearChinese: lunar.getYearInChinese(),
-    monthChinese: lunar.getMonthInChinese(),
-    dayChinese: lunar.getDayInChinese(),
-    yearGanZhi: lunar.getYearInGanZhi(),
-    monthGanZhi: lunar.getMonthInGanZhi(),
-    dayGanZhi: lunar.getDayInGanZhi(),
-    shengXiao: lunar.getYearShengXiao(),
-    jieQi: lunar.getJieQi() || '',
-    yi: lunar.getDayYi(),
-    ji: lunar.getDayJi(),
-    fullLunar: `${lunar.getYearInGanZhi()}年 ${lunar.getMonthInChinese()}月 ${lunar.getDayInChinese()}`,
-  };
+  try {
+    const solar = Solar.fromYmd(date.getFullYear(), date.getMonth() + 1, date.getDate());
+    const lunar = solar.getLunar();
+    return {
+      yearChinese: lunar.getYearInChinese(),
+      monthChinese: lunar.getMonthInChinese(),
+      dayChinese: lunar.getDayInChinese(),
+      yearGanZhi: lunar.getYearInGanZhi(),
+      monthGanZhi: lunar.getMonthInGanZhi(),
+      dayGanZhi: lunar.getDayInGanZhi(),
+      shengXiao: lunar.getYearShengXiao(),
+      jieQi: lunar.getJieQi() || '',
+      yi: lunar.getDayYi(),
+      ji: lunar.getDayJi(),
+      fullLunar: `${lunar.getYearInGanZhi()}年 ${lunar.getMonthInChinese()}月 ${lunar.getDayInChinese()}`,
+    };
+  } catch {
+    return { yearChinese: '', monthChinese: '', dayChinese: '', yearGanZhi: '', monthGanZhi: '', dayGanZhi: '', shengXiao: '', jieQi: '', yi: [], ji: [], fullLunar: '' };
+  }
 }

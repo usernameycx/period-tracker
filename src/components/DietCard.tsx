@@ -14,14 +14,14 @@ export default function DietCard() {
   const [diet, setDiet] = useState<DietRule | null>(null);
 
   useEffect(() => {
-    (async () => {
+    (async () => { try {
       if (records.length === 0) return;
       const db = await getDatabase();
       const phase: Phase = phaseInfo?.phase || 'follicular';
       const dayOffset: number = phaseInfo?.dayOffset || 1;
       const rule = await getDietRules(db, phase, dayOffset);
       setDiet(rule);
-    })();
+    } catch { /* ignore */ } })();
   }, [records, phaseInfo]);
 
   if (!diet) {

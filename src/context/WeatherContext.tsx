@@ -5,6 +5,7 @@ import { useSettings } from './SettingsContext';
 
 export interface DisplayWeather {
   temperature: number;
+  feelsLike: number;
   weatherCode: number;
   uvIndex: number;
   humidity: number;
