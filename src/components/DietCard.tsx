@@ -15,7 +15,7 @@ export default function DietCard() {
   const [error, setError] = useState(false);
 
   const load = useCallback(() => {
-    if (records.length === 0) return;
+    if (records.length === 0) { setDiet(null); setError(false); return; }
     setError(false);
     (async () => { try {
       const db = await getDatabase();
