@@ -206,7 +206,7 @@ export default function DayDetailSheet({ visible, date, onClose }: Props) {
       visible={errorVisible}
       title="无法标记"
       message={errorMessage}
-      icon="exclamation"
+      icon="warning"
       variant="danger"
       cancelLabel="知道了"
       confirmLabel="知道了"
