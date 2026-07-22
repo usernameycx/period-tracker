@@ -58,7 +58,16 @@ export default function WeatherCard() {
 
   return (
     <View style={styles.card}>
-      {/* Hero: emoji + temp + city/date */}
+      {/* Location + Date bar */}
+      <View style={styles.locRow}>
+        <PressableScale style={styles.locPill} onPress={() => { setCityInput(city); setCityModal(true); }}>
+          <Icon name="location" size={10} color={Colors.primary} />
+          <Text style={styles.locText}>{city}</Text>
+        </PressableScale>
+        <Text style={styles.dateText}>{new Date().getMonth() + 1}月{new Date().getDate()}日</Text>
+      </View>
+
+      {/* Hero: icon + temp */}
       <View style={styles.hero}>
         <Text style={styles.emoji}>{weather.icon}</Text>
         <View style={styles.heroContent}>
@@ -68,13 +77,6 @@ export default function WeatherCard() {
           </View>
           <Text style={styles.condition}>{weather.condition}</Text>
         </View>
-        <PressableScale style={styles.locBox} onPress={() => { setCityInput(city); setCityModal(true); }}>
-          <View style={styles.locPill}>
-            <Icon name="location" size={10} color={Colors.primary} />
-            <Text style={styles.locText}>{city}</Text>
-          </View>
-          <Text style={styles.dateText}>{new Date().getMonth() + 1}月{new Date().getDate()}日</Text>
-        </PressableScale>
       </View>
 
       {/* Advice */}
@@ -154,14 +156,16 @@ const styles = StyleSheet.create({
   },
 
   /* ── Location ── */
-  locBox: { alignItems: 'flex-end', gap: Spacing.xs },
-  locPill: { backgroundColor: Colors.primaryBg, borderRadius: Radius.full, paddingHorizontal: Spacing.sm, paddingVertical: 3, flexDirection: 'row', alignItems: 'center', gap: 4 },
+  /* ── Location row ── */
+  locRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.lg },
+  locPill: { backgroundColor: Colors.primaryBg, borderRadius: Radius.full, paddingHorizontal: Spacing.md, paddingVertical: 4, flexDirection: 'row', alignItems: 'center', gap: 4 },
   locText: { fontSize: FontSize.xs, color: Colors.primary, fontWeight: Weight.semibold },
   dateText: { fontSize: FontSize.xs, color: Colors.textMuted },
 
   /* ── Hero ── */
   hero: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, marginBottom: Spacing.lg },
-  emoji: { fontSize: 52 },
+  emoji: { fontSize: 48 },
+  heroContent: { flex: 1, gap: 2 },
   tempRow: { flexDirection: 'row', alignItems: 'baseline', gap: Spacing.sm },
   temp: { fontSize: 40, fontWeight: Weight.extrabold, color: Colors.primary, letterSpacing: -2 },
   feels: { fontSize: FontSize.xs, color: Colors.textMuted },
