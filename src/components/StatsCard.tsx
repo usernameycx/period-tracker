@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { usePeriod } from '../context/PeriodContext';
-import { computeCycleStats } from '../services/stats';
+import { computeStats } from '../services/stats';
 import { Colors, Spacing, FontSize, Radius, Weight, LineHeight } from '../constants/theme';
 import Icon from './Icon';
 
@@ -9,11 +9,12 @@ const REGULARITY_STYLE: Record<string, { dot: string; bg: string; label: string 
   regular: { dot: Colors.success, bg: Colors.botanicalBg, label: '规律' },
   slightly_irregular: { dot: Colors.warning, bg: Colors.warningBg, label: '基本规律' },
   irregular: { dot: Colors.danger, bg: Colors.dangerBg, label: '不规律' },
+  unknown: { dot: Colors.textMuted, bg: Colors.inkBg, label: '数据不足' },
 };
 
 export default function StatsCard() {
   const { records } = usePeriod();
-  const stats = useMemo(() => computeCycleStats(records), [records]);
+  const stats = useMemo(() => computeStats(records), [records]);
 
   if (stats.totalCycles === 0) {
     return (

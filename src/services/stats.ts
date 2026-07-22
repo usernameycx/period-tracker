@@ -24,7 +24,7 @@ export interface PeriodStats {
   maxCycleLength: number | null;
   minPeriodDays: number | null;
   maxPeriodDays: number | null;
-  regularity: 'regular' | 'irregular' | 'unknown';
+  regularity: 'regular' | 'slightly_irregular' | 'irregular' | 'unknown';
 }
 
 const REGULARITY_THRESHOLD = 3; // ± days
@@ -102,8 +102,14 @@ export function computeStats(records: PeriodRecord[]): PeriodStats {
   let regularity: PeriodStats['regularity'] = 'unknown';
   if (cycleLengths.length >= 2) {
     const avg = cycleLengths.reduce((a, b) => a + b, 0) / cycleLengths.length;
-    const allWithin = cycleLengths.every(c => Math.abs(c - avg) <= REGULARITY_THRESHOLD);
-    regularity = allWithin ? 'regular' : 'irregular';
+    const maxDev = Math.max(...cycleLengths.map(c => Math.abs(c - avg)));
+    if (maxDev <= REGULARITY_THRESHOLD) {
+      regularity = 'regular';
+    } else if (maxDev <= REGULARITY_THRESHOLD * 2) {
+      regularity = 'slightly_irregular';
+    } else {
+      regularity = 'irregular';
+    }
   }
 
   return {
