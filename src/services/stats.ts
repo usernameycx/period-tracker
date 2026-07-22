@@ -1,51 +1,139 @@
+/**
+ * Period statistics helpers.
+ *
+ * A "cycle" is defined by consecutive pairs of period-start dates.
+ * Cycle length = days between two consecutive start dates.
+ * Period length = days from start_date to the day before the next start_date
+ *                 >= the recorded start_date and in the same period block.
+ *
+ * Period days counting rule:
+ * We trace forward from a recorded start_date. Each day is counted as a
+ * period day until we encounter another start_date that opens a NEW
+ * period (the start of the next cycle). We do NOT count days after that
+ * new start as belonging to the previous period.
+ */
 import { PeriodRecord } from '../db/period-records';
-import { parseDate, diffDays } from '../utils/date';
 
-export interface CycleStats {
-  totalCycles: number;
+export interface PeriodStats {
   avgCycleLength: number | null;
+  avgPeriodDays: number | null;
+  totalCycles: number;
+  cycleLengths: number[];
+  periodLengths: number[];
   minCycleLength: number | null;
   maxCycleLength: number | null;
-  regularity: 'regular' | 'slightly_irregular' | 'irregular' | null;
-  regularityLabel: string;
-  cycles: { start: string; length: number }[];
+  minPeriodDays: number | null;
+  maxPeriodDays: number | null;
+  regularity: 'regular' | 'irregular' | 'unknown';
 }
 
-export function computeCycleStats(records: PeriodRecord[]): CycleStats {
-  const sorted = [...records].sort((a, b) => a.start_date.localeCompare(b.start_date));
+const REGULARITY_THRESHOLD = 3; // ± days
 
-  const intervals: number[] = [];
-  for (let i = 1; i < sorted.length; i++) {
-    intervals.push(diffDays(parseDate(sorted[i].start_date), parseDate(sorted[i - 1].start_date)));
+export function computeStats(records: PeriodRecord[]): PeriodStats {
+  if (records.length < 2) {
+    return {
+      avgCycleLength: null, avgPeriodDays: null,
+      totalCycles: 0, cycleLengths: [], periodLengths: [],
+      minCycleLength: null, maxCycleLength: null,
+      minPeriodDays: null, maxPeriodDays: null,
+      regularity: 'unknown',
+    };
   }
 
-  const totalCycles = intervals.length;
+  // Sort ascending by date
+  const sorted = [...records].sort((a, b) =>
+    a.start_date.localeCompare(b.start_date),
+  );
 
-  if (totalCycles === 0) {
-    return { totalCycles: 0, avgCycleLength: null, minCycleLength: null, maxCycleLength: null, regularity: null, regularityLabel: '暂无数据', cycles: [] };
+  // Deduplicate by date (keep first)
+  const seen = new Set<string>();
+  const unique = sorted.filter(r => {
+    if (seen.has(r.start_date)) return false;
+    seen.add(r.start_date);
+    return true;
+  });
+
+  // Cycle lengths: days between consecutive start dates
+  const cycleLengths: number[] = [];
+  for (let i = 1; i < unique.length; i++) {
+    const prev = parseDate(unique[i - 1].start_date);
+    const curr = parseDate(unique[i].start_date);
+    const diff = Math.round((curr.getTime() - prev.getTime()) / MS_PER_DAY);
+    if (diff > 0) cycleLengths.push(diff);
   }
 
-  const minCycleLength = Math.min(...intervals);
-  const maxCycleLength = Math.max(...intervals);
+  // Period lengths: for each start_date, count consecutive days that belong
+  // to this period before the NEXT start_date appears.
+  const periodLengths: number[] = [];
+  for (let i = 0; i < unique.length; i++) {
+    const start = parseDate(unique[i].start_date);
+    const nextStart = i < unique.length - 1
+      ? parseDate(unique[i + 1].start_date)
+      : undefined;
 
-  // Average: use only biologically plausible intervals (21-35 days)
-  const valid = intervals.filter(n => n >= 21 && n <= 35);
-  const avgSource = valid.length > 0 ? valid : intervals;
-  const avgCycleLength = Math.round(avgSource.reduce((a, b) => a + b, 0) / avgSource.length);
+    // Walk forward day by day. For each day, check if any OTHER record starts
+    // on that day. The first such date after the current start ends this period.
+    let days = 0;
+    const cursor = new Date(start);
+    while (true) {
+      // Check if this day is a start_date of a DIFFERENT record
+      const cursorStr = formatDate(cursor);
+      const hit = unique.find(r => r.start_date === cursorStr);
+      if (hit && hit.start_date !== unique[i].start_date) break;
 
-  // Regularity: need ≥2 intervals, use only valid ones
-  let regularity: CycleStats['regularity'] = null;
-  let regularityLabel = '';
-  if (valid.length >= 2) {
-    const range = Math.max(...valid) - Math.min(...valid);
-    if (range <= 2) { regularity = 'regular'; regularityLabel = '非常规律'; }
-    else if (range <= 5) { regularity = 'slightly_irregular'; regularityLabel = '基本规律'; }
-    else { regularity = 'irregular'; regularityLabel = '不太规律'; }
-  } else if (totalCycles >= 1) {
-    regularityLabel = '需要更多数据';
-  } else {
-    regularityLabel = '暂无数据';
+      // If we reached the next known start and it's not the same record,
+      // that ends this period
+      if (nextStart && cursorStr === unique[i + 1].start_date) break;
+
+      days++;
+      cursor.setDate(cursor.getDate() + 1);
+
+      // Safety: max period length is ~14 days
+      if (days > 14) break;
+    }
+
+    // Sanity: period should be >= 1 and <= 10 days
+    if (days >= 1 && days <= 10) {
+      periodLengths.push(days);
+    }
   }
 
-  return { totalCycles, avgCycleLength, minCycleLength, maxCycleLength, regularity, regularityLabel, cycles: [] };
+  // For regularity, compare each cycle length to the average
+  let regularity: PeriodStats['regularity'] = 'unknown';
+  if (cycleLengths.length >= 2) {
+    const avg = cycleLengths.reduce((a, b) => a + b, 0) / cycleLengths.length;
+    const allWithin = cycleLengths.every(c => Math.abs(c - avg) <= REGULARITY_THRESHOLD);
+    regularity = allWithin ? 'regular' : 'irregular';
+  }
+
+  return {
+    avgCycleLength: cycleLengths.length > 0
+      ? Math.round((cycleLengths.reduce((a, b) => a + b, 0) / cycleLengths.length) * 10) / 10
+      : null,
+    avgPeriodDays: periodLengths.length > 0
+      ? Math.round((periodLengths.reduce((a, b) => a + b, 0) / periodLengths.length) * 10) / 10
+      : null,
+    totalCycles: cycleLengths.length,
+    cycleLengths,
+    periodLengths,
+    minCycleLength: cycleLengths.length > 0 ? Math.min(...cycleLengths) : null,
+    maxCycleLength: cycleLengths.length > 0 ? Math.max(...cycleLengths) : null,
+    minPeriodDays: periodLengths.length > 0 ? Math.min(...periodLengths) : null,
+    maxPeriodDays: periodLengths.length > 0 ? Math.max(...periodLengths) : null,
+    regularity,
+  };
+}
+
+const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+function parseDate(d: string): Date {
+  const [y, m, day] = d.split('-').map(Number);
+  return new Date(y, m - 1, day);
+}
+
+function formatDate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }

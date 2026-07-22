@@ -80,7 +80,7 @@ export default function DayDetailSheet({ visible, date, onClose }: Props) {
   const m = `${d.getMonth() + 1}月${d.getDate()}日`;
   const w = ['日', '一', '二', '三', '四', '五', '六'][d.getDay()];
 
-  return (
+  return (<>
     <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
       <TouchableWithoutFeedback onPress={onClose}>
         <Animated.View style={[styles.overlay, { opacity: overlayOpacity }]}>
@@ -198,6 +198,7 @@ export default function DayDetailSheet({ visible, date, onClose }: Props) {
       onCancel={() => setConfirmVisible(false)}
       onConfirm={handleRemoveConfirm}
     />
+  </>
   );
 }
 
