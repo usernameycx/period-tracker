@@ -10,7 +10,7 @@ import { Phase, PHASE_LABELS, DEFAULT_CYCLE_DAYS } from '../constants/phases';
 import { parseDate, addDays } from '../utils/date';
 
 const PERIOD_REMINDER_IDS_KEY = 'period_reminder_ids';
-const DAILY_NOTIF_ID_KEY = 'daily_notif_id';
+const DAILY_NOTIF_IDS_KEY = 'daily_notif_ids';
 
 export function setupNotificationHandler(): void {
   Notifications.setNotificationHandler({
@@ -30,24 +30,39 @@ export async function requestNotificationPermission(): Promise<boolean> {
 }
 
 export async function scheduleDailyNotification(hour: number, minute: number): Promise<void> {
-  // Cancel previous daily notification
-  const prevId = await AsyncStorage.getItem(DAILY_NOTIF_ID_KEY);
-  if (prevId) {
-    await Notifications.cancelScheduledNotificationAsync(prevId);
+  // Cancel all previous daily notifications
+  const prevIdsStr = await AsyncStorage.getItem(DAILY_NOTIF_IDS_KEY);
+  if (prevIdsStr) {
+    let ids: string[] = [];
+    try { ids = JSON.parse(prevIdsStr); } catch { /* ignore */ }
+    for (const id of ids) {
+      await Notifications.cancelScheduledNotificationAsync(id);
+    }
   }
 
-  const { title, body } = await buildNotificationContent();
+  // Pre-build 7 days of notifications, each computed for its target date
+  const db = await getDatabase();
+  const records = await getAllPeriodRecords(db);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-  const id = await Notifications.scheduleNotificationAsync({
-    content: { title, body },
-    trigger: {
-      type: Notifications.SchedulableTriggerInputTypes.DAILY,
-      hour,
-      minute,
-    },
-  });
+  const newIds: string[] = [];
+  for (let i = 0; i < 7; i++) {
+    const targetDate = new Date(today);
+    targetDate.setDate(targetDate.getDate() + i);
+    const triggerDate = new Date(targetDate);
+    triggerDate.setHours(hour, minute, 0, 0);
+    if (triggerDate.getTime() <= Date.now()) continue;
 
-  await AsyncStorage.setItem(DAILY_NOTIF_ID_KEY, id);
+    const { title, body } = await buildContentForDate(records, db, targetDate);
+    const id = await Notifications.scheduleNotificationAsync({
+      content: { title, body },
+      trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: triggerDate },
+    });
+    newIds.push(id);
+  }
+
+  await AsyncStorage.setItem(DAILY_NOTIF_IDS_KEY, JSON.stringify(newIds));
 }
 
 /** Schedule period-approaching reminders. Call whenever records change. */
@@ -122,26 +137,24 @@ export async function schedulePeriodReminders(): Promise<void> {
   }
 }
 
-async function buildNotificationContent(): Promise<{ title: string; body: string }> {
+async function buildContentForDate(
+  records: any[],
+  db: any,
+  date: Date,
+): Promise<{ title: string; body: string }> {
   try {
-    const db = await getDatabase();
-    const records = await getAllPeriodRecords(db);
     if (records.length === 0) {
-      return {
-        title: '🌸 FayeTide',
-        body: '打开 App 录入你的经期记录吧',
-      };
+      return { title: '🌸 FayeTide', body: '打开 App 录入你的经期记录吧' };
     }
 
     const nextStart = getNextPredictedStart(records);
     const avgDays = getAveragePeriodDays(records);
     const cycleLength = getAverageCycleLength(records) || DEFAULT_CYCLE_DAYS;
-    const today = new Date();
 
     let phase: Phase = 'follicular';
     let dayOffset = 1;
     if (nextStart) {
-      const info = getPhaseForDate(today, parseDate(nextStart), avgDays, cycleLength);
+      const info = getPhaseForDate(date, parseDate(nextStart), avgDays, cycleLength);
       phase = info.phase;
       dayOffset = info.dayOffset;
     }
@@ -167,10 +180,7 @@ async function buildNotificationContent(): Promise<{ title: string; body: string
 
     return { title, body };
   } catch {
-    return {
-      title: '🌸 FayeTide',
-      body: '打开 App 查看今日的天气和饮食建议吧',
-    };
+    return { title: '🌸 FayeTide', body: '打开 App 查看今日详情' };
   }
 }
 
