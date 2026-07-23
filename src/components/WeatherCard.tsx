@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, Modal, TextInput, Pressable } from 'react-native';
 import { useWeather } from '../context/WeatherContext';
 import { useSettings } from '../context/SettingsContext';
@@ -47,19 +47,12 @@ export default function WeatherCard() {
     );
   }
 
-  const { feelsDiff, showFeelsLike, windLevel, windColor, windLabel } = useMemo(() => {
-    const diff = Math.abs(weather.feelsLike - weather.temperature);
-    const kmh = weather.windSpeed ?? 0;
-    const level = kmh < 2 ? 0 : kmh < 6 ? 1 : kmh < 12 ? 2 : kmh < 20 ? 3 : kmh < 29 ? 4 : kmh < 39 ? 5 : 6;
-    return {
-      feelsDiff: diff,
-      showFeelsLike: diff >= 2,
-      windLevel: level,
-      windColor: level <= 1 ? Colors.success : level <= 3 ? Colors.primary : Colors.warning,
-      windLabel: level === 0 ? '微风' : level <= 2 ? '轻风' : level <= 4 ? '和风' : '强风',
-    };
-  }, [weather.feelsLike, weather.temperature, weather.windSpeed]);
-
+  const feelsDiff = Math.abs(weather.feelsLike - weather.temperature);
+  const showFeelsLike = feelsDiff >= 2;
+  const windKmh = weather.windSpeed ?? 0;
+  const windLevel = windKmh < 2 ? 0 : windKmh < 6 ? 1 : windKmh < 12 ? 2 : windKmh < 20 ? 3 : windKmh < 29 ? 4 : windKmh < 39 ? 5 : 6;
+  const windColor = windLevel <= 1 ? Colors.success : windLevel <= 3 ? Colors.primary : Colors.warning;
+  const windLabel = windLevel === 0 ? '微风' : windLevel <= 2 ? '轻风' : windLevel <= 4 ? '和风' : '强风';
   const lifeAdvice = phaseInfo ? getLifeAdvice(phaseInfo.phase, weather) : null;
 
   return (
