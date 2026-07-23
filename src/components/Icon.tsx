@@ -40,7 +40,9 @@ export type IconName =
   | 'location'    // Map pin for city/location
   | 'edit'        // Pencil/edit
   | 'moon'        // Crescent moon for evening
-  | 'wind';       // Wind lines for weather
+  | 'wind'        // Wind lines for weather
+  | 'refresh'     // Circular refresh arrow
+  | 'cloud';      // Cloud shape for weather
 
 // Ellipse helper — SVG <ellipse> with center coordinates
 function Ellipse2({ cx, cy, rx, ry, ...rest }: { cx: number; cy: number; rx: number; ry: number; [key: string]: any }) {
@@ -391,6 +393,18 @@ const PATHS: Record<IconName, (color: string) => React.ReactElement> = {
     <Path
       d="M 3,8 C 7,6 13,9 16,8 M 3,12 C 8,10 14,13 18,12 M 3,16 C 6,15 11,17 14,16"
       fill="none" stroke={c} strokeWidth="1.5" strokeLinecap="round"
+    />
+  ),
+  refresh: (c) => (
+    <Path
+      d="M 21,12 A 9,9 0 1,1 18,5 M 21,3 L 21,8 L 16,8"
+      fill="none" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+    />
+  ),
+  cloud: (c) => (
+    <Path
+      d="M 6,18 C 3,18 1,15 2,12 C 0.5,9.5 2.5,6 5.5,6 C 7,3.5 10,2 13,4 C 16.5,3 20,6 19,10 C 22,11 22,15 19,17 C 17,18 12,18 6,18 Z"
+      fill="none" stroke={c} strokeWidth="1.5" strokeLinejoin="round"
     />
   ),
 };
