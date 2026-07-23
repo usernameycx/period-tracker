@@ -24,7 +24,8 @@
           "icon": "./assets/images/notification-icon.png",
           "color": "#C2905A"
         }
-      ]
+      ],
+      "./plugins/withSplashWindowBackground"
     ],
     "ios": {
       "supportsTablet": false,
