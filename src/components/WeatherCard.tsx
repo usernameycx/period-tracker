@@ -187,9 +187,10 @@ const styles = StyleSheet.create({
   /* ── Advice ── */
   advice: {
     flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.sm,
-    backgroundColor: Colors.primaryBg, borderRadius: Radius.md,
+    backgroundColor: Colors.primaryBg, borderRadius: Radius.lg,
     padding: Spacing.md, marginBottom: Spacing.lg,
     borderLeftWidth: 3, borderLeftColor: Colors.primary,
+    ...Shadow.raised,
   },
   adviceContent: { flex: 1, gap: Spacing.xs },
   adviceWeather: { fontSize: FontSize.sm, color: Colors.textSecondary, lineHeight: LineHeight.sm2 },
@@ -197,7 +198,12 @@ const styles = StyleSheet.create({
   advicePlaceholder: { flex: 1, fontSize: FontSize.sm, color: Colors.textHint },
 
   /* ── Metrics ── */
-  metrics: { flexDirection: 'row', gap: Spacing.sm },
+  metrics: {
+    flexDirection: 'row', gap: Spacing.sm,
+    backgroundColor: Colors.primaryBg, borderRadius: Radius.lg,
+    padding: Spacing.md,
+    ...Shadow.raised,
+  },
   metric: { flex: 1, alignItems: 'center', gap: Spacing.xs },
   metricIcon: { width: 36, height: 36, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
   metricVal: { fontSize: FontSize.md, fontWeight: Weight.bold, color: Colors.ink },
