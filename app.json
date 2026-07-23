@@ -23,6 +23,7 @@
         }
       ],
       "./plugins/withSplashWindowBackground",
+      "./plugins/withAndroidSplashLogo",
       "./plugins/withAndroidShrink"
     ],
     "ios": {
