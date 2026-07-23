@@ -46,25 +46,14 @@ export default function StatsCard() {
         ) : null}
       </View>
 
-      {/* Two stat tiles side by side */}
-      <View style={styles.tileRow}>
-        <View style={styles.tile}>
-          <Text style={styles.tileNum}>{stats.avgCycleLength ?? '-'}</Text>
-          <Text style={styles.tileUnit}>天</Text>
-          <Text style={styles.tileDesc}>平均周期</Text>
-        </View>
-        <View style={styles.tileDivider} />
-        <View style={styles.tile}>
-          <Text style={[styles.tileNum, { color: Colors.botanical }]}>{stats.avgPeriodDays ?? '-'}</Text>
-          <Text style={styles.tileUnit}>天</Text>
-          <Text style={styles.tileDesc}>平均经期</Text>
+      {/* Hero: avg cycle length */}
+      <View style={styles.heroTile}>
+        <Text style={styles.heroNum}>{stats.avgCycleLength ?? '-'}</Text>
+        <View style={styles.heroMeta}>
+          <Text style={styles.heroLabel}>天平均周期</Text>
+          <Text style={styles.heroCount}>共 {stats.totalCycles} 个已完成周期</Text>
         </View>
       </View>
-
-      {/* Cycle count */}
-      <Text style={styles.cycleCount}>
-        基于 <Text style={styles.cycleCountBold}>{stats.totalCycles} 个</Text>已完成周期
-      </Text>
 
       {/* Cycle range bar */}
       {stats.minCycleLength && stats.maxCycleLength && (
@@ -95,17 +84,6 @@ export default function StatsCard() {
           </View>
         </View>
       )}
-
-      {/* Period days range */}
-      {stats.minPeriodDays && stats.maxPeriodDays && (
-        <View style={styles.periodRange}>
-          <Text style={styles.periodRangeLabel}>经期持续</Text>
-          <View style={styles.periodRangeChip}>
-            <Icon name="blood" size={12} color={Colors.primary} />
-            <Text style={styles.periodRangeText}>{stats.minPeriodDays} - {stats.maxPeriodDays} 天</Text>
-          </View>
-        </View>
-      )}
     </View>
   );
 }
@@ -133,27 +111,17 @@ const styles = StyleSheet.create({
   regDot: { width: 6, height: 6, borderRadius: 3 },
   regLabel: { fontSize: FontSize.xs, fontWeight: Weight.semibold },
 
-  /* Twin tiles */
-  tileRow: {
-    flexDirection: 'row', alignItems: 'stretch',
+  /* Hero tile */
+  heroTile: {
+    flexDirection: 'row', alignItems: 'center', gap: Spacing.lg,
     backgroundColor: Colors.cardBg, borderRadius: Radius.lg,
-    paddingVertical: Spacing.lg, marginBottom: Spacing.md,
+    padding: Spacing.lg, marginBottom: Spacing.md,
+    ...Shadow.raised,
   },
-  tile: {
-    flex: 1, alignItems: 'center', justifyContent: 'center',
-    paddingHorizontal: Spacing.md,
-  },
-  tileDivider: {
-    width: 1, backgroundColor: Colors.divider,
-    marginVertical: Spacing.sm,
-  },
-  tileNum: { fontSize: 32, fontWeight: Weight.extrabold, color: Colors.primary, letterSpacing: -1 },
-  tileUnit: { fontSize: FontSize.xs, color: Colors.textMuted, fontWeight: Weight.medium, marginTop: -4 },
-  tileDesc: { fontSize: FontSize.xs, color: Colors.textMuted, marginTop: Spacing.xs },
-
-  /* Cycle count */
-  cycleCount: { fontSize: FontSize.xs, color: Colors.textMuted, textAlign: 'center', marginBottom: Spacing.lg },
-  cycleCountBold: { fontWeight: Weight.semibold, color: Colors.primary },
+  heroNum: { fontSize: 40, fontWeight: Weight.extrabold, color: Colors.primary, letterSpacing: -2, lineHeight: 44 },
+  heroMeta: { gap: 2 },
+  heroLabel: { fontSize: FontSize.sm, color: Colors.textSecondary, fontWeight: Weight.medium },
+  heroCount: { fontSize: FontSize.xs, color: Colors.textMuted },
 
   /* Range bar */
   rangeWrap: { marginBottom: Spacing.lg },
