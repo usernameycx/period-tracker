@@ -90,10 +90,11 @@ export default function StatsCard() {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.primaryBg,
+    backgroundColor: Colors.cardBg,
     borderRadius: Radius.xl,
     padding: Spacing.xl,
     marginBottom: Spacing.cardGap,
+    ...Shadow.raised,
   },
 
   /* Header */
@@ -114,9 +115,8 @@ const styles = StyleSheet.create({
   /* Hero tile */
   heroTile: {
     flexDirection: 'row', alignItems: 'center', gap: Spacing.lg,
-    backgroundColor: Colors.cardBg, borderRadius: Radius.lg,
+    backgroundColor: Colors.primaryBg, borderRadius: Radius.lg,
     padding: Spacing.lg, marginBottom: Spacing.md,
-    ...Shadow.raised,
   },
   heroNum: { fontSize: 40, fontWeight: Weight.extrabold, color: Colors.primary, letterSpacing: -2, lineHeight: 44 },
   heroMeta: { gap: 2 },
