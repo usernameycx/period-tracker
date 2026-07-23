@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef, type ReactNode } from 'react';
 import { getDatabase } from '../db/database';
 import { PeriodRecord, getAllPeriodRecords, insertPeriodRecord, deletePeriodRecord, clearAllPeriodRecords } from '../db/period-records';
 import { schedulePeriodReminders } from '../services/notifications';
@@ -6,6 +6,8 @@ import { parseDate, diffDays } from '../utils/date';
 
 /** Minimum plausible cycle length — prevents accidental multi-marking within one month */
 const MIN_CYCLE_DAYS = 21;
+/** Debounce window for batch-operations — merges rapid refreshes */
+const REFRESH_DEBOUNCE_MS = 300;
 
 interface PeriodCtx {
   records: PeriodRecord[];
@@ -24,8 +26,10 @@ export function PeriodProvider({ children }: { children: ReactNode }) {
   const [records, setRecords] = useState<PeriodRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const latestRefresh = useRef<() => Promise<void>>(() => Promise.resolve());
 
-  const refresh = useCallback(async () => {
+  const doRefresh = useCallback(async () => {
     try {
       setError(null);
       const db = await getDatabase();
@@ -37,11 +41,22 @@ export function PeriodProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-    // Reschedule period reminders whenever records change
-    try { await schedulePeriodReminders(); } catch { /* non-critical — notification scheduling can fail */ }
+    try { await schedulePeriodReminders(); } catch { /* non-critical */ }
   }, []);
 
-  useEffect(() => { refresh(); }, [refresh]);
+  /** Debounced refresh — merges rapid successive calls into a single DB query */
+  const refresh = useCallback(async () => {
+    if (refreshTimer.current) clearTimeout(refreshTimer.current);
+    return new Promise<void>(resolve => {
+      latestRefresh.current = async () => { await doRefresh(); resolve(); };
+      refreshTimer.current = setTimeout(() => {
+        refreshTimer.current = null;
+        latestRefresh.current();
+      }, REFRESH_DEBOUNCE_MS);
+    });
+  }, [doRefresh]);
+
+  useEffect(() => { doRefresh(); }, [doRefresh]);
 
   const addRecord = useCallback(async (startDate: string) => {
     const db = await getDatabase();
@@ -71,13 +86,14 @@ export function PeriodProvider({ children }: { children: ReactNode }) {
         throw e;
       }
     }
-    await refresh();
+    // Fire-and-forget debounced refresh — non-blocking for UI responsiveness
+    refresh();
   }, [refresh]);
 
   const removeRecord = useCallback(async (id: number) => {
     const db = await getDatabase();
     await deletePeriodRecord(db, id);
-    await refresh();
+    refresh();
   }, [refresh]);
 
   const clearAll = useCallback(async () => {

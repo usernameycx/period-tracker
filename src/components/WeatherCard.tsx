@@ -85,7 +85,7 @@ export default function WeatherCard() {
           const advice = getLifeAdvice(phaseInfo.phase, weather);
           return (
             <>
-              <Icon name="cloud" size={14} color={Colors.textMuted} style={{ marginTop: 2 }} />
+              <Icon name="cloud" size={14} color={Colors.textMuted} />
               <View style={styles.adviceContent}>
                 <Text style={styles.adviceWeather}>{advice.weatherAdvice}</Text>
                 <Text style={styles.advicePhase}>
@@ -96,7 +96,7 @@ export default function WeatherCard() {
           );
         })() : (
           <>
-            <Icon name="bulb" size={14} color={Colors.textHint} style={{ marginTop: 2 }} />
+            <Icon name="bulb" size={14} color={Colors.textHint} />
             <Text style={styles.advicePlaceholder}>记录经期后查看阶段生活建议</Text>
           </>
         )}
@@ -112,15 +112,15 @@ export default function WeatherCard() {
           <Text style={styles.metricLabel}>紫外线</Text>
         </View>
         <View style={styles.metric}>
-          <View style={[styles.metricIcon, { backgroundColor: Colors.primary + '18' }]}>
-            <Icon name="drop" size={16} color={Colors.primary} />
+          <View style={[styles.metricIcon, { backgroundColor: Colors.skyBg }]}>
+            <Icon name="drop" size={16} color={Colors.sky} />
           </View>
           <Text style={styles.metricVal}>{weather.humidity}%</Text>
           <Text style={styles.metricLabel}>湿度</Text>
         </View>
         <View style={styles.metric}>
-          <View style={[styles.metricIcon, { backgroundColor: windColor + '22' }]}>
-            <Icon name="wind" size={16} color={windColor} />
+          <View style={[styles.metricIcon, { backgroundColor: Colors.botanicalBg }]}>
+            <Icon name="wind" size={16} color={Colors.botanical} />
           </View>
           <Text style={styles.metricVal}>{windLevel}级</Text>
           <Text style={styles.metricLabel}>{windLabel}</Text>
@@ -211,7 +211,6 @@ const styles = StyleSheet.create({
   skeletonIcon: { width: 44, height: 44, borderRadius: Radius.md, backgroundColor: Colors.inkBg },
   skeletonBar: { backgroundColor: Colors.inkBg, borderRadius: Radius.xs, opacity: 0.5 },
   skeletonContent: { flex: 1, gap: 6 },
-  heroContent: { flex: 1 },
 
   /* ── City modal ── */
   modalOverlay: { flex: 1, backgroundColor: Colors.overlay, justifyContent: 'center', alignItems: 'center', padding: Spacing.xxxl },

@@ -36,6 +36,8 @@ export const Colors = {
   botanical: '#5D7A5F',
   botanicalBg: '#EEF3EE',
   accentGold: '#D4A85A',
+  sky: '#7EA4C3',
+  skyBg: '#EDF4F9',
 
   // ── Text ────────────────────────────────────────────────────
   text: '#29211D',

@@ -89,7 +89,8 @@ export default function DayDetailSheet({ visible, date, onClose }: Props) {
               </View>
 
               <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent}
-                showsVerticalScrollIndicator={false} bounces={false}>
+                showsVerticalScrollIndicator={false} nestedScrollEnabled
+                keyboardShouldPersistTaps="handled">
 
                 {/* Period status card */}
                 <View style={styles.periodCard}>

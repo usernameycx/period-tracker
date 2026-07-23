@@ -37,44 +37,72 @@ export default function StatsCard() {
       {/* Header */}
       <View style={styles.headerRow}>
         <Icon name="stats" size={16} color={Colors.primary} />
-      </View>
-
-      {/* Hero stat */}
-      <View style={styles.heroStat}>
-        <Text style={styles.heroNum}>{stats.avgCycleLength ?? '-'}</Text>
-        <Text style={styles.heroUnit}>天</Text>
-      </View>
-      <Text style={styles.heroDesc}>平均周期长度</Text>
-
-      {/* Info row: cycles + regularity */}
-      <View style={styles.infoRow}>
-        <Text style={styles.infoText}>{stats.totalCycles} 个已完成周期</Text>
+        <Text style={styles.headerTitle}>周期统计</Text>
         {reg ? (
           <View style={[styles.regBadge, { backgroundColor: reg.bg, borderColor: reg.dot + '40' }]}>
             <View style={[styles.regDot, { backgroundColor: reg.dot }]} />
             <Text style={[styles.regLabel, { color: reg.dot }]}>{reg.label}</Text>
           </View>
-        ) : (
-          <Text style={styles.infoText}>{stats.regularityLabel}</Text>
-        )}
+        ) : null}
       </View>
 
-      {/* Range bar */}
+      {/* Two stat tiles side by side */}
+      <View style={styles.tileRow}>
+        <View style={styles.tile}>
+          <Text style={styles.tileNum}>{stats.avgCycleLength ?? '-'}</Text>
+          <Text style={styles.tileUnit}>天</Text>
+          <Text style={styles.tileDesc}>平均周期</Text>
+        </View>
+        <View style={styles.tileDivider} />
+        <View style={styles.tile}>
+          <Text style={[styles.tileNum, { color: Colors.botanical }]}>{stats.avgPeriodDays ?? '-'}</Text>
+          <Text style={styles.tileUnit}>天</Text>
+          <Text style={styles.tileDesc}>平均经期</Text>
+        </View>
+      </View>
+
+      {/* Cycle count */}
+      <Text style={styles.cycleCount}>
+        基于 <Text style={styles.cycleCountBold}>{stats.totalCycles} 个</Text>已完成周期
+      </Text>
+
+      {/* Cycle range bar */}
       {stats.minCycleLength && stats.maxCycleLength && (
         <View style={styles.rangeWrap}>
-          <View style={styles.rangeEnds}>
-            <Text style={styles.rangeEndVal}>{stats.minCycleLength}<Text style={styles.rangeEndUnit}>天</Text></Text>
-            <Text style={styles.rangeEndVal}>{stats.maxCycleLength}<Text style={styles.rangeEndUnit}>天</Text></Text>
+          <Text style={styles.rangeTitle}>周期范围</Text>
+          <View style={styles.rangeRow}>
+            <View style={styles.rangeEndpoint}>
+              <Text style={styles.rangeVal}>{stats.minCycleLength}<Text style={styles.rangeUnit}>天</Text></Text>
+              <Text style={styles.rangeSub}>最短</Text>
+            </View>
+            <View style={styles.rangeBarWrap}>
+              <View style={styles.rangeTrack}>
+                <View style={[styles.rangeFill, {
+                  marginLeft: `${((stats.minCycleLength - 21) / 14) * 100}%`,
+                  width: `${Math.max(10, ((stats.maxCycleLength - stats.minCycleLength) / 14) * 100)}%`,
+                }]} />
+              </View>
+              <View style={styles.rangeLabels}>
+                <Text style={styles.rangeTick}>21</Text>
+                <Text style={styles.rangeTick}>28</Text>
+                <Text style={styles.rangeTick}>35</Text>
+              </View>
+            </View>
+            <View style={styles.rangeEndpoint}>
+              <Text style={[styles.rangeVal, styles.rangeValRight]}>{stats.maxCycleLength}<Text style={styles.rangeUnit}>天</Text></Text>
+              <Text style={[styles.rangeSub, { textAlign: 'right' }]}>最长</Text>
+            </View>
           </View>
-          <View style={styles.rangeTrack}>
-            <View style={[styles.rangeFill, {
-              marginLeft: `${((stats.minCycleLength - 21) / 14) * 100}%`,
-              width: `${Math.max(4, ((stats.maxCycleLength - stats.minCycleLength) / 14) * 100)}%`,
-            }]} />
-          </View>
-          <View style={styles.rangeEnds}>
-            <Text style={styles.rangeEndLbl}>最短</Text>
-            <Text style={styles.rangeEndLbl}>最长</Text>
+        </View>
+      )}
+
+      {/* Period days range */}
+      {stats.minPeriodDays && stats.maxPeriodDays && (
+        <View style={styles.periodRange}>
+          <Text style={styles.periodRangeLabel}>经期持续</Text>
+          <View style={styles.periodRangeChip}>
+            <Icon name="blood" size={12} color={Colors.primary} />
+            <Text style={styles.periodRangeText}>{stats.minPeriodDays} - {stats.maxPeriodDays} 天</Text>
           </View>
         </View>
       )}
@@ -91,33 +119,78 @@ const styles = StyleSheet.create({
   },
 
   /* Header */
-  headerRow: { marginBottom: Spacing.lg },
-
-  /* Hero stat */
-  heroStat: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'center', gap: Spacing.xs, marginBottom: Spacing.xs },
-  heroNum: { fontSize: 48, fontWeight: Weight.extrabold, color: Colors.primary, letterSpacing: -2 },
-  heroUnit: { fontSize: FontSize.base, fontWeight: Weight.semibold, color: Colors.textMuted },
-  heroDesc: { fontSize: FontSize.xs, color: Colors.textMuted, textAlign: 'center', marginBottom: Spacing.xl },
-
-  /* Info row */
-  infoRow: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: Colors.cardBg, borderRadius: Radius.lg,
-    paddingVertical: Spacing.md, paddingHorizontal: Spacing.lg, marginBottom: Spacing.lg,
+  headerRow: {
+    flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
+    marginBottom: Spacing.lg,
   },
-  infoText: { fontSize: FontSize.sm, color: Colors.textSecondary, fontWeight: Weight.medium },
-  regBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: Spacing.sm, paddingVertical: 3, borderRadius: Radius.full, borderWidth: 1 },
+  headerTitle: { fontSize: FontSize.base, fontWeight: Weight.bold, color: Colors.text, flex: 1 },
+
+  regBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    paddingHorizontal: Spacing.sm, paddingVertical: 3,
+    borderRadius: Radius.full, borderWidth: 1,
+  },
   regDot: { width: 6, height: 6, borderRadius: 3 },
   regLabel: { fontSize: FontSize.xs, fontWeight: Weight.semibold },
 
-  /* Range */
-  rangeWrap: { backgroundColor: Colors.cardBg, borderRadius: Radius.lg, padding: Spacing.lg },
-  rangeEnds: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: Spacing.sm },
-  rangeEndVal: { fontSize: FontSize.base, fontWeight: Weight.bold, color: Colors.ink },
-  rangeEndUnit: { fontSize: FontSize.xs, color: Colors.textMuted, fontWeight: Weight.medium },
-  rangeEndLbl: { fontSize: FontSize.xs, color: Colors.textHint },
-  rangeTrack: { height: 6, backgroundColor: Colors.inkBg, borderRadius: 3, overflow: 'hidden' },
-  rangeFill: { height: 6, backgroundColor: Colors.botanical, borderRadius: 3 },
+  /* Twin tiles */
+  tileRow: {
+    flexDirection: 'row', alignItems: 'stretch',
+    backgroundColor: Colors.cardBg, borderRadius: Radius.lg,
+    paddingVertical: Spacing.lg, marginBottom: Spacing.md,
+  },
+  tile: {
+    flex: 1, alignItems: 'center', justifyContent: 'center',
+    paddingHorizontal: Spacing.md,
+  },
+  tileDivider: {
+    width: 1, backgroundColor: Colors.divider,
+    marginVertical: Spacing.sm,
+  },
+  tileNum: { fontSize: 32, fontWeight: Weight.extrabold, color: Colors.primary, letterSpacing: -1 },
+  tileUnit: { fontSize: FontSize.xs, color: Colors.textMuted, fontWeight: Weight.medium, marginTop: -4 },
+  tileDesc: { fontSize: FontSize.xs, color: Colors.textMuted, marginTop: Spacing.xs },
+
+  /* Cycle count */
+  cycleCount: { fontSize: FontSize.xs, color: Colors.textMuted, textAlign: 'center', marginBottom: Spacing.lg },
+  cycleCountBold: { fontWeight: Weight.semibold, color: Colors.primary },
+
+  /* Range bar */
+  rangeWrap: { marginBottom: Spacing.lg },
+  rangeTitle: { fontSize: FontSize.xs, color: Colors.textMuted, fontWeight: Weight.semibold, marginBottom: Spacing.md },
+  rangeRow: { flexDirection: 'row', alignItems: 'flex-end', gap: Spacing.sm },
+  rangeEndpoint: { minWidth: 36 },
+  rangeVal: { fontSize: FontSize.lg, fontWeight: Weight.bold, color: Colors.ink },
+  rangeValRight: { textAlign: 'right' },
+  rangeUnit: { fontSize: FontSize.xs, color: Colors.textMuted, fontWeight: Weight.medium },
+  rangeSub: { fontSize: FontSize.xs, color: Colors.textHint },
+
+  rangeBarWrap: { flex: 1, paddingBottom: 2 },
+  rangeTrack: {
+    height: 8, backgroundColor: Colors.inkBg, borderRadius: 4,
+    overflow: 'hidden', marginBottom: Spacing.xs,
+  },
+  rangeFill: { height: 8, backgroundColor: Colors.botanical, borderRadius: 4 },
+  rangeLabels: {
+    flexDirection: 'row', justifyContent: 'space-between',
+    paddingHorizontal: 0,
+  },
+  rangeTick: { fontSize: 9, color: Colors.textHint },
+
+  /* Period range chip */
+  periodRange: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: Colors.cardBg, borderRadius: Radius.lg,
+    paddingVertical: Spacing.md, paddingHorizontal: Spacing.lg,
+    justifyContent: 'space-between',
+  },
+  periodRangeLabel: { fontSize: FontSize.sm, color: Colors.textSecondary },
+  periodRangeChip: {
+    flexDirection: 'row', alignItems: 'center', gap: Spacing.xs,
+    backgroundColor: Colors.primaryBg, borderRadius: Radius.full,
+    paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm,
+  },
+  periodRangeText: { fontSize: FontSize.sm, fontWeight: Weight.semibold, color: Colors.text },
 
   /* Empty */
   emptyWrap: { alignItems: 'center', paddingVertical: Spacing.md },
