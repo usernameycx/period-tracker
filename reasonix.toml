@@ -1,0 +1,2 @@
+[permissions]
+allow = ["Bash(cd \"C:\\AllProject\\period-tracker\" && ffprobe -v quiet -print_format json -show_streams assets/splash-icon.png 2>/dev/null || echo \"ffprobe not available\")"]

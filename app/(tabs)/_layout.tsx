@@ -57,6 +57,7 @@ export default function TabLayout() {
           elevation: 0,
           borderTopWidth: 1,
           borderTopColor: Colors.divider,
+          overflow: 'hidden',
         },
         tabBarLabelStyle: {
           fontSize: FontSize.xs,

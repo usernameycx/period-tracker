@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableWithoutFeedback, ScrollView, StyleSheet, Modal, Animated, Dimensions } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Modal, Animated, Dimensions, Pressable } from 'react-native';
 import { usePeriod } from '../context/PeriodContext';
 import { useWeather } from '../context/WeatherContext';
 import { getDatabase } from '../db/database';
@@ -80,17 +80,16 @@ export default function DayDetailSheet({ visible, date, onClose }: Props) {
 
   return (<>
     <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
-      <TouchableWithoutFeedback onPress={onClose}>
-        <Animated.View style={[styles.overlay, { opacity: overlayOpacity }]}>
-          <TouchableWithoutFeedback onPress={() => {}}>
-            <Animated.View style={[styles.sheet, { transform: [{ translateY }] }]}>
-              <View style={styles.handleRow}>
-                <View style={styles.handle} />
-              </View>
-
+      <View style={styles.modalWrap}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+        <Animated.View style={[styles.sheet, { opacity: overlayOpacity, transform: [{ translateY }] }]}>
               <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false} nestedScrollEnabled
                 keyboardShouldPersistTaps="handled">
+
+                <View style={styles.handleRow}>
+                  <View style={styles.handle} />
+                </View>
 
                 {/* Period status card */}
                 <View style={styles.periodCard}>
@@ -181,9 +180,7 @@ export default function DayDetailSheet({ visible, date, onClose }: Props) {
                 </PressableScale>
               </ScrollView>
             </Animated.View>
-          </TouchableWithoutFeedback>
-        </Animated.View>
-      </TouchableWithoutFeedback>
+      </View>
     </Modal>
 
     <ConfirmModal
@@ -214,7 +211,8 @@ export default function DayDetailSheet({ visible, date, onClose }: Props) {
 }
 
 const styles = StyleSheet.create({
-  overlay: { flex: 1, backgroundColor: Colors.overlay, justifyContent: 'flex-end' },
+  overlay: { flex: 1, backgroundColor: Colors.overlay },
+  modalWrap: { flex: 1, justifyContent: 'flex-end' },
   sheet: {
     backgroundColor: Colors.cardBg,
     borderTopLeftRadius: Radius.xxl,

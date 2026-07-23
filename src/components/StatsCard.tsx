@@ -183,6 +183,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.cardBg, borderRadius: Radius.lg,
     paddingVertical: Spacing.md, paddingHorizontal: Spacing.lg,
     justifyContent: 'space-between',
+    ...Shadow.raised,
   },
   periodRangeLabel: { fontSize: FontSize.sm, color: Colors.textSecondary },
   periodRangeChip: {

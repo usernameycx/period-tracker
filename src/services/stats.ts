@@ -13,6 +13,7 @@
  * new start as belonging to the previous period.
  */
 import { PeriodRecord } from '../db/period-records';
+import { DEFAULT_PERIOD_DAYS } from '../constants/phases';
 
 export interface PeriodStats {
   avgCycleLength: number | null;
@@ -90,6 +91,11 @@ export function computeStats(records: PeriodRecord[]): PeriodStats {
 
       // Safety: max period length is ~14 days
       if (days > 14) break;
+    }
+
+    // Last record with no next start: use default period length
+    if (!nextStart && days > 14) {
+      days = DEFAULT_PERIOD_DAYS;
     }
 
     // Sanity: period should be >= 1 and <= 10 days
