@@ -17,13 +17,16 @@ export default function DietCard() {
   const load = useCallback(() => {
     if (records.length === 0) { setDiet(null); setError(false); return; }
     setError(false);
+    let cancelled = false;
     (async () => { try {
       const db = await getDatabase();
+      if (cancelled) return;
       const phase: Phase = phaseInfo?.phase || 'follicular';
       const dayOffset: number = phaseInfo?.dayOffset || 1;
       const rule = await getDietRules(db, phase, dayOffset);
-      setDiet(rule);
-    } catch { setError(true); } })();
+      if (!cancelled) setDiet(rule);
+    } catch { if (!cancelled) setError(true); } })();
+    return () => { cancelled = true; };
   }, [records, phaseInfo]);
 
   useEffect(() => { load(); }, [load]);

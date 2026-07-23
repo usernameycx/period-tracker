@@ -85,8 +85,12 @@ export default function SymptomPicker({ date, visible }: Props) {
       const updated = { ...(prev || {} as SymptomRecord), [field]: value } as SymptomRecord;
       return updated;
     });
-    const db = await getDatabase();
-    await upsertSymptom(db, date, { [field]: value });
+    try {
+      const db = await getDatabase();
+      await upsertSymptom(db, date, { [field]: value });
+    } catch (e) {
+      console.warn('SymptomPicker.update failed:', e);
+    }
   };
 
   if (!visible) return null;

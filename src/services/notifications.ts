@@ -178,7 +178,7 @@ async function buildContentForDate(
     const isToday = date.toDateString() === new Date().toDateString();
     const weather = isToday ? await getCachedWeatherForNotification() : null;
 
-    const foods = rule.recommend.slice(0, 3).join('、');
+    const foods = rule?.recommend?.slice(0, 3).join('、') || '';
     let body = '';
     if (weather) {
       const wa = getWeatherAdvice(weather.weatherCode);

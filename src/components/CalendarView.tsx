@@ -51,11 +51,13 @@ export default function CalendarView({ onDayPress, selectedDate, currentMonth, o
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const todayStr = formatDate(new Date());
 
-  const days: (number | null)[] = [];
-  for (let i = 0; i < firstDay; i++) days.push(null);
-  for (let d = 1; d <= daysInMonth; d++) days.push(d);
-  while (days.length % 7 !== 0) days.push(null);
-  const rows = chunk(days, 7);
+  const { days, rows } = useMemo(() => {
+    const d: (number | null)[] = [];
+    for (let i = 0; i < firstDay; i++) d.push(null);
+    for (let i = 1; i <= daysInMonth; i++) d.push(i);
+    while (d.length % 7 !== 0) d.push(null);
+    return { days: d, rows: chunk(d, 7) };
+  }, [firstDay, daysInMonth]);
 
   // ── Swipe gesture ──
   const panX = useRef(new Animated.Value(0)).current;

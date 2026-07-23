@@ -63,6 +63,9 @@ export function computeStats(records: PeriodRecord[]): PeriodStats {
     if (diff > 0) cycleLengths.push(diff);
   }
 
+  // Build date set for O(1) lookup
+  const dateSet = new Set(unique.map(r => r.start_date));
+
   // Period lengths: for each start_date, count consecutive days that belong
   // to this period before the NEXT start_date appears.
   const periodLengths: number[] = [];
@@ -72,15 +75,13 @@ export function computeStats(records: PeriodRecord[]): PeriodStats {
       ? parseDate(unique[i + 1].start_date)
       : undefined;
 
-    // Walk forward day by day. For each day, check if any OTHER record starts
-    // on that day. The first such date after the current start ends this period.
+    // Walk forward day by day until we hit another recorded start
     let days = 0;
     const cursor = new Date(start);
     while (true) {
-      // Check if this day is a start_date of a DIFFERENT record
       const cursorStr = formatDate(cursor);
-      const hit = unique.find(r => r.start_date === cursorStr);
-      if (hit && hit.start_date !== unique[i].start_date) break;
+      // Check if this day is a start_date of a DIFFERENT record (O(1) lookup)
+      if (cursorStr !== unique[i].start_date && dateSet.has(cursorStr)) break;
 
       // If we reached the next known start and it's not the same record,
       // that ends this period

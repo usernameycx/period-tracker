@@ -34,6 +34,7 @@ export default function DayDetailSheet({ visible, date, onClose }: Props) {
   const dateStr = formatDate(date);
   const recordedStart = records.find(r => r.start_date === dateStr);
   const phaseInfo = getPhaseForCalendarDay(date, records);
+  const lifeAdvice = weather && phaseInfo ? getLifeAdvice(phaseInfo.phase, weather) : null;
 
   useEffect(() => {
     const anim = Animated.parallel([
@@ -162,18 +163,15 @@ export default function DayDetailSheet({ visible, date, onClose }: Props) {
 
                 <SymptomPicker date={dateStr} visible={visible} />
 
-                {weather && phaseInfo && (() => {
-                    const adv = getLifeAdvice(phaseInfo.phase, weather);
-                    return (
-                      <View style={styles.adviceBox}>
-                        <Icon name="bulb" size={16} color={Colors.warning} />
-                        <View style={styles.adviceContent}>
-                          <Text style={styles.adviceWeather}>{adv.weatherAdvice}</Text>
-                          <Text style={styles.advicePhase}>{adv.phaseAdvice}</Text>
-                        </View>
-                      </View>
-                    );
-                  })()}
+                {lifeAdvice && (
+                  <View style={styles.adviceBox}>
+                    <Icon name="bulb" size={16} color={Colors.warning} />
+                    <View style={styles.adviceContent}>
+                      <Text style={styles.adviceWeather}>{lifeAdvice.weatherAdvice}</Text>
+                      <Text style={styles.advicePhase}>{lifeAdvice.phaseAdvice}</Text>
+                    </View>
+                  </View>
+                )}
 
                 <PressableScale style={styles.closeBtn} onPress={onClose}>
                   <Text style={styles.closeText}>关闭</Text>
