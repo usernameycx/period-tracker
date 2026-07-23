@@ -34,54 +34,37 @@ export default function StatsCard() {
 
   return (
     <View style={styles.card}>
-      {/* Header */}
-      <View style={styles.headerRow}>
-        <Icon name="stats" size={16} color={Colors.primary} />
-        <Text style={styles.headerTitle}>周期统计</Text>
+      {/* Hero */}
+      <View style={styles.heroTile}>
+        <Text style={styles.heroNum}>{stats.avgCycleLength ?? '-'}</Text>
+        <Text style={styles.heroLabel}>天平均周期</Text>
+        <Text style={styles.heroCount}>共 {stats.totalCycles} 个已完成周期</Text>
         {reg ? (
-          <View style={[styles.regBadge, { backgroundColor: reg.bg, borderColor: reg.dot + '40' }]}>
+          <View style={[styles.regBadge, { backgroundColor: reg.bg, borderColor: reg.dot + '40', marginTop: Spacing.sm }]}>
             <View style={[styles.regDot, { backgroundColor: reg.dot }]} />
             <Text style={[styles.regLabel, { color: reg.dot }]}>{reg.label}</Text>
           </View>
         ) : null}
       </View>
 
-      {/* Hero: avg cycle length */}
-      <View style={styles.heroTile}>
-        <Text style={styles.heroNum}>{stats.avgCycleLength ?? '-'}</Text>
-        <View style={styles.heroMeta}>
-          <Text style={styles.heroLabel}>天平均周期</Text>
-          <Text style={styles.heroCount}>共 {stats.totalCycles} 个已完成周期</Text>
-        </View>
-      </View>
-
-      {/* Cycle range bar */}
+      {/* Range */}
       {stats.minCycleLength && stats.maxCycleLength && (
-        <View style={styles.rangeWrap}>
-          <Text style={styles.rangeTitle}>周期范围</Text>
-          <View style={styles.rangeRow}>
-            <View style={styles.rangeEndpoint}>
-              <Text style={styles.rangeVal}>{stats.minCycleLength}<Text style={styles.rangeUnit}>天</Text></Text>
-              <Text style={styles.rangeSub}>最短</Text>
+        <View style={styles.rangeRow}>
+          <Text style={styles.rangeVal}>{stats.minCycleLength}<Text style={styles.rangeUnit}>天</Text></Text>
+          <View style={styles.rangeBarWrap}>
+            <View style={styles.rangeTrack}>
+              <View style={[styles.rangeFill, {
+                left: `${((stats.minCycleLength - 21) / 14) * 100}%`,
+                width: `${Math.max(6, ((stats.maxCycleLength - stats.minCycleLength) / 14) * 100)}%`,
+              }]} />
             </View>
-            <View style={styles.rangeBarWrap}>
-              <View style={styles.rangeTrack}>
-                <View style={[styles.rangeFill, {
-                  marginLeft: `${((stats.minCycleLength - 21) / 14) * 100}%`,
-                  width: `${Math.max(10, ((stats.maxCycleLength - stats.minCycleLength) / 14) * 100)}%`,
-                }]} />
-              </View>
-              <View style={styles.rangeLabels}>
-                <Text style={styles.rangeTick}>21</Text>
-                <Text style={styles.rangeTick}>28</Text>
-                <Text style={styles.rangeTick}>35</Text>
-              </View>
-            </View>
-            <View style={styles.rangeEndpoint}>
-              <Text style={[styles.rangeVal, styles.rangeValRight]}>{stats.maxCycleLength}<Text style={styles.rangeUnit}>天</Text></Text>
-              <Text style={[styles.rangeSub, { textAlign: 'right' }]}>最长</Text>
+            <View style={styles.rangeLabels}>
+              <Text style={styles.rangeTick}>21</Text>
+              <Text style={styles.rangeTick}>28</Text>
+              <Text style={styles.rangeTick}>35</Text>
             </View>
           </View>
+          <Text style={[styles.rangeVal, { textAlign: 'right' }]}>{stats.maxCycleLength}<Text style={styles.rangeUnit}>天</Text></Text>
         </View>
       )}
     </View>
@@ -98,11 +81,15 @@ const styles = StyleSheet.create({
   },
 
   /* Header */
-  headerRow: {
-    flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
-    marginBottom: Spacing.lg,
+  heroTile: {
+    alignItems: 'center',
+    backgroundColor: Colors.cardBg, borderRadius: Radius.lg,
+    padding: Spacing.xl, marginBottom: Spacing.md,
+    ...Shadow.raised,
   },
-  headerTitle: { fontSize: FontSize.base, fontWeight: Weight.bold, color: Colors.text, flex: 1 },
+  heroNum: { fontSize: 48, fontWeight: Weight.extrabold, color: Colors.primary, letterSpacing: -2, lineHeight: 52 },
+  heroLabel: { fontSize: FontSize.sm, color: Colors.textSecondary, fontWeight: Weight.medium, marginTop: Spacing.xs },
+  heroCount: { fontSize: FontSize.xs, color: Colors.textMuted, marginTop: 2 },
 
   regBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
@@ -112,29 +99,9 @@ const styles = StyleSheet.create({
   regDot: { width: 6, height: 6, borderRadius: 3 },
   regLabel: { fontSize: FontSize.xs, fontWeight: Weight.semibold },
 
-  /* Hero tile */
-  heroTile: {
-    flexDirection: 'row', alignItems: 'center', gap: Spacing.lg,
-    backgroundColor: Colors.cardBg, borderRadius: Radius.lg,
-    padding: Spacing.lg, marginBottom: Spacing.md,
-    ...Shadow.raised,
-  },
-  heroNum: { fontSize: 40, fontWeight: Weight.extrabold, color: Colors.primary, letterSpacing: -2, lineHeight: 44 },
-  heroMeta: { gap: 2 },
-  heroLabel: { fontSize: FontSize.sm, color: Colors.textSecondary, fontWeight: Weight.medium },
-  heroCount: { fontSize: FontSize.xs, color: Colors.textMuted },
-
   /* Range bar */
-  rangeWrap: {
-    backgroundColor: Colors.cardBg, borderRadius: Radius.lg,
-    padding: Spacing.lg, marginBottom: Spacing.md,
-    ...Shadow.raised,
-  },
-  rangeTitle: { fontSize: FontSize.xs, color: Colors.textMuted, fontWeight: Weight.semibold, marginBottom: Spacing.md },
-  rangeRow: { flexDirection: 'row', alignItems: 'flex-end', gap: Spacing.sm },
-  rangeEndpoint: { minWidth: 36 },
-  rangeVal: { fontSize: FontSize.lg, fontWeight: Weight.bold, color: Colors.ink },
-  rangeValRight: { textAlign: 'right' },
+  rangeRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
+  rangeVal: { fontSize: FontSize.lg, fontWeight: Weight.bold, color: Colors.ink, minWidth: 32 },
   rangeUnit: { fontSize: FontSize.xs, color: Colors.textMuted, fontWeight: Weight.medium },
   rangeSub: { fontSize: FontSize.xs, color: Colors.textHint },
 

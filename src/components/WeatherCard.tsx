@@ -198,12 +198,7 @@ const styles = StyleSheet.create({
   advicePlaceholder: { flex: 1, fontSize: FontSize.sm, color: Colors.textHint },
 
   /* ── Metrics ── */
-  metrics: {
-    flexDirection: 'row', gap: Spacing.sm,
-    backgroundColor: Colors.primaryBg, borderRadius: Radius.lg,
-    padding: Spacing.md,
-    ...Shadow.raised,
-  },
+  metrics: { flexDirection: 'row', gap: Spacing.sm },
   metric: { flex: 1, alignItems: 'center', gap: Spacing.xs },
   metricIcon: { width: 36, height: 36, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
   metricVal: { fontSize: FontSize.md, fontWeight: Weight.bold, color: Colors.ink },

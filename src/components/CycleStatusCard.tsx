@@ -177,6 +177,7 @@ const styles = StyleSheet.create({
   countdownBox: {
     flex: 1, alignItems: 'center', paddingVertical: Spacing.lg,
     backgroundColor: Colors.primaryBg, borderRadius: Radius.md,
+    ...Shadow.raised,
   },
   cdDivider: { width: Spacing.md, alignSelf: 'stretch' },
   countdownNum: { fontSize: 36, fontWeight: Weight.extrabold, color: Colors.ink, letterSpacing: -1 },
