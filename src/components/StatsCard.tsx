@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { usePeriod } from '../context/PeriodContext';
 import { computeStats } from '../services/stats';
-import { Colors, Spacing, FontSize, Radius, Weight, LineHeight } from '../constants/theme';
+import { Colors, Spacing, FontSize, Radius, Shadow, Weight, LineHeight } from '../constants/theme';
 import Icon from './Icon';
 
 const REGULARITY_STYLE: Record<string, { dot: string; bg: string; label: string }> = {
