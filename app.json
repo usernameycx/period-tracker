@@ -23,8 +23,7 @@
         }
       ],
       "./plugins/withSplashWindowBackground",
-      "./plugins/withAndroidSplashLogo",
-      "./plugins/withAndroidShrink"
+      "expo-splash-screen"
     ],
     "ios": {
       "supportsTablet": false,

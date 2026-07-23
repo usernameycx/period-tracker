@@ -18,47 +18,47 @@ const CATEGORIES = [
     key: 'flow' as const,
     label: '经血量',
     options: [
-      { key: 'light', label: '少量', icon: 'drop' as IconName, iconColor: Colors.textHint },
-      { key: 'medium', label: '正常', icon: 'blood' as IconName, iconColor: Colors.primary },
-      { key: 'heavy', label: '较多', icon: 'blood' as IconName, iconColor: Colors.danger },
+      { key: 'light', label: '少量', icon: 'droplet' as IconName, iconColor: Colors.textHint },
+      { key: 'medium', label: '正常', icon: 'drop' as IconName, iconColor: Colors.primary },
+      { key: 'heavy', label: '较多', icon: 'drops' as IconName, iconColor: Colors.danger },
     ],
   },
   {
     key: 'cramps' as const,
     label: '痛经',
     options: [
-      { key: 'none', label: '无', icon: 'check' as IconName, iconColor: Colors.success },
-      { key: 'mild', label: '轻微', icon: 'leaf' as IconName, iconColor: Colors.warning },
-      { key: 'moderate', label: '中等', icon: 'warning' as IconName, iconColor: Colors.warning },
-      { key: 'severe', label: '严重', icon: 'close' as IconName, iconColor: Colors.danger },
+      { key: 'none', label: '无', icon: 'check-circle' as IconName, iconColor: Colors.success },
+      { key: 'mild', label: '轻微', icon: 'wave' as IconName, iconColor: Colors.primary },
+      { key: 'moderate', label: '中等', icon: 'zigzag' as IconName, iconColor: Colors.warning },
+      { key: 'severe', label: '严重', icon: 'lightning' as IconName, iconColor: Colors.danger },
     ],
   },
   {
     key: 'mood' as const,
     label: '心情',
     options: [
-      { key: 'happy', label: '开心', icon: 'sparkle' as IconName, iconColor: Colors.success },
-      { key: 'calm', label: '平静', icon: 'moon' as IconName, iconColor: Colors.primary },
-      { key: 'irritable', label: '烦躁', icon: 'warning' as IconName, iconColor: Colors.warning },
-      { key: 'sad', label: '难过', icon: 'drop' as IconName, iconColor: Colors.primaryLight },
-      { key: 'anxious', label: '焦虑', icon: 'lightning' as IconName, iconColor: Colors.warning },
+      { key: 'happy', label: '开心', icon: 'smile' as IconName, iconColor: Colors.success },
+      { key: 'calm', label: '平静', icon: 'zen' as IconName, iconColor: Colors.primary },
+      { key: 'irritable', label: '烦躁', icon: 'storm' as IconName, iconColor: Colors.warning },
+      { key: 'sad', label: '难过', icon: 'frown' as IconName, iconColor: Colors.primaryLight },
+      { key: 'anxious', label: '焦虑', icon: 'nervous' as IconName, iconColor: Colors.warning },
     ],
   },
   {
     key: 'energy' as const,
     label: '精力',
     options: [
-      { key: 'high', label: '充沛', icon: 'lightning' as IconName, iconColor: Colors.warning },
+      { key: 'high', label: '充沛', icon: 'battery-full' as IconName, iconColor: Colors.warning },
       { key: 'normal', label: '正常', icon: 'battery' as IconName, iconColor: Colors.success },
-      { key: 'low', label: '疲惫', icon: 'moon' as IconName, iconColor: Colors.textHint },
+      { key: 'low', label: '疲惫', icon: 'battery-low' as IconName, iconColor: Colors.textHint },
     ],
   },
 ];
 
 const TOGGLES = [
-  { key: 'headache' as const, label: '头痛', icon: 'warning' as IconName, iconColor: Colors.warning },
-  { key: 'bloating' as const, label: '腹胀', icon: 'drop' as IconName, iconColor: Colors.primary },
-  { key: 'cravings' as const, label: '嘴馋', icon: 'diet' as IconName, iconColor: Colors.primary },
+  { key: 'headache' as const, label: '头痛', icon: 'head' as IconName, iconColor: Colors.danger },
+  { key: 'bloating' as const, label: '腹胀', icon: 'bloat' as IconName, iconColor: Colors.primaryLight },
+  { key: 'cravings' as const, label: '嘴馋', icon: 'cookie' as IconName, iconColor: Colors.primary },
 ];
 
 export default function SymptomPicker({ date, visible }: Props) {
@@ -125,7 +125,7 @@ export default function SymptomPicker({ date, visible }: Props) {
                     style={[styles.option, currentVal === opt.key && styles.optionActive]}
                     onPress={() => update(cat.key, opt.key)}
                   >
-                    <Icon name={opt.icon} size={18} color={currentVal === opt.key ? Colors.primary : opt.iconColor} />
+                    <Icon name={opt.icon} size={20} color={currentVal === opt.key ? Colors.primary : opt.iconColor} />
                     <Text style={[styles.optionLabel, currentVal === opt.key && styles.optionLabelActive]}>
                       {opt.label}
                     </Text>
@@ -150,7 +150,7 @@ export default function SymptomPicker({ date, visible }: Props) {
                 style={[styles.toggle, val && styles.toggleActive]}
                 onPress={() => update(t.key, val ? 0 : 1)}
               >
-                <Icon name={t.icon} size={16} color={t.iconColor} />
+                <Icon name={t.icon} size={18} color={t.iconColor} />
                 <Text style={[styles.toggleLabel, val && styles.toggleLabelActive]}>{t.label}</Text>
               </PressableScale>
             );
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
   title: { fontSize: FontSize.lg, fontWeight: Weight.bold, color: Colors.primary },
   category: { marginBottom: Spacing.md },
   catDivider: { height: 1, backgroundColor: Colors.divider, marginBottom: Spacing.md },
-  catLabel: { fontSize: FontSize.sm, fontWeight: Weight.semibold, color: Colors.textSecondary, marginBottom: Spacing.xs },
+  catLabel: { fontSize: FontSize.sm2, fontWeight: Weight.semibold, color: Colors.textSecondary, marginBottom: Spacing.xs },
   optionRow: { flexDirection: 'row', gap: Spacing.sm },
   option: {
     flex: 1, alignItems: 'center', paddingVertical: Spacing.md, paddingHorizontal: Spacing.xs,
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
   },
   optionActive: { backgroundColor: Colors.primaryBg, borderWidth: 1, borderColor: Colors.primary },
   optionIcon: { marginBottom: 2 },
-  optionLabel: { fontSize: FontSize.xs, color: Colors.textMuted, fontWeight: Weight.medium },
+  optionLabel: { fontSize: FontSize.sm, color: Colors.textMuted, fontWeight: Weight.medium },
   optionLabelActive: { color: Colors.primary, fontWeight: Weight.bold },
 
   toggleRow: { flexDirection: 'row', gap: Spacing.sm },

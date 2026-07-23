@@ -50,7 +50,10 @@ export default function StatsCard() {
       {/* Range */}
       {stats.minCycleLength && stats.maxCycleLength && (
         <View style={styles.rangeRow}>
-          <Text style={styles.rangeVal}>{stats.minCycleLength}<Text style={styles.rangeUnit}>天</Text></Text>
+          <View style={styles.rangeEdge}>
+            <Text style={styles.rangeEdgeLabel}>最短</Text>
+            <Text style={styles.rangeVal}>{stats.minCycleLength}<Text style={styles.rangeUnit}>天</Text></Text>
+          </View>
           <View style={styles.rangeBarWrap}>
             <View style={styles.rangeTrack}>
               <View style={[styles.rangeFill, {
@@ -64,7 +67,10 @@ export default function StatsCard() {
               <Text style={styles.rangeTick}>35</Text>
             </View>
           </View>
-          <Text style={[styles.rangeVal, { textAlign: 'right' }]}>{stats.maxCycleLength}<Text style={styles.rangeUnit}>天</Text></Text>
+          <View style={[styles.rangeEdge, { alignItems: 'flex-end' }]}>
+            <Text style={styles.rangeEdgeLabel}>最长</Text>
+            <Text style={styles.rangeVal}>{stats.maxCycleLength}<Text style={styles.rangeUnit}>天</Text></Text>
+          </View>
         </View>
       )}
     </View>
@@ -100,14 +106,16 @@ const styles = StyleSheet.create({
   regLabel: { fontSize: FontSize.xs, fontWeight: Weight.semibold },
 
   /* Range bar */
-  rangeRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
+  rangeRow: { flexDirection: 'row', alignItems: 'flex-end', gap: Spacing.sm },
+  rangeEdge: { alignItems: 'center' },
+  rangeEdgeLabel: { fontSize: FontSize.xs, color: Colors.textMuted, fontWeight: Weight.medium, marginBottom: 2 },
   rangeVal: { fontSize: FontSize.lg, fontWeight: Weight.bold, color: Colors.ink, minWidth: 32 },
   rangeUnit: { fontSize: FontSize.xs, color: Colors.textMuted, fontWeight: Weight.medium },
   rangeSub: { fontSize: FontSize.xs, color: Colors.textHint },
 
   rangeBarWrap: { flex: 1, paddingBottom: 2 },
   rangeTrack: {
-    height: 8, backgroundColor: Colors.inkBg, borderRadius: 4,
+    height: 8, backgroundColor: '#DDD6CB', borderRadius: 4,
     overflow: 'hidden', marginBottom: Spacing.xs,
   },
   rangeFill: { height: 8, backgroundColor: Colors.botanical, borderRadius: 4 },
