@@ -7,11 +7,6 @@
     "icon": "./assets/icon.png",
     "scheme": "faye-tide",
     "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#F8F2EA"
-    },
     "plugins": [
       "expo-router",
       "expo-sqlite",
