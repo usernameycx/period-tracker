@@ -1,27 +1,41 @@
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Platform } from 'react-native';
+import { Platform, NativeModules } from 'react-native';
 import { getDatabase } from '../db/database';
 import { getAllPeriodRecords } from '../db/period-records';
-import { getDietRules } from '../db/diet-rules';
 import { getNextPredictedStart, getAveragePeriodDays, getAverageCycleLength, getPhaseForDate } from './prediction';
 import { getCachedWeather, geocodeCity } from './weather';
 import { getWeatherAdvice } from '../constants/weather-advice';
+import { getLifeAdvice } from './advice';
 import { Phase, PHASE_LABELS, DEFAULT_CYCLE_DAYS } from '../constants/phases';
-import { parseDate, addDays } from '../utils/date';
+import { parseDate, addDays, isSameDay } from '../utils/date';
+
+const DailyAlarm = NativeModules.DailyAlarmModule;
 
 const PERIOD_REMINDER_IDS_KEY = 'period_reminder_ids';
 const DAILY_NOTIF_IDS_KEY = 'daily_notif_ids';
 
 export async function setupNotificationHandler(): Promise<void> {
   if (Platform.OS === 'android') {
+    // 'default' channel — only used for general/first-time prompts
+    // Keep importance at DEFAULT so it doesn't disturb, but still shows.
     await Notifications.setNotificationChannelAsync('default', {
       name: 'FayeTide 提醒',
       importance: Notifications.AndroidImportance.DEFAULT,
     });
+    // 'period' channel — HIGH importance so reminders are visible even
+    // on Chinese ROMs with strict background restrictions.
     await Notifications.setNotificationChannelAsync('period', {
       name: '经期提醒',
       importance: Notifications.AndroidImportance.HIGH,
+    });
+    // 'daily' channel — HIGH importance for the daily check-in notification.
+    // Separate from 'period' to let users control them independently.
+    await Notifications.setNotificationChannelAsync('daily', {
+      name: '每日播报',
+      importance: Notifications.AndroidImportance.HIGH,
+      vibrationPattern: [0, 100, 50, 100],
+      lightColor: '#C2905A',
     });
   }
 
@@ -41,8 +55,28 @@ export async function requestNotificationPermission(): Promise<boolean> {
   return status === 'granted';
 }
 
-export async function scheduleDailyNotification(hour: number, minute: number): Promise<void> {
-  // Cancel all previous daily notifications
+/**
+ * Schedule a native AlarmManager-based daily notification.
+ * The native receiver fetches fresh data (phase + weather + advice) at fire time,
+ * so content is always real-time accurate. Falls back to JS scheduling
+ * on non-Android platforms or if the native module is unavailable.
+ */
+export async function scheduleDailyNotifications(hour: number, minute: number): Promise<void> {
+  if (Platform.OS === 'android' && DailyAlarm) {
+    try {
+      const city = (await AsyncStorage.getItem('city')) || '南昌';
+      await DailyAlarm.schedule(hour, minute, city);
+      return;
+    } catch (e) {
+      console.warn('Native alarm failed, falling back to JS:', e);
+    }
+  }
+  // Fallback: JS-based one-time scheduling (still used for iOS / native-unavailable)
+  await scheduleJSFallback(hour, minute);
+}
+
+/** JS fallback: simple DAILY trigger for when native alarm isn't available */
+async function scheduleJSFallback(hour: number, minute: number): Promise<void> {
   const prevIdsStr = await AsyncStorage.getItem(DAILY_NOTIF_IDS_KEY);
   if (prevIdsStr) {
     let ids: string[] = [];
@@ -51,21 +85,17 @@ export async function scheduleDailyNotification(hour: number, minute: number): P
       await Notifications.cancelScheduledNotificationAsync(id);
     }
   }
-
-  // Schedule a single daily recurring notification (system AlarmManager)
+  const db = await getDatabase();
+  const records = await getAllPeriodRecords(db);
+  const content = await buildContentForDate(new Date(), records);
   const id = await Notifications.scheduleNotificationAsync({
-    content: {
-      title: '🌸 FayeTide',
-      body: '打开 App 查看今日周期状态和生活建议',
-    },
+    content: { title: content.title, body: content.body },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.DAILY,
-      hour,
-      minute,
-      channelId: 'default',
+      hour, minute,
+      channelId: 'daily',
     },
   });
-
   await AsyncStorage.setItem(DAILY_NOTIF_IDS_KEY, JSON.stringify([id]));
 }
 
@@ -141,10 +171,26 @@ export async function schedulePeriodReminders(): Promise<void> {
   }
 }
 
+/**
+ * Combined scheduler: reschedule DAILY notification + period reminders.
+ * Call this on app cold start (NOT just when records change) so that
+ * period-approaching reminders survive app kills + reboots.
+ */
+export async function scheduleAllNotifications(
+  hour: number,
+  minute: number,
+): Promise<void> {
+  await setupNotificationHandler();
+  const granted = await requestNotificationPermission();
+  if (!granted) return;
+  await scheduleDailyNotifications(hour, minute);
+  await schedulePeriodReminders();
+}
+
+/** Build notification content for a specific date — phase + weather (today only) + life advice. */
 async function buildContentForDate(
-  records: any[],
-  db: any,
   date: Date,
+  records: any[],
 ): Promise<{ title: string; body: string }> {
   try {
     if (records.length === 0) {
@@ -163,22 +209,28 @@ async function buildContentForDate(
       dayOffset = info.dayOffset;
     }
 
-    const rule = await getDietRules(db, phase, dayOffset);
     const title = `${PHASE_LABELS[phase]} · 第${dayOffset}天`;
 
-    // Weather: only use for today's notification (not future dates)
-    const isToday = date.toDateString() === new Date().toDateString();
+    // Weather: only include for today (can't predict future weather)
+    const isToday = isSameDay(date, new Date());
     const weather = isToday ? await getCachedWeatherForNotification() : null;
 
-    const foods = rule?.recommend?.slice(0, 3).join('、') || '';
     let body = '';
     if (weather) {
       const wa = getWeatherAdvice(weather.weatherCode);
-      body = `${wa.condition}${weather.temperature}° · 推荐${foods}`;
-    } else if (rule) {
-      body = `推荐饮食：${foods}`;
+      const life = getLifeAdvice(phase, {
+        temperature: weather.temperature,
+        weatherCode: weather.weatherCode,
+        condition: wa.condition,
+        advice: wa.advice,
+      });
+      body = `${wa.icon} ${wa.condition} ${weather.temperature}° · ${life.phaseAdvice}`;
+    } else {
+      const life = getLifeAdvice(phase, {
+        temperature: 20, weatherCode: 0, condition: '未知', advice: '保持好心情',
+      });
+      body = life.phaseAdvice;
     }
-    if (!body) body = '打开 App 查看今日详情';
 
     return { title, body };
   } catch {

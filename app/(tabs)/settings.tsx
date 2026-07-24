@@ -7,6 +7,7 @@ import PressableScale from '../../src/components/PressableScale';
 import TimeWheelPicker from '../../src/components/TimeWheelPicker';
 import ConfirmModal from '../../src/components/ConfirmModal';
 import { exportData, importData } from '../../src/utils/backup';
+import { scheduleAllNotifications } from '../../src/services/notifications';
 import { usePeriod } from '../../src/context/PeriodContext';
 import { getDatabase } from '../../src/db/database';
 import { getSymptomCount, clearAllSymptoms } from '../../src/db/symptoms';
@@ -43,6 +44,13 @@ export default function SettingsPage() {
   const handleClearPeriods = () => setConfirmType('clearPeriods');
   const handleClearSymptoms = () => setConfirmType('clearSymptoms');
   const handleResetAll = () => setConfirmType('resetAll');
+
+  const handleNotifyDone = async () => {
+    setNotifyModal(false);
+    await scheduleAllNotifications(notifyHour, notifyMinute).catch(e => {
+      console.warn('scheduleAllNotifications failed:', e);
+    });
+  };
 
   const executeConfirm = async () => {
     const type = confirmType; setConfirmType(null);
@@ -156,7 +164,7 @@ export default function SettingsPage() {
           <View style={styles.notifyModalCard}>
             <Text style={styles.notifyModalTitle}>设置提醒时间</Text>
             <TimeWheelPicker hour={notifyHour} minute={notifyMinute} onHourChange={setNotifyHour} onMinuteChange={setNotifyMinute} />
-            <PressableScale style={styles.notifyModalBtn} onPress={() => setNotifyModal(false)}>
+            <PressableScale style={styles.notifyModalBtn} onPress={handleNotifyDone}>
               <Text style={styles.notifyModalBtnText}>完成</Text>
             </PressableScale>
           </View>

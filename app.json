@@ -17,15 +17,7 @@
           "color": "#C2905A"
         }
       ],
-      "./plugins/withSplashWindowBackground",
-      [
-        "expo-splash-screen",
-        {
-          "image": "./assets/splash-icon.png",
-          "resizeMode": "contain",
-          "backgroundColor": "#F8F2EA"
-        }
-      ]
+      "./plugins/withSplashWindowBackground"
     ],
     "ios": {
       "supportsTablet": false,

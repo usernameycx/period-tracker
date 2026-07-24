@@ -105,16 +105,18 @@ async function generate() {
       .toFile(path.join(dir, 'ic_launcher_round.png'));
   }
 
-  // 10. Android splash screen logos — same fill strategy
+  // 10. Android splash screen logos — render full SVG, no center-crop
+  //    SVG has 36px padding around the circle (r=220 in 512 canvas);
+  //    cropping into it clips the circle edges.
   for (const d of densities) {
     const drawDir = path.join(ANDROID_RES, `drawable-${d.name}`);
     fs.mkdirSync(drawDir, { recursive: true });
-    const renderSize = Math.round(d.size * 1.5);
+    const targetSize = d.size * 3;               // 3× icon size for splash
+    const renderSize = Math.round(targetSize * 1.2);  // 20% oversample for crisp edges
+    console.log(`splashscreen_logo.png (${d.name} ${targetSize}px)...`);
     const markBuf = await iconMark(renderSize);
-    const offset = Math.floor((renderSize - d.size) / 2);
-    console.log(`splashscreen_logo.png (${d.name} render ${renderSize}→${d.size})...`);
     await sharp(markBuf)
-      .extract({ left: offset, top: offset, width: d.size, height: d.size })
+      .resize(targetSize, targetSize, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
       .png()
       .toFile(path.join(drawDir, 'splashscreen_logo.png'));
   }
