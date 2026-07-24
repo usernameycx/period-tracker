@@ -41,3 +41,10 @@ yarn-error.*
 
 # agent metadata
 .reasonix/
+
+# Android build artifacts
+android/app/.cxx/
+
+# Screenshots and test APKs in root
+/*.png
+/*.apk
