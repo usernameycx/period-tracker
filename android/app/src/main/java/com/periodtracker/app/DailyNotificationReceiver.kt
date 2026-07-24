@@ -10,6 +10,7 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.database.sqlite.SQLiteDatabase
 import android.os.Build
+import android.os.PowerManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import java.io.BufferedReader
@@ -61,15 +62,15 @@ class DailyNotificationReceiver : BroadcastReceiver() {
                 }
             }
 
-            // Use setExact for precise timing; fall back to set() if permission not granted
+            // Use setExactAndAllowWhileIdle — bypasses Doze on aggressive ROMs
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
                 alarmMgr.canScheduleExactAlarms()) {
-                alarmMgr.setExact(
+                alarmMgr.setExactAndAllowWhileIdle(
                     AlarmManager.RTC_WAKEUP,
                     calendar.timeInMillis,
                     pending
                 )
-                Log.d(TAG, "Alarm scheduled EXACT for ${calendar.time}")
+                Log.d(TAG, "Alarm scheduled WHILE_IDLE for ${calendar.time}")
             } else {
                 alarmMgr.set(
                     AlarmManager.RTC_WAKEUP,
@@ -97,7 +98,22 @@ class DailyNotificationReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == ACTION_FIRE ||
             intent.action == Intent.ACTION_BOOT_COMPLETED) {
-            thread { fireNotification(context) }
+            val pending = goAsync()
+            val wl = (context.getSystemService(Context.POWER_SERVICE) as PowerManager)
+                .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "FayeTide:DailyNotification")
+            wl.acquire(30_000)
+            thread {
+                try {
+                    if (intent.action == ACTION_FIRE) {
+                        fireNotification(context)
+                    } else {
+                        scheduleNext(context)
+                    }
+                } finally {
+                    pending.finish()
+                    wl.release()
+                }
+            }
         }
     }
 
@@ -110,7 +126,16 @@ class DailyNotificationReceiver : BroadcastReceiver() {
 
     private fun fireNotification(context: Context) {
         try {
+            // Prevent duplicate fires within 30s
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val lastFire = prefs.getLong("last_fire_time", 0)
+            val now = System.currentTimeMillis()
+            if (now - lastFire < 30_000) {
+                Log.d(TAG, "Skipping duplicate fire within ${(now - lastFire)}ms")
+                return
+            }
+            prefs.edit().putLong("last_fire_time", now).apply()
+
             val city = prefs.getString(KEY_CITY, "南昌") ?: "南昌"
 
             // 1. Read period records from expo-sqlite database

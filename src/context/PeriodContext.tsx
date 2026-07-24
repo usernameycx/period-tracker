@@ -61,8 +61,6 @@ export function PeriodProvider({ children }: { children: ReactNode }) {
   const addRecord = useCallback(async (startDate: string) => {
     const db = await getDatabase();
     try {
-      // Validate minimum cycle gap before inserting — prevents accidental
-      // multi-marking within one month that breaks prediction entirely.
       const all = await getAllPeriodRecords(db);
       const newDate = parseDate(startDate);
       for (const rec of all) {
@@ -74,19 +72,26 @@ export function PeriodProvider({ children }: { children: ReactNode }) {
         }
       }
       await insertPeriodRecord(db, startDate);
+      // Optimistic: update UI immediately, then debounce DB refresh
+      setRecords(prev => {
+        const exists = prev.find(r => r.start_date === startDate);
+        if (exists) return prev;
+        return [...prev, { id: -1, start_date: startDate, created_at: new Date().toISOString() }];
+      });
     } catch (e: any) {
-      // Only treat genuine UNIQUE constraint violations as toggle-off.
-      // All other errors (DB locked, disk full, validation, etc.) must surface.
       const msg = e?.message || '';
       if (msg.includes('UNIQUE') || msg.includes('unique')) {
         const all = await getAllPeriodRecords(db);
         const existing = all.find(r => r.start_date === startDate);
-        if (existing) await deletePeriodRecord(db, existing.id);
+        if (existing) {
+          await deletePeriodRecord(db, existing.id);
+          setRecords(prev => prev.filter(r => r.start_date !== startDate));
+        }
       } else {
         throw e;
       }
     }
-    // Fire-and-forget debounced refresh — non-blocking for UI responsiveness
+    // Debounced full refresh to sync IDs and re-schedule reminders
     refresh();
   }, [refresh]);
 

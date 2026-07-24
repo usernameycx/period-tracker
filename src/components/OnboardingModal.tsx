@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, StyleSheet, Modal } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Modal, Linking, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSettings } from '../context/SettingsContext';
 import { Colors, Spacing, FontSize, Radius, Shadow, Weight, LineHeight } from '../constants/theme';
@@ -30,6 +30,11 @@ const STEPS: { icon: IconName; title: string; desc: string }[] = [
     title: '设置城市',
     desc: '用于获取当地天气和生活建议',
   },
+  {
+    icon: 'bell',
+    title: '确保准时通知',
+    desc: '为不错过每日提醒\n请开启「自启动」权限',
+  },
 ];
 
 export default function OnboardingModal() {
@@ -43,6 +48,12 @@ export default function OnboardingModal() {
       if (!v) setVisible(true);
     }).catch(() => {});
   }, []);
+
+  const openAppSettings = () => {
+    if (Platform.OS === 'android') {
+      Linking.openSettings();
+    }
+  };
 
   const finish = async () => {
     const trimmed = cityInput.trim();
@@ -64,6 +75,7 @@ export default function OnboardingModal() {
   if (!visible) return null;
 
   const s = STEPS[step];
+  const isLast = step === STEPS.length - 1;
 
   return (
     <Modal visible transparent animationType="fade">
@@ -82,6 +94,17 @@ export default function OnboardingModal() {
               placeholderTextColor={Colors.textHint}
               autoFocus
             />
+          ) : step === 4 ? (
+            <View style={styles.autoStartWrap}>
+              <Text style={styles.desc}>{s.desc}</Text>
+              <PressableScale style={styles.settingBtn} onPress={openAppSettings}>
+                <Icon name="settings" size={16} color={Colors.primary} />
+                <Text style={styles.settingBtnText}>打开系统设置</Text>
+              </PressableScale>
+              <Text style={styles.hint}>
+                设置 → 应用 → FayeTide → 自启动 / 省电策略 → 允许
+              </Text>
+            </View>
           ) : (
             <Text style={styles.desc}>{s.desc}</Text>
           )}
@@ -94,7 +117,7 @@ export default function OnboardingModal() {
 
           <PressableScale style={styles.btn} onPress={next}>
             <Text style={styles.btnText}>
-              {step < STEPS.length - 1 ? '下一步' : '开始使用'}
+              {isLast ? '开始使用' : '下一步'}
             </Text>
           </PressableScale>
 
@@ -120,6 +143,14 @@ const styles = StyleSheet.create({
   iconWrap: { marginBottom: Spacing.lg },
   title: { fontSize: FontSize.xl, fontWeight: Weight.extrabold, color: Colors.text, marginBottom: Spacing.sm },
   desc: { fontSize: FontSize.md, color: Colors.textSecondary, textAlign: 'center', lineHeight: LineHeight.base },
+  autoStartWrap: { alignItems: 'center', width: '100%' },
+  settingBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
+    marginTop: Spacing.xl, borderWidth: 2, borderColor: Colors.primaryLight,
+    borderRadius: Radius.full, paddingVertical: Spacing.md, paddingHorizontal: Spacing.xl,
+  },
+  settingBtnText: { fontSize: FontSize.md, color: Colors.primary, fontWeight: Weight.bold },
+  hint: { fontSize: FontSize.xs, color: Colors.textMuted, marginTop: Spacing.md, textAlign: 'center' },
   dots: { flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.xxl },
   cityInput: {
     width: '100%', borderWidth: 2, borderColor: Colors.primaryLight, borderRadius: Radius.md,

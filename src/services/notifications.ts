@@ -183,6 +183,19 @@ export async function scheduleAllNotifications(
   await setupNotificationHandler();
   const granted = await requestNotificationPermission();
   if (!granted) return;
+  // Android 12+: check exact alarm permission for precise timing
+  if (Platform.OS === 'android' && DailyAlarm) {
+    try {
+      const hasExact = await DailyAlarm.hasExactAlarmPermission();
+      if (hasExact === false) {
+        const asked = await AsyncStorage.getItem('exact_alarm_asked');
+        if (!asked) {
+          await AsyncStorage.setItem('exact_alarm_asked', '1');
+          DailyAlarm.requestExactAlarmPermission();
+        }
+      }
+    } catch { /* native module may not support these methods yet */ }
+  }
   await scheduleDailyNotifications(hour, minute);
   await schedulePeriodReminders();
 }
