@@ -1,0 +1,24 @@
+# EAS Build 会自动安装依赖
+node_modules
+
+# Android 构建缓存
+android/build
+android/app/build
+android/.gradle
+
+# Expo 导出
+dist
+
+# 工具目录
+.reasonix
+.impeccable
+.superpowers
+.trash
+.claude
+.idea
+
+# 测试截图和安装包（保留 assets/ 和 android/ 里的资源）
+/*.png
+/*.apk
+splash-preview.*
+*.hbc
