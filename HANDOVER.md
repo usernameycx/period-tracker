@@ -45,7 +45,7 @@ npx expo start
 npx expo run:android
 ```
 
-**注意：** 本地调试需要 Expo Go 或开发版 APK，因为 `android/` 原生目录已提交到 git，直接 `expo start` 连接的 Expo Go 可能无法使用所有功能。
+**注意：** 本地调试使用 EAS `preview` profile 构建的 APK，通过 ADB reverse + Metro 即可热更新。MuMu 连接方式见下方。
 
 ### 连接 MuMu 模拟器（Windows）
 
@@ -166,9 +166,8 @@ https://expo.dev/accounts/y-y/projects/period-tracker/builds
 
 ## 6. 已知问题
 
-1. **本地 Expo Go 无法热更新** — release APK 不连 Metro。需装 Expo Go 或重新打包。
-2. **包版本不匹配** — `@react-native-async-storage/async-storage` 3.1.1（SDK manifest 要求 2.2.0），但 3.x 向下兼容，不影响使用。
-3. **`src/services/notifications.ts` 有 TS 编译错误** — 预存在问题，不影响构建。
+1. **包版本不匹配** — `@react-native-async-storage/async-storage` 3.1.1（SDK manifest 要求 2.2.0），但 3.x 向下兼容，不影响使用。
+2. **`src/services/notifications.ts` 有 TS 编译错误** — 预存在问题，不影响构建。
 
 ---
 
