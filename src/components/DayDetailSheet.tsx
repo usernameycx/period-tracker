@@ -108,10 +108,15 @@ export default function DayDetailSheet({ visible, date, onClose }: Props) {
                     style={[styles.toggleBtn, recordedStart && styles.toggleBtnActive]}
                     onPress={handleToggle}
                   >
-                    <Icon name={recordedStart ? 'check' : 'blood'} size={20} color={recordedStart ? Colors.success : Colors.primary} />
-                    <Text style={[styles.toggleText, recordedStart && styles.toggleTextActive]}>
-                      {recordedStart ? '已标记为经期第一天' : '标记为经期第一天'}
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm }}>
+                      <Icon name={recordedStart ? 'check' : 'blood'} size={20} color={recordedStart ? Colors.success : Colors.primary} />
+                      <Text style={[styles.toggleText, recordedStart && styles.toggleTextActive]}>
+                        {recordedStart ? '已标记为经期第一天' : '标记为经期第一天'}
+                      </Text>
+                    </View>
+                    {recordedStart && (
+                      <Text style={styles.toggleHint}>再次点击可取消</Text>
+                    )}
                   </PressableScale>
 
                   {recordedStart && (
@@ -243,12 +248,13 @@ const styles = StyleSheet.create({
   toggleBtn: {
     backgroundColor: Colors.cardBg, borderRadius: Radius.lg,
     paddingVertical: Spacing.md,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.sm,
+    flexDirection: 'column', alignItems: 'center', gap: Spacing.xs,
     borderWidth: 1.5, borderColor: Colors.primaryLight, borderStyle: 'dashed',
   },
   toggleBtnActive: { backgroundColor: Colors.botanicalBg, borderColor: Colors.success, borderStyle: 'solid' },
   toggleText: { fontSize: FontSize.base, fontWeight: Weight.bold, color: Colors.ink },
   toggleTextActive: { color: Colors.botanical },
+  toggleHint: { fontSize: FontSize.xs, color: Colors.success, marginTop: 2, textAlign: 'center' },
   hint: { fontSize: FontSize.xs, color: Colors.textMuted, textAlign: 'center' },
 
   /* ── Scrollable ── */

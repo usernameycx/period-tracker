@@ -9,7 +9,7 @@ import {
   CalendarPhaseInfo,
 } from '../services/prediction';
 import { DEFAULT_CYCLE_DAYS } from '../constants/phases';
-import { parseDate } from '../utils/date';
+import { parseDate, addDays } from '../utils/date';
 
 /** Single source of truth for the current phase, computed once per render cycle. */
 export function useCurrentPhase(): CalendarPhaseInfo | null {
@@ -22,26 +22,27 @@ export function useCurrentPhase(): CalendarPhaseInfo | null {
     const fromCalendar = getPhaseForCalendarDay(today, records);
     if (fromCalendar) return fromCalendar;
 
-    // Fallback: predictive model
+    // If today is before the first recorded cycle, we can't predict backwards
+    const sorted = [...records].sort((a, b) => a.start_date.localeCompare(b.start_date));
+    const earliestStart = parseDate(sorted[0].start_date);
+    if (today < earliestStart) return null;
+
+    // Fallback: predictive model for dates after or within known cycles
     const nextStart = getNextPredictedStart(records);
     const avgDays = getAveragePeriodDays(records);
     const cycleLength = getAverageCycleLength(records) || DEFAULT_CYCLE_DAYS;
     if (nextStart) {
-      return getPhaseForDate(today, parseDate(nextStart), avgDays, cycleLength);
+      const nextStartDate = parseDate(nextStart);
+      // Don't predict beyond the one cycle we have data for
+      if (today >= addDays(nextStartDate, avgDays)) return null;
+      return getPhaseForDate(today, nextStartDate, avgDays, cycleLength);
     }
 
     return null;
   }, [records]);
 }
 
-const defaultPhase: CalendarPhaseInfo = {
-  phase: 'follicular',
-  dayOffset: 1,
-  daysUntilPeriod: 28,
-  nextPeriodDate: '',
-};
-
-/** Like useCurrentPhase, but always returns a value (never null). */
-export function useCurrentPhaseOrDefault(): CalendarPhaseInfo {
-  return useCurrentPhase() ?? defaultPhase;
+/** Returns phase info for today, or null if no data covers it. */
+export function useCurrentPhaseOrDefault(): CalendarPhaseInfo | null {
+  return useCurrentPhase();
 }

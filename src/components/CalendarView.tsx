@@ -49,7 +49,6 @@ export default function CalendarView({ onDayPress, selectedDate, currentMonth, o
   const month = currentMonth.getMonth();
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const todayStr = formatDate(new Date());
 
   const { days, rows } = useMemo(() => {
     const d: (number | null)[] = [];
@@ -123,21 +122,20 @@ export default function CalendarView({ onDayPress, selectedDate, currentMonth, o
               const date = new Date(year, month, d);
               const dateStr = formatDate(date);
               const info = phaseMap.get(dateStr);
-              const isToday = dateStr === todayStr;
               const isSelected = isSameDay(date, selectedDate);
               const bgColor = info ? PHASE_COLORS[info.phase] : 'transparent';
               const isRecorded = recordDateSet.has(dateStr);
 
               return (
                 <PressableScale key={d}
-                  style={[styles.dayCell, { backgroundColor: bgColor }, isSelected && styles.selectedCell, isToday && !isSelected && styles.todayCell]}
+                  style={[styles.dayCell, { backgroundColor: bgColor }, isSelected && styles.selectedCell]}
                   onPress={() => onDayPress(date)}
                 >
-                  <Text style={[styles.dayNum, isSelected && styles.selectedText, isToday && !isSelected && styles.todayText]}>
+                  <Text style={[styles.dayNum, isSelected && styles.selectedText]}>
                     {d}
                   </Text>
                   {isRecorded && (
-                    <View style={[styles.recordDot, isSelected && styles.recordDotSel]} />
+                    <View style={styles.recordDot} />
                   )}
                 </PressableScale>
               );
@@ -182,17 +180,14 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md, minHeight: 36,
   },
   dayNum: { fontSize: 14, color: Colors.ink, fontWeight: Weight.medium },
-  selectedCell: { backgroundColor: Colors.primary },
-  selectedText: { color: Colors.white, fontWeight: Weight.bold },
-  todayCell: { borderWidth: 1.5, borderColor: Colors.ink },
-  todayText: { fontWeight: Weight.bold, color: Colors.ink },
+  selectedCell: { borderWidth: 2, borderColor: Colors.ink, borderRadius: Radius.md },
+  selectedText: { fontWeight: Weight.extrabold, color: Colors.ink },
 
   /* Record dot */
   recordDot: {
     position: 'absolute', bottom: 3, width: 5, height: 5,
     borderRadius: Radius.xxs, backgroundColor: Colors.danger,
   },
-  recordDotSel: { backgroundColor: Colors.white },
 
   /* Swipe */
   swipeHint: { textAlign: 'center', marginTop: Spacing.sm, fontSize: FontSize.xs, color: Colors.textHint },

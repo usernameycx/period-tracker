@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { ScrollView, View, Text, StyleSheet, Modal, TextInput } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 import { useSettings } from '../../src/context/SettingsContext';
 import CityPicker from '../../src/components/CityPicker';
 import PressableScale from '../../src/components/PressableScale';
@@ -24,6 +25,12 @@ export default function SettingsPage() {
   type ConfirmType = 'clearPeriods' | 'clearSymptoms' | 'resetAll' | null;
   const [confirmType, setConfirmType] = useState<ConfirmType>(null);
   const [toast, setToast] = useState<{ title: string; message: string } | null>(null);
+
+  const scrollRef = useRef<ScrollView>(null);
+
+  useFocusEffect(useCallback(() => {
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
+  }, []));
 
   useEffect(() => {
     (async () => {
@@ -68,7 +75,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <ScrollView ref={scrollRef} style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       {/* Page title */}
       <View style={styles.pageTitleRow}>
         <View style={styles.titleIconWrap}><Icon name="settings" size={22} color={Colors.primary} /></View>

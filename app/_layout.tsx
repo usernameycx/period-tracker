@@ -37,8 +37,8 @@ function NotificationScheduler() {
 
 export default function RootLayout() {
   const onLayoutRootView = useCallback(async () => {
-    // 保持启动屏至少展示 1 秒，避免一闪而过
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // 保持启动屏至少展示 3 秒，避免一闪而过
+    await new Promise(resolve => setTimeout(resolve, 3000));
     await hideAsync();
   }, []);
 

@@ -58,7 +58,7 @@ async function generate() {
   // 6. splash-icon.png — 1024×1024, smaller mark centered, transparent bg (splash bg is set in app.json)
   console.log('splash-icon.png (1024×1024)...');
   await sharp(await transparent(1024, 1024))
-    .composite([{ input: await iconMark(480), gravity: 'center' }])
+    .composite([{ input: await iconMark(700), gravity: 'center' }])
     .toFile(path.join(ASSETS, 'splash-icon.png'));
 
   // 7. notification-icon.png — 96×96, mark on transparent (status bar)
@@ -109,7 +109,7 @@ async function generate() {
   for (const d of densities) {
     const drawDir = path.join(ANDROID_RES, `drawable-${d.name}`);
     fs.mkdirSync(drawDir, { recursive: true });
-    const renderSize = Math.round(d.size * 1.083);
+    const renderSize = Math.round(d.size * 1.5);
     const markBuf = await iconMark(renderSize);
     const offset = Math.floor((renderSize - d.size) / 2);
     console.log(`splashscreen_logo.png (${d.name} render ${renderSize}→${d.size})...`);

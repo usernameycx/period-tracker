@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import { usePeriod } from '../context/PeriodContext';
 import { useCurrentPhaseOrDefault } from '../hooks/useCurrentPhase';
 import { PHASE_LABELS, PHASE_ICONS, OVULATION_BEFORE_PERIOD, OVULATION_SPAN, DEFAULT_PERIOD_DAYS, PHASE_COLORS } from '../constants/phases';
@@ -7,6 +7,7 @@ import { Colors, Spacing, FontSize, Radius, Shadow, Weight, LineHeight } from '.
 import { todayStr } from '../utils/date';
 import Icon from './Icon';
 import PressableScale from './PressableScale';
+import ConfirmModal from './ConfirmModal';
 
 function computeCountdowns(phaseInfo: { phase: string; dayOffset: number; daysUntilPeriod: number }) {
   const OV_START = OVULATION_BEFORE_PERIOD + Math.floor(OVULATION_SPAN / 2);
@@ -14,6 +15,9 @@ function computeCountdowns(phaseInfo: { phase: string; dayOffset: number; daysUn
   let daysUntilOvulation: number | null = null;
   switch (phaseInfo.phase) {
     case 'period':
+      // Ovulation is ~14 days into the cycle; subtract days already past
+      daysUntilOvulation = Math.max(0, OV_START - Math.floor(OVULATION_SPAN / 2) - phaseInfo.dayOffset);
+      break;
     case 'follicular':
       daysUntilOvulation = daysUntilPeriod > OV_START ? daysUntilPeriod - OV_START : 0;
       break;
@@ -32,9 +36,29 @@ export default function CycleStatusCard() {
   const phaseInfo = useCurrentPhaseOrDefault();
   const today = todayStr();
   const alreadyRecorded = records.some(r => r.start_date === today);
+  const [errorVisible, setErrorVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const firstRecordDate = useMemo(
+    () => records.length > 0
+      ? [...records].sort((a, b) => a.start_date.localeCompare(b.start_date))[0].start_date
+      : '',
+    [records]
+  );
 
   if (loading || records.length === 0) {
     return null;
+  }
+  if (!phaseInfo) {
+    return (
+      <View style={styles.placeholderCard}>
+        <View style={styles.placeholderIconWrap}>
+          <Icon name="calendar" size={28} color={Colors.white} />
+        </View>
+        <Text style={styles.placeholderTitle}>今日暂无周期数据</Text>
+        <Text style={styles.placeholderDesc}>已记录经期从 {firstRecordDate} 开始</Text>
+      </View>
+    );
   }
 
   const phaseDuration = (() => {
@@ -78,18 +102,22 @@ export default function CycleStatusCard() {
 
       {/* Countdown */}
       <View style={styles.countdownRow}>
-        {daysUntilPeriod > 0 && (
+        {phaseInfo.phase === 'period' ? (
+          <View style={[styles.countdownBox, { backgroundColor: Colors.dangerBg }]}>
+            <Text style={[styles.countdownNum, { color: Colors.danger }]}>进行中</Text>
+            <Text style={styles.countdownLbl}>经期第{phaseInfo.dayOffset}天</Text>
+          </View>
+        ) : daysUntilPeriod > 0 ? (
           <View style={styles.countdownBox}>
             <Text style={styles.countdownNum}>{daysUntilPeriod}</Text>
             <Text style={styles.countdownLbl}>天后经期</Text>
           </View>
-        )}
-        {daysUntilPeriod <= 0 && daysUntilPeriod > -DEFAULT_PERIOD_DAYS && (
+        ) : daysUntilPeriod <= 0 && daysUntilPeriod > -DEFAULT_PERIOD_DAYS ? (
           <View style={[styles.countdownBox, { backgroundColor: Colors.dangerBg }]}>
             <Text style={[styles.countdownNum, { color: Colors.danger }]}>进行中</Text>
             <Text style={styles.countdownLbl}>经期第{-daysUntilPeriod + 1}天</Text>
           </View>
-        )}
+        ) : null}
 
         {daysUntilOvulation !== null && daysUntilOvulation > 0 && (
           <>
@@ -113,30 +141,50 @@ export default function CycleStatusCard() {
 
       {!alreadyRecorded && phaseInfo.phase !== 'period' && (
         <PressableScale style={styles.quickBtn} onPress={async () => {
-          try { await addRecord(today); } catch (e: any) { Alert.alert('无法标记', e.message); }
+          try { await addRecord(today); } catch (e: any) {
+            setErrorMessage(e.message || '标记失败，请稍后再试');
+            setErrorVisible(true);
+          }
         }}>
           <Icon name="blood" size={18} color={Colors.white} />
           <Text style={styles.quickBtnText}>今天来了</Text>
         </PressableScale>
       )}
+
+      <ConfirmModal
+        visible={errorVisible}
+        title="无法标记"
+        message={errorMessage}
+        icon="warning"
+        variant="danger"
+        cancelLabel="知道了"
+        confirmLabel="知道了"
+        onCancel={() => setErrorVisible(false)}
+        onConfirm={() => setErrorVisible(false)}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  /* ── Empty state ── */
-  emptyCard: {
-    backgroundColor: Colors.cardBg, borderRadius: Radius.xl,
-    padding: Spacing.xxl, alignItems: 'center', ...Shadow.card,
+  /* ── Placeholder (matches cold-start banner) ── */
+  placeholderCard: {
+    backgroundColor: Colors.primary, borderRadius: Radius.xl,
+    padding: Spacing.xxxl, alignItems: 'center', marginBottom: Spacing.cardGap,
   },
-  emptyIconWrap: {
-    width: 64, height: 64, borderRadius: 32,
-    backgroundColor: Colors.primaryBg,
+  placeholderIconWrap: {
+    width: 56, height: 56, borderRadius: 28,
+    backgroundColor: 'rgba(255,255,255,0.20)',
     alignItems: 'center', justifyContent: 'center', marginBottom: Spacing.md,
   },
-  emptyTitle: { fontSize: FontSize.base, fontWeight: Weight.semibold, color: Colors.text, marginBottom: Spacing.xs },
-  emptySubtitle: { fontSize: FontSize.sm2, color: Colors.textMuted, textAlign: 'center' },
-  emptyHint: { fontSize: FontSize.sm2, color: Colors.textMuted, textAlign: 'center', lineHeight: LineHeight.md },
+  placeholderTitle: {
+    fontSize: FontSize.base, fontWeight: Weight.extrabold, color: Colors.white,
+    textAlign: 'center', marginBottom: Spacing.xs,
+  },
+  placeholderDesc: {
+    fontSize: FontSize.sm2, color: 'rgba(255,255,255,0.75)',
+    textAlign: 'center',
+  },
 
   /* ── Card ── */
   card: {

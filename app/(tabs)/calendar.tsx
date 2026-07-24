@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { View, ScrollView, Text, StyleSheet } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 import CalendarView from '../../src/components/CalendarView';
 import DayDetailSheet from '../../src/components/DayDetailSheet';
 import LunarCard from '../../src/components/LunarCard';
@@ -22,13 +23,22 @@ export default function CalendarPage() {
   const today = new Date();
   const todayStr = formatDate(today);
 
+  // 周条始终锚定系统当前日期，不跟随选中日期
   const weekDays = useMemo(() => {
-    const startOfWeek = new Date(selectedDate);
+    const startOfWeek = new Date();
     startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
     return Array.from({ length: 7 }, (_, i) => addDays(startOfWeek, i));
-  }, [selectedDate]);
+  }, []);
 
   const weekDayLabels = ['日', '一', '二', '三', '四', '五', '六'];
+
+  // 离开日历页再返回时，重置为当月 + 清选中
+  useFocusEffect(
+    useCallback(() => {
+      setSelectedDate(new Date());
+      setCurrentMonth(new Date());
+    }, [setSelectedDate])
+  );
 
   const handleDayPress = (d: Date) => {
     setSelectedDate(d);
@@ -46,13 +56,13 @@ export default function CalendarPage() {
             const isSel = ds === formatDate(selectedDate);
             const isRecorded = records.some(r => r.start_date === ds);
             return (
-              <PressableScale key={i} style={styles.weekDay} onPress={() => setSelectedDate(d)}>
+              <View key={i} style={styles.weekDay}>
                 <Text style={[styles.weekLabel, (i === 0 || i === 6) && styles.weekLabelWknd]}>{weekDayLabels[i]}</Text>
-                <View style={[styles.weekNumWrap, isSel && styles.weekNumSel, isToday && !isSel && styles.weekNumToday]}>
-                  <Text style={[styles.weekNum, isSel && styles.weekNumSelText, isToday && !isSel && styles.weekNumTodayText]}>{d.getDate()}</Text>
-                  {isRecorded && <View style={[styles.weekDot, isSel && styles.weekDotSel]} />}
+                <View style={[styles.weekNumWrap, isToday && styles.weekNumToday]}>
+                  <Text style={[styles.weekNum, isToday && styles.weekNumTodayText]}>{d.getDate()}</Text>
+                  {isRecorded && <View style={styles.weekDot} />}
                 </View>
-              </PressableScale>
+              </View>
             );
           })}
         </View>
@@ -110,13 +120,10 @@ const styles = StyleSheet.create({
   weekLabel: { fontSize: FontSize.xs, color: Colors.textMuted, fontWeight: Weight.medium },
   weekLabelWknd: { color: Colors.primaryLight },
   weekNumWrap: { width: 36, height: 36, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center' },
-  weekNumSel: { backgroundColor: Colors.primary, borderRadius: Radius.md },
-  weekNumToday: { borderWidth: 2, borderColor: Colors.ink, borderRadius: Radius.md },
+  weekNumToday: { backgroundColor: Colors.ink, borderRadius: Radius.md },
   weekNum: { fontSize: FontSize.sm2, fontWeight: Weight.medium, color: Colors.ink },
-  weekNumSelText: { color: Colors.white, fontWeight: Weight.bold },
-  weekNumTodayText: { fontWeight: Weight.bold },
+  weekNumTodayText: { color: Colors.white, fontWeight: Weight.bold },
   weekDot: { width: 5, height: 5, borderRadius: Radius.xxs, backgroundColor: Colors.danger, position: 'absolute', bottom: 3 },
-  weekDotSel: { backgroundColor: Colors.white },
 
   todayStrip: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',

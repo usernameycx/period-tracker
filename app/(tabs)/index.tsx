@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback, useRef } from 'react';
 import { ScrollView, View, Text, StyleSheet, RefreshControl, AppState } from 'react-native';
 import { useFocusEffect, router } from 'expo-router';
 import PressableScale from '../../src/components/PressableScale';
@@ -26,7 +26,12 @@ export default function TodayPage() {
     return () => clearInterval(timer);
   }, []);
 
-  useFocusEffect(useCallback(() => { setRefreshKey(k => k + 1); }, []));
+  const scrollRef = useRef<ScrollView>(null);
+
+  useFocusEffect(useCallback(() => {
+    setRefreshKey(k => k + 1);
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
+  }, []));
 
   React.useEffect(() => {
     const sub = AppState.addEventListener('change', (state) => {
@@ -54,6 +59,7 @@ export default function TodayPage() {
 
   return (
     <ScrollView
+      ref={scrollRef}
       style={styles.container}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
@@ -84,7 +90,7 @@ export default function TodayPage() {
             记录周期后，FayeTide 会为你预测下次经期、提供每日饮食建议和生活指南。
           </Text>
           <PressableScale style={styles.coldStartBtn} onPress={() => router.push('/(tabs)/calendar')}>
-            <Icon name="calendar" size={18} color={Colors.white} />
+            <Icon name="calendar" size={18} color={Colors.primary} />
             <Text style={styles.coldStartBtnText}>去日历记录</Text>
           </PressableScale>
         </View>
@@ -131,9 +137,6 @@ const styles = StyleSheet.create({
   lunarSm: { fontSize: FontSize.xs, color: Colors.textHint, flexShrink: 0 },
 
   quoteWrap: { marginVertical: Spacing.md },
-
-  /* ── Hero section ── */
-  heroSection: { marginBottom: Spacing.md },
 
   /* ── Cold start ── */
   coldStart: {
