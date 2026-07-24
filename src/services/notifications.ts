@@ -52,29 +52,21 @@ export async function scheduleDailyNotification(hour: number, minute: number): P
     }
   }
 
-  // Pre-build 7 days of notifications, each computed for its target date
-  const db = await getDatabase();
-  const records = await getAllPeriodRecords(db);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // Schedule a single daily recurring notification (system AlarmManager)
+  const id = await Notifications.scheduleNotificationAsync({
+    content: {
+      title: '🌸 FayeTide',
+      body: '打开 App 查看今日周期状态和生活建议',
+    },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.DAILY,
+      hour,
+      minute,
+      channelId: 'default',
+    },
+  });
 
-  const newIds: string[] = [];
-  for (let i = 0; i < 7; i++) {
-    const targetDate = new Date(today);
-    targetDate.setDate(targetDate.getDate() + i);
-    const triggerDate = new Date(targetDate);
-    triggerDate.setHours(hour, minute, 0, 0);
-    if (triggerDate.getTime() <= Date.now()) continue;
-
-    const { title, body } = await buildContentForDate(records, db, targetDate);
-    const id = await Notifications.scheduleNotificationAsync({
-      content: { title, body },
-      trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: triggerDate, channelId: 'default' },
-    });
-    newIds.push(id);
-  }
-
-  await AsyncStorage.setItem(DAILY_NOTIF_IDS_KEY, JSON.stringify(newIds));
+  await AsyncStorage.setItem(DAILY_NOTIF_IDS_KEY, JSON.stringify([id]));
 }
 
 /** Schedule period-approaching reminders. Call whenever records change. */
