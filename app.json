@@ -18,7 +18,14 @@
         }
       ],
       "./plugins/withSplashWindowBackground",
-      "expo-splash-screen"
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#F8F2EA"
+        }
+      ]
     ],
     "ios": {
       "supportsTablet": false,

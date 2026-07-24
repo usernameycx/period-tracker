@@ -69,7 +69,7 @@ export async function scheduleDailyNotification(hour: number, minute: number): P
     const { title, body } = await buildContentForDate(records, db, targetDate);
     const id = await Notifications.scheduleNotificationAsync({
       content: { title, body },
-      trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: triggerDate },
+      trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: triggerDate, channelId: 'default' },
     });
     newIds.push(id);
   }
@@ -111,7 +111,7 @@ export async function schedulePeriodReminders(): Promise<void> {
           title: '⏰ 经期临近',
           body: `当前${PHASE_LABELS[info3.phase]}第${info3.dayOffset}天，预计3天后经期开始`,
         },
-        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: day3 },
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: day3, channelId: 'period' },
       });
       newIds.push(id);
     }
@@ -125,7 +125,7 @@ export async function schedulePeriodReminders(): Promise<void> {
           title: '🌸 经期将至',
           body: `当前${PHASE_LABELS[info1.phase]}第${info1.dayOffset}天，预计明天经期开始，注意保暖`,
         },
-        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: day1 },
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: day1, channelId: 'period' },
       });
       newIds.push(id);
     }
@@ -138,7 +138,7 @@ export async function schedulePeriodReminders(): Promise<void> {
           title: '🥚 排卵期',
           body: '今天可能是排卵期，状态通常会比较好',
         },
-        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: ovDay },
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: ovDay, channelId: 'period' },
       });
       newIds.push(id);
     }
