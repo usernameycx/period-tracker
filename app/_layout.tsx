@@ -1,5 +1,6 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { AppState } from 'react-native';
 import { useCallback, useEffect, useRef } from 'react';
 import { preventAutoHideAsync, hideAsync } from 'expo-splash-screen';
 import { PeriodProvider } from '../src/context/PeriodContext';
@@ -15,22 +16,35 @@ function NotificationScheduler() {
   const { notifyHour, notifyMinute, ready } = useSettings();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const schedule = useCallback(async () => {
+    setupNotificationHandler();
+    const granted = await requestNotificationPermission();
+    if (granted) {
+      await scheduleDailyNotification(notifyHour, notifyMinute);
+    }
+  }, [notifyHour, notifyMinute]);
+
+  // Initial scheduling when settings are ready
   useEffect(() => {
     if (!ready) return;
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      (async () => {
-        setupNotificationHandler();
-        const granted = await requestNotificationPermission();
-        if (granted) {
-          await scheduleDailyNotification(notifyHour, notifyMinute);
-        }
-      })().catch(e => { console.warn('NotificationScheduler failed:', e); });
+      schedule().catch(e => { console.warn('NotificationScheduler failed:', e); });
     }, 500);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [notifyHour, notifyMinute, ready]);
+  }, [ready, schedule]);
+
+  // Re-schedule when app returns to foreground (keeps 7-day window fresh)
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        schedule().catch(e => { console.warn('NotificationScheduler refresh failed:', e); });
+      }
+    });
+    return () => sub.remove();
+  }, [schedule]);
 
   return null;
 }
