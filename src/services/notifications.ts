@@ -13,13 +13,13 @@ import { parseDate, addDays } from '../utils/date';
 const PERIOD_REMINDER_IDS_KEY = 'period_reminder_ids';
 const DAILY_NOTIF_IDS_KEY = 'daily_notif_ids';
 
-export function setupNotificationHandler(): void {
+export async function setupNotificationHandler(): Promise<void> {
   if (Platform.OS === 'android') {
-    Notifications.setNotificationChannelAsync('default', {
+    await Notifications.setNotificationChannelAsync('default', {
       name: 'FayeTide 提醒',
       importance: Notifications.AndroidImportance.DEFAULT,
     });
-    Notifications.setNotificationChannelAsync('period', {
+    await Notifications.setNotificationChannelAsync('period', {
       name: '经期提醒',
       importance: Notifications.AndroidImportance.HIGH,
     });

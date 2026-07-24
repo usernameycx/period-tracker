@@ -20,7 +20,7 @@ function NotificationScheduler() {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       (async () => {
-        setupNotificationHandler();
+        await setupNotificationHandler();
         const granted = await requestNotificationPermission();
         if (granted) {
           await scheduleDailyNotification(notifyHour, notifyMinute);
