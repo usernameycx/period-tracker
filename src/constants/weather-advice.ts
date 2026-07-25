@@ -46,8 +46,27 @@ export const UV_ADVICE: Record<number, string> = {
   11: '紫外线极强，尽量不要外出',
 };
 
-export function getWeatherAdvice(code: number): WeatherAdvice {
-  return WEATHER_ADVICE[code] ?? { condition: '未知', advice: '保持好心情', icon: '🌈' };
+export function getWeatherAdvice(code: number, temperature?: number): WeatherAdvice {
+  const base = WEATHER_ADVICE[code] ?? { condition: '未知', advice: '保持好心情', icon: '🌈' };
+
+  if (temperature !== undefined) {
+    // Temperature-based override — science-backed thresholds
+    if (temperature > 38) {
+      return { ...base, advice: '酷热预警，避免外出，小心中暑' };
+    } else if (temperature > 32) {
+      return { ...base, advice: '高温天气，减少户外活动，注意防晒补水' };
+    } else if (temperature > 28) {
+      return { ...base, advice: '天气较热，避免中午时段外出，穿透气衣物' };
+    } else if (temperature < 0) {
+      return { ...base, advice: '严寒天气，注意保暖防冻，减少外出' };
+    } else if (temperature < 5) {
+      return { ...base, advice: '天气寒冷，出门穿暖，泡泡脚暖暖身' };
+    } else if (temperature < 10) {
+      return { ...base, advice: '天气偏凉，注意腹部和腰部保暖' };
+    }
+  }
+
+  return base;
 }
 
 export function getUVAdvice(index: number): string {

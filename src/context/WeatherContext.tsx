@@ -19,7 +19,7 @@ export interface DisplayWeather {
 
 /** Derive display strings from raw data — always uses current mapping, never stale. */
 function toDisplay(raw: RawWeather): DisplayWeather {
-  const wa = getWeatherAdvice(raw.weatherCode);
+  const wa = getWeatherAdvice(raw.weatherCode, raw.temperature);
   return {
     ...raw,
     condition: wa.condition,
