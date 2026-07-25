@@ -148,8 +148,8 @@ export default function CycleStatusCard() {
           <>
             <View style={styles.cdDivider} />
             <View style={styles.countdownBox}>
-              <Text style={styles.countdownNum}>{daysUntilOvulation}</Text>
-              <Text style={styles.countdownLbl}>天后排卵</Text>
+              <Text style={styles.countdownNum}>{daysUntilOvulation}天</Text>
+              <Text style={styles.countdownLbl}>距离下次排卵</Text>
             </View>
           </>
         )}

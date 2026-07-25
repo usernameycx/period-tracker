@@ -68,6 +68,7 @@ export default function DayDetailSheet({ visible, date, onClose }: Props) {
   }, [visible]);
 
   useEffect(() => {
+    if (!visible) return;
     let cancelled = false;
     (async () => {
       const db = await getDatabase();

@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { ScrollView, View, Text, StyleSheet, Modal, TextInput, Share } from 'react-native';
+import { ScrollView, View, Text, StyleSheet, Modal, TextInput, Share, ActivityIndicator } from 'react-native';
 import { useFocusEffect } from 'expo-router';
+import { Paths, File } from 'expo-file-system';
 import { useSettings } from '../../src/context/SettingsContext';
 import CityPicker from '../../src/components/CityPicker';
 import PressableScale from '../../src/components/PressableScale';
@@ -22,6 +23,7 @@ export default function SettingsPage() {
   const [importModalVisible, setImportModalVisible] = useState(false);
   const [importText, setImportText] = useState('');
   const [notifyModal, setNotifyModal] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   type ConfirmType = 'clearPeriods' | 'clearSymptoms' | 'resetAll' | null;
   const [confirmType, setConfirmType] = useState<ConfirmType>(null);
@@ -72,20 +74,36 @@ export default function SettingsPage() {
   };
 
   const handleExport = async () => {
+    setBusy(true);
     try {
       const json = await exportData();
-      await Share.share({ message: json, title: 'FayeTide 数据备份' });
+      const file = new File(Paths.cache, 'fayetide_backup.json');
+      file.write(json);
+      await Share.share({ url: file.uri, title: 'FayeTide 数据备份' });
+      setToast({ title: '导出成功', message: '备份文件已保存' });
     } catch (e: any) {
       if (e?.message !== 'User did not share') {
         setToast({ title: '导出失败', message: e.message || '导出失败' });
       }
+    } finally {
+      setBusy(false);
     }
   };
   const handleImport = () => setImportModalVisible(true);
   const handleImportConfirm = async () => {
     if (!importText.trim()) return;
-    try { await importData(importText.trim()); await Promise.all([refresh(), refreshSettings()]); setImportText(''); setImportModalVisible(false); setToast({ title: '导入完成', message: '数据已成功恢复' }); }
-    catch (e: any) { setToast({ title: '导入失败', message: e.message || '请检查 JSON 格式' }); }
+    setImportModalVisible(false);
+    setBusy(true);
+    try {
+      await importData(importText.trim());
+      await Promise.all([refresh(), refreshSettings()]);
+      setImportText('');
+      setToast({ title: '导入完成', message: '数据已成功恢复' });
+    } catch (e: any) {
+      setToast({ title: '导入失败', message: e.message || '请检查 JSON 格式' });
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -141,8 +159,9 @@ export default function SettingsPage() {
         <Text style={styles.sectionTitle}>数据备份</Text>
       </View>
       <View style={styles.backupRow}>
-        <PressableScale style={styles.backupBtn} onPress={handleExport}>
-          <Icon name="export" size={16} color={Colors.white} /><Text style={styles.backupText}>导出 JSON</Text>
+        <PressableScale style={styles.backupBtn} onPress={handleExport} disabled={busy}>
+          {busy ? <ActivityIndicator size="small" color={Colors.white} /> :
+            <><Icon name="export" size={16} color={Colors.white} /><Text style={styles.backupText}>导出 JSON</Text></>}
         </PressableScale>
         <PressableScale style={styles.importBtn} onPress={handleImport}>
           <Icon name="import" size={16} color={Colors.primary} /><Text style={styles.importText}>导入 JSON</Text>
