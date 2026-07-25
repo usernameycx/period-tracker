@@ -3,6 +3,7 @@ import { ScrollView, View, Text, StyleSheet, Modal, TextInput, ActivityIndicator
 import { useFocusEffect } from 'expo-router';
 import { Paths, File } from 'expo-file-system';
 import { shareAsync } from 'expo-sharing';
+import * as DocumentPicker from 'expo-document-picker';
 import { useSettings } from '../../src/context/SettingsContext';
 import CityPicker from '../../src/components/CityPicker';
 import PressableScale from '../../src/components/PressableScale';
@@ -89,6 +90,19 @@ export default function SettingsPage() {
     }
   };
   const handleImport = () => setImportModalVisible(true);
+  const handleImportFile = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({ type: 'application/json' });
+      if (result.canceled) return;
+      const file = result.assets[0];
+      const content = await (new File(file.uri)).text();
+      await importData(content);
+      await Promise.all([refresh(), refreshSettings()]);
+      setToast({ title: '导入完成', message: '数据已成功恢复' });
+    } catch (e: any) {
+      setToast({ title: '导入失败', message: e.message || '请检查文件格式' });
+    }
+  };
   const handleImportConfirm = async () => {
     if (!importText.trim()) return;
     setImportModalVisible(false);
@@ -222,7 +236,11 @@ export default function SettingsPage() {
         <View style={styles.modalOverlay}>
           <View style={styles.importCard}>
             <Text style={styles.importTitle}>导入备份</Text>
-            <Text style={styles.importHint}>粘贴之前导出的 JSON 数据</Text>
+            <Text style={styles.importHint}>粘贴 JSON 数据，或直接选择备份文件</Text>
+            <PressableScale style={styles.importFileBtn} onPress={handleImportFile}>
+              <Icon name="export" size={16} color={Colors.primary} />
+              <Text style={styles.importFileText}>从文件导入</Text>
+            </PressableScale>
             <TextInput style={styles.importInput} value={importText} onChangeText={setImportText}
               placeholder='[{"start_date":"2026-01-01",...}]' multiline textAlignVertical="top" />
             <View style={styles.importBtns}>
@@ -312,6 +330,8 @@ const styles = StyleSheet.create({
   importTitle: { fontSize: FontSize.xl, fontWeight: Weight.extrabold, color: Colors.text, marginBottom: Spacing.sm },
   importHint: { fontSize: FontSize.sm, color: Colors.textMuted, marginBottom: Spacing.lg },
   importInput: { borderWidth: 1, borderColor: Colors.primaryLight, borderRadius: Radius.md, padding: Spacing.md, fontSize: FontSize.sm, color: Colors.text, minHeight: 120, marginBottom: Spacing.lg },
+  importFileBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.sm, borderWidth: 1.5, borderColor: Colors.primaryLight, borderRadius: Radius.md, paddingVertical: Spacing.md, marginBottom: Spacing.lg, borderStyle: 'dashed' },
+  importFileText: { fontSize: FontSize.md, color: Colors.primary, fontWeight: Weight.bold },
   importBtns: { flexDirection: 'row', gap: Spacing.md, justifyContent: 'flex-end' },
   importCancel: { paddingVertical: Spacing.sm, paddingHorizontal: Spacing.lg },
   importCancelT: { fontSize: FontSize.md, color: Colors.textMuted, fontWeight: Weight.semibold },
