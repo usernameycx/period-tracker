@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { ScrollView, View, Text, StyleSheet, Modal, TextInput } from 'react-native';
+import { ScrollView, View, Text, StyleSheet, Modal, TextInput, Share } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { useSettings } from '../../src/context/SettingsContext';
 import CityPicker from '../../src/components/CityPicker';
@@ -72,8 +72,14 @@ export default function SettingsPage() {
   };
 
   const handleExport = async () => {
-    try { const json = await exportData(); setToast({ title: '导出成功', message: json.slice(0, 200) + '...' }); }
-    catch (e: any) { setToast({ title: '导出失败', message: e.message || '导出失败' }); }
+    try {
+      const json = await exportData();
+      await Share.share({ message: json, title: 'FayeTide 数据备份' });
+    } catch (e: any) {
+      if (e?.message !== 'User did not share') {
+        setToast({ title: '导出失败', message: e.message || '导出失败' });
+      }
+    }
   };
   const handleImport = () => setImportModalVisible(true);
   const handleImportConfirm = async () => {

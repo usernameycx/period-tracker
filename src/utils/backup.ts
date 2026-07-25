@@ -82,8 +82,8 @@ export async function importData(json: string): Promise<void> {
       for (const rec of data.periodRecords) {
         if (!rec.start_date || typeof rec.start_date !== 'string') continue;
         await db.runAsync(
-          'INSERT INTO period_records (start_date, created_at) VALUES (?, ?)',
-          [rec.start_date, rec.created_at || new Date().toISOString()]
+          'INSERT INTO period_records (start_date, end_date, created_at) VALUES (?, ?, ?)',
+          [rec.start_date, rec.end_date ?? null, rec.created_at || new Date().toISOString()]
         );
       }
     }
