@@ -180,11 +180,11 @@ const styles = StyleSheet.create({
   optionLabel: { fontSize: FontSize.sm, color: Colors.textMuted, fontWeight: Weight.medium },
   optionLabelActive: { color: Colors.primary, fontWeight: Weight.bold },
 
-  toggleRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
+  toggleRow: { flexDirection: 'row', justifyContent: 'space-between' },
   toggle: {
     flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-    paddingVertical: Spacing.md, paddingHorizontal: Spacing.sm, borderRadius: Radius.md,
-    backgroundColor: Colors.cardBg, gap: Spacing.xs, minWidth: 70,
+    paddingVertical: Spacing.sm, paddingHorizontal: 4, borderRadius: Radius.md,
+    backgroundColor: Colors.cardBg, gap: Spacing.xs,
   },
   toggleActive: { backgroundColor: Colors.primaryBg, borderWidth: 1, borderColor: Colors.primary },
   toggleLabel: { fontSize: FontSize.sm, color: Colors.textMuted, fontWeight: Weight.medium },
