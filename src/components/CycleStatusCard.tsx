@@ -5,7 +5,7 @@ import { useCurrentPhaseOrDefault } from '../hooks/useCurrentPhase';
 import { getAveragePeriodDays } from '../services/prediction';
 import { PHASE_LABELS, PHASE_ICONS, OVULATION_BEFORE_PERIOD, OVULATION_SPAN, PHASE_COLORS } from '../constants/phases';
 import { Colors, Spacing, FontSize, Radius, Shadow, Weight, LineHeight } from '../constants/theme';
-import { todayStr } from '../utils/date';
+import { todayStr, parseDate, diffDays } from '../utils/date';
 import Icon from './Icon';
 import PressableScale from './PressableScale';
 import ConfirmModal from './ConfirmModal';
@@ -51,7 +51,11 @@ export default function CycleStatusCard() {
     const sorted = [...records].sort((a, b) => b.start_date.localeCompare(a.start_date));
     return sorted.find(r => !r.end_date) || null;
   }, [records]);
-  const isPeriodOngoing = phaseInfo?.phase === 'period' && !!ongoingRecord;
+  const isPeriodOngoing = phaseInfo?.phase === 'period' && !!ongoingRecord &&
+    (() => {
+      const len = diffDays(parseDate(today), parseDate(ongoingRecord.start_date)) + 1;
+      return len >= 2 && len <= 9;
+    })();
 
   const avgPeriodDays = getAveragePeriodDays(records);
 

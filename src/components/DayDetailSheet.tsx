@@ -5,7 +5,7 @@ import { useWeather } from '../context/WeatherContext';
 import { getDatabase } from '../db/database';
 import { getDietRules, DietRule } from '../db/diet-rules';
 import { getPhaseForCalendarDay, getAveragePeriodDays } from '../services/prediction';
-import { formatDate } from '../utils/date';
+import { formatDate, parseDate, diffDays } from '../utils/date';
 import { Phase, PHASE_LABELS, PHASE_ICONS } from '../constants/phases';
 import { getLifeAdvice } from '../services/advice';
 import PressableScale from './PressableScale';
@@ -42,7 +42,11 @@ export default function DayDetailSheet({ visible, date, onClose }: Props) {
     return sorted.find(r => !r.end_date) || null;
   }, [records]);
   const isInOngoingPeriod = !recordedStart && ongoingRecord &&
-    dateStr >= ongoingRecord.start_date && dateStr !== ongoingRecord.start_date;
+    dateStr >= ongoingRecord.start_date && dateStr !== ongoingRecord.start_date &&
+    (() => {
+      const len = diffDays(parseDate(dateStr), parseDate(ongoingRecord.start_date)) + 1;
+      return len >= 2 && len <= 9;
+    })();
 
   const handleEndPeriod = async () => {
     if (!ongoingRecord) return;
