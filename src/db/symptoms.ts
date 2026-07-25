@@ -15,8 +15,8 @@ export async function upsertSymptom(
   fields: Partial<Omit<SymptomRecord, 'id' | 'date' | 'created_at'>>
 ): Promise<void> {
   await db.runAsync(
-    `INSERT INTO symptoms (date, flow, cramps, mood, energy, headache, bloating, cravings, notes)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO symptoms (date, flow, cramps, mood, energy, headache, bloating, cravings, backPain, breastPain, skinSensitive, notes)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(date) DO UPDATE SET
        flow = COALESCE(excluded.flow, flow),
        cramps = COALESCE(excluded.cramps, cramps),
@@ -25,6 +25,9 @@ export async function upsertSymptom(
        headache = COALESCE(excluded.headache, headache),
        bloating = COALESCE(excluded.bloating, bloating),
        cravings = COALESCE(excluded.cravings, cravings),
+       backPain = COALESCE(excluded.backPain, backPain),
+       breastPain = COALESCE(excluded.breastPain, breastPain),
+       skinSensitive = COALESCE(excluded.skinSensitive, skinSensitive),
        notes = COALESCE(excluded.notes, notes)`,
     [
       date,
@@ -35,6 +38,9 @@ export async function upsertSymptom(
       fields.headache ?? 0,
       fields.bloating ?? 0,
       fields.cravings ?? 0,
+      fields.backPain ?? 0,
+      fields.breastPain ?? 0,
+      fields.skinSensitive ?? 0,
       fields.notes || null,
     ]
   );

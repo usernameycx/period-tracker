@@ -141,6 +141,12 @@ export default function CalendarView({ onDayPress, selectedDate, currentMonth, o
                   {isRecorded && (
                     <View style={styles.recordDot} />
                   )}
+                  {info?.phase === 'ovulation' && (
+                    <Text style={styles.dayLabel}>排卵日</Text>
+                  )}
+                  {info?.fertility && (
+                    <Text style={styles.dayLabel}>窗口期</Text>
+                  )}
                 </PressableScale>
               );
             })}
@@ -184,6 +190,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md, minHeight: 36,
   },
   dayNum: { fontSize: 14, color: Colors.ink, fontWeight: Weight.medium },
+  dayLabel: { fontSize: 9, color: Colors.textMuted, fontWeight: Weight.medium, marginTop: 1 },
   selectedCell: { borderWidth: 2, borderColor: Colors.ink, borderRadius: Radius.md },
   selectedText: { fontWeight: Weight.extrabold, color: Colors.ink },
 

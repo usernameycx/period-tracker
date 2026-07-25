@@ -16,7 +16,7 @@ interface Props {
 const CATEGORIES = [
   {
     key: 'flow' as const,
-    label: '经血量',
+    label: '出血量',
     options: [
       { key: 'light', label: '少量', icon: 'droplet' as IconName, iconColor: Colors.textHint },
       { key: 'medium', label: '正常', icon: 'drop' as IconName, iconColor: Colors.primary },
@@ -25,7 +25,7 @@ const CATEGORIES = [
   },
   {
     key: 'cramps' as const,
-    label: '痛经',
+    label: '小腹不适感',
     options: [
       { key: 'none', label: '无', icon: 'check-circle' as IconName, iconColor: Colors.success },
       { key: 'mild', label: '轻微', icon: 'wave' as IconName, iconColor: Colors.primary },
@@ -35,7 +35,7 @@ const CATEGORIES = [
   },
   {
     key: 'mood' as const,
-    label: '心情',
+    label: '今日心情',
     options: [
       { key: 'happy', label: '开心', icon: 'smile' as IconName, iconColor: Colors.success },
       { key: 'calm', label: '平静', icon: 'zen' as IconName, iconColor: Colors.primary },
@@ -46,7 +46,7 @@ const CATEGORIES = [
   },
   {
     key: 'energy' as const,
-    label: '精力',
+    label: '精力状态',
     options: [
       { key: 'high', label: '充沛', icon: 'battery-full' as IconName, iconColor: Colors.warning },
       { key: 'normal', label: '正常', icon: 'battery' as IconName, iconColor: Colors.success },
@@ -59,6 +59,9 @@ const TOGGLES = [
   { key: 'headache' as const, label: '头痛', icon: 'head' as IconName, iconColor: Colors.danger },
   { key: 'bloating' as const, label: '腹胀', icon: 'bloat' as IconName, iconColor: Colors.primaryLight },
   { key: 'cravings' as const, label: '嘴馋', icon: 'cookie' as IconName, iconColor: Colors.primary },
+  { key: 'backPain' as const, label: '腰骶部酸痛', icon: 'backPain' as IconName, iconColor: Colors.primaryLight },
+  { key: 'breastPain' as const, label: '乳房胀痛', icon: 'breastPain' as IconName, iconColor: Colors.danger },
+  { key: 'skinSensitive' as const, label: '皮肤敏感', icon: 'skinSensitive' as IconName, iconColor: Colors.primary },
 ];
 
 export default function SymptomPicker({ date, visible }: Props) {
@@ -140,7 +143,7 @@ export default function SymptomPicker({ date, visible }: Props) {
       {/* Toggles section */}
       <View style={styles.catDivider} />
       <View style={styles.category}>
-        <Text style={styles.catLabel}>其他</Text>
+        <Text style={styles.catLabel}>其他身体症状</Text>
         <View style={styles.toggleRow}>
           {TOGGLES.map(t => {
             const val = data?.[t.key] === 1;

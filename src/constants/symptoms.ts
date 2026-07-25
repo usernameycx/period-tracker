@@ -8,6 +8,9 @@ export interface SymptomRecord {
   headache: number;
   bloating: number;
   cravings: number;
+  backPain: number;
+  breastPain: number;
+  skinSensitive: number;
   notes: string | null;
   created_at: string;
 }

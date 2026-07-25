@@ -106,10 +106,11 @@ export async function importData(json: string): Promise<void> {
       for (const s of data.symptoms) {
         if (!s.date || typeof s.date !== 'string') continue;
         await db.runAsync(
-          `INSERT INTO symptoms (date, flow, cramps, mood, energy, headache, bloating, cravings, notes, created_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO symptoms (date, flow, cramps, mood, energy, headache, bloating, cravings, backPain, breastPain, skinSensitive, notes, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [s.date, s.flow ?? null, s.cramps ?? null, s.mood ?? null, s.energy ?? null,
-           s.headache ?? 0, s.bloating ?? 0, s.cravings ?? 0, s.notes ?? null,
+           s.headache ?? 0, s.bloating ?? 0, s.cravings ?? 0,
+           s.backPain ?? 0, s.breastPain ?? 0, s.skinSensitive ?? 0, s.notes ?? null,
            s.created_at ?? new Date().toISOString()]
         );
       }

@@ -34,17 +34,26 @@ export default function StatsCard() {
 
   return (
     <View style={styles.card}>
-      {/* Hero */}
+      {/* Hero: two stats side by side */}
       <View style={styles.heroTile}>
-        <Text style={styles.heroNum}>{stats.avgCycleLength ?? '-'}</Text>
-        <Text style={styles.heroLabel}>天平均周期</Text>
-        <Text style={styles.heroCount}>共 {stats.totalCycles} 个已完成周期</Text>
+        <View style={styles.heroRow}>
+          <View style={styles.heroCol}>
+            <Text style={styles.heroNum}>{stats.avgCycleLength ?? '-'}<Text style={styles.heroUnit}>天</Text></Text>
+            <Text style={styles.heroLabel}>平均周期</Text>
+          </View>
+          <View style={styles.heroDivider} />
+          <View style={styles.heroCol}>
+            <Text style={styles.heroNum}>{stats.avgPeriodDays ?? '-'}<Text style={styles.heroUnit}>天</Text></Text>
+            <Text style={styles.heroLabel}>平均经期</Text>
+          </View>
+        </View>
         {reg ? (
-          <View style={[styles.regBadge, { backgroundColor: reg.bg, borderColor: reg.dot + '40', marginTop: Spacing.sm }]}>
+          <View style={[styles.regBadge, { backgroundColor: reg.bg, borderColor: reg.dot + '40' }]}>
             <View style={[styles.regDot, { backgroundColor: reg.dot }]} />
             <Text style={[styles.regLabel, { color: reg.dot }]}>{reg.label}</Text>
           </View>
         ) : null}
+        <Text style={styles.heroCount}>共 {stats.totalCycles} 个已完成周期</Text>
       </View>
 
       {/* Range */}
@@ -93,9 +102,16 @@ const styles = StyleSheet.create({
     padding: Spacing.xl, marginBottom: Spacing.md,
     ...Shadow.raised,
   },
-  heroNum: { fontSize: 48, fontWeight: Weight.extrabold, color: Colors.primary, letterSpacing: -2, lineHeight: 52 },
-  heroLabel: { fontSize: FontSize.sm, color: Colors.textSecondary, fontWeight: Weight.medium, marginTop: Spacing.xs },
-  heroCount: { fontSize: FontSize.xs, color: Colors.textMuted, marginTop: 2 },
+  heroRow: {
+    flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center',
+    marginBottom: Spacing.sm,
+  },
+  heroCol: { alignItems: 'center', flex: 1 },
+  heroDivider: { width: 1, height: 36, backgroundColor: Colors.divider, marginHorizontal: Spacing.md },
+  heroNum: { fontSize: 32, fontWeight: Weight.extrabold, color: Colors.primary, letterSpacing: -1 },
+  heroUnit: { fontSize: FontSize.sm, fontWeight: Weight.medium, color: Colors.textMuted },
+  heroLabel: { fontSize: FontSize.xs, color: Colors.textSecondary, fontWeight: Weight.medium, marginTop: 2 },
+  heroCount: { fontSize: FontSize.xs, color: Colors.textMuted, marginTop: 4 },
 
   regBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 4,

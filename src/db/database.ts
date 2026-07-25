@@ -59,6 +59,9 @@ async function initTables(db: SQLite.SQLiteDatabase): Promise<void> {
       headache INTEGER DEFAULT 0,
       bloating INTEGER DEFAULT 0,
       cravings INTEGER DEFAULT 0,
+      backPain INTEGER DEFAULT 0,
+      breastPain INTEGER DEFAULT 0,
+      skinSensitive INTEGER DEFAULT 0,
       notes TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );

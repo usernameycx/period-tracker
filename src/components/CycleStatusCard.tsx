@@ -134,8 +134,8 @@ export default function CycleStatusCard() {
           </View>
         ) : daysUntilPeriod > 0 ? (
           <View style={styles.countdownBox}>
-            <Text style={styles.countdownNum}>{daysUntilPeriod}</Text>
-            <Text style={styles.countdownLbl}>天后经期</Text>
+            <Text style={styles.countdownNum}>{daysUntilPeriod}天</Text>
+            <Text style={styles.countdownLbl}>距离下次经期</Text>
           </View>
         ) : daysUntilPeriod <= 0 && daysUntilPeriod > -avgPeriodDays ? (
           <View style={[styles.countdownBox, { backgroundColor: Colors.dangerBg }]}>
