@@ -1,5 +1,5 @@
 import { PeriodRecord } from '../db/period-records';
-import { Phase, DEFAULT_PERIOD_DAYS, DEFAULT_CYCLE_DAYS, OVULATION_BEFORE_PERIOD, FERTILITY_WINDOW, MIN_RECORDS_FOR_PREDICTION } from '../constants/phases';
+import { Phase, DEFAULT_PERIOD_DAYS, DEFAULT_CYCLE_DAYS, OVULATION_BEFORE_PERIOD, MIN_RECORDS_FOR_PREDICTION } from '../constants/phases';
 import { parseDate, diffDays, addDays, formatDate } from '../utils/date';
 
 /** Minimum plausible cycle length — skip records closer than this when computing phases */
@@ -116,11 +116,8 @@ export function getPhaseForDate(
     return { phase: 'ovulation', dayOffset: 1, daysUntilPeriod: daysUntilNext, nextPeriodDate: nextDate };
   }
 
-  // Fertility window — same as calendar detection
-  const halfFertility = Math.floor(FERTILITY_WINDOW / 2);
-  const fStart = OVULATION_BEFORE_PERIOD + halfFertility;
-  const fEnd = OVULATION_BEFORE_PERIOD - halfFertility;
-  const fertility = daysUntilNext !== OVULATION_BEFORE_PERIOD && daysUntilNext <= fStart && daysUntilNext >= fEnd;
+  // Fertility window (day before ovulation only)
+  const fertility = daysUntilNext === OVULATION_BEFORE_PERIOD + 1;
 
   // Follicular
   if (daysUntilNext > OVULATION_BEFORE_PERIOD) {
@@ -199,11 +196,8 @@ export function getPhaseForCalendarDay(
         return { phase: 'ovulation', dayOffset: 1, daysUntilPeriod: daysUntilEnd, nextPeriodDate: nextDate };
       }
 
-      // Fertility window (day before / after ovulation — calendar color only)
-      const halfFertility = Math.floor(FERTILITY_WINDOW / 2);
-      const fertilityStart = ovDay + halfFertility;
-      const fertilityEnd = ovDay - halfFertility;
-      const inFertility = daysUntilEnd !== ovDay && daysUntilEnd <= fertilityStart && daysUntilEnd >= fertilityEnd;
+      // Fertility window (day before ovulation only — luteal stays 14 days)
+      const inFertility = daysUntilEnd === OVULATION_BEFORE_PERIOD + 1;
 
       // Follicular
       if (daysUntilEnd > ovDay) {

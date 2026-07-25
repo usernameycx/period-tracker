@@ -111,6 +111,10 @@ export default function CalendarView({ onDayPress, selectedDate, currentMonth, o
             <Text style={styles.legendText}>{PHASE_LABELS[p]}</Text>
           </View>
         ))}
+        <View style={styles.legendItem}>
+          <View style={[styles.legendDot, { backgroundColor: FERTILITY_COLOR }]} />
+          <Text style={styles.legendText}>备孕窗口</Text>
+        </View>
       </View>
 
       {/* Grid */}
