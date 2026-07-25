@@ -28,7 +28,7 @@ export const MIN_RECORDS_FOR_PREDICTION = 2;
 export const PHASE_COLORS: Record<Phase, string> = {
   period: '#F2D5C5',
   follicular: '#D6E4D0',
-  ovulation: '#EDE0C8',
-  luteal: '#E6DBD5',
+  ovulation: '#F2DAA5',
+  luteal: '#F0DEB8',
 };
-export const FERTILITY_COLOR = '#F5EDE0'; // 备孕窗口浅色（比排卵更浅）
+export const FERTILITY_COLOR = '#F5EDD8'; // 备孕窗口浅色（比排卵更浅）
