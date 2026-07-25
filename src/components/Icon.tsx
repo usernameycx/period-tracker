@@ -59,9 +59,9 @@ export type IconName =
   | 'head'         // 头痛 — head with pain
   | 'bloat'        // 腹胀 — bloated belly
   | 'cookie'       // 嘴馋 — cookie/sweet
-  | 'backPain'     // 腰骶部酸痛 — spine/back
-  | 'breastPain'   // 乳房胀痛 — breast/chest
-  | 'skinSensitive'; // 皮肤敏感 — skin/irritation
+  | 'backPain'     // 腰痛 — spine/lower back
+  | 'breastPain'   // 胸胀 — chest tenderness
+  | 'eyeDry';      // 眼干 — dry eye
 
 // Ellipse helper — SVG <ellipse> with center coordinates
 function Ellipse2({ cx, cy, rx, ry, ...rest }: { cx: number; cy: number; rx: number; ry: number; [key: string]: any }) {
@@ -665,40 +665,38 @@ const PATHS: Record<IconName, (color: string) => React.ReactElement> = {
 
   backPain: (c) => (
     <G>
-      {/* Spine/back — 腰骶部酸痛 */}
-      <Line x1="12" y1="3" x2="12" y2="21" stroke={c} strokeWidth="1.5" strokeLinecap="round" />
-      <Line x1="8" y1="7" x2="16" y2="7" stroke={c} strokeWidth="1.2" strokeLinecap="round" opacity="0.6" />
-      <Line x1="8" y1="11" x2="16" y2="11" stroke={c} strokeWidth="1.2" strokeLinecap="round" opacity="0.6" />
-      <Line x1="8" y1="15" x2="16" y2="15" stroke={c} strokeWidth="1.2" strokeLinecap="round" opacity="0.6" />
+      {/* Lower back/spine — 腰痛 */}
+      <Path d="M 6,8 C 7,5 9,4 9,3 L 15,3 C 15,4 17,5 18,8" fill="none" stroke={c} strokeWidth="1.5" strokeLinecap="round" />
+      <Line x1="9" y1="3" x2="9" y2="12" stroke={c} strokeWidth="1.5" strokeLinecap="round" />
+      <Line x1="15" y1="3" x2="15" y2="12" stroke={c} strokeWidth="1.5" strokeLinecap="round" />
+      <Path d="M 10,12 C 10,15 14,15 14,12" fill="none" stroke={c} strokeWidth="1.5" strokeLinecap="round" />
       {/* Pain spark */}
-      <Line x1="18" y1="5" x2="20" y2="3" stroke={c} strokeWidth="1.2" strokeLinecap="round" opacity="0.5" />
-      <Line x1="20" y1="5" x2="18" y2="3" stroke={c} strokeWidth="1.2" strokeLinecap="round" opacity="0.5" />
+      <Line x1="19" y1="5" x2="21" y2="3" stroke={c} strokeWidth="1.2" strokeLinecap="round" opacity="0.5" />
+      <Line x1="21" y1="5" x2="19" y2="3" stroke={c} strokeWidth="1.2" strokeLinecap="round" opacity="0.5" />
     </G>
   ),
 
   breastPain: (c) => (
     <G>
-      {/* Breast/chest — 乳房胀痛 */}
-      <Path d="M 8,21 C 8,14 10,11 12,11 C 14,11 16,14 16,21" fill="none" stroke={c} strokeWidth="1.5" strokeLinecap="round" />
-      <Path d="M 6,16 C 6,12 8,9 12,9 C 16,9 18,12 18,16" fill="none" stroke={c} strokeWidth="1.2" strokeLinecap="round" opacity="0.4" />
-      {/* Pain dots */}
-      <Circle cx="12" cy="14" r="0.8" fill={c} opacity="0.5" />
-      <Circle cx="10" cy="12" r="0.6" fill={c} opacity="0.4" />
-      <Circle cx="14" cy="12" r="0.6" fill={c} opacity="0.4" />
+      {/* Chest outline — 胸胀 */}
+      <Path d="M 6,16 C 6,10 9,7 12,7 C 15,7 18,10 18,16" fill="none" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M 4,12 L 20,12" stroke={c} strokeWidth="1" strokeLinecap="round" opacity="0.3" />
+      {/* Tenderness dots */}
+      <Circle cx="9" cy="11" r="0.8" fill={c} opacity="0.5" />
+      <Circle cx="12" cy="10" r="0.7" fill={c} opacity="0.45" />
+      <Circle cx="15" cy="11" r="0.8" fill={c} opacity="0.5" />
     </G>
   ),
 
-  skinSensitive: (c) => (
+  eyeDry: (c) => (
     <G>
-      {/* Skin/arm with irritation — 皮肤敏感 */}
-      <Path d="M 6,8 C 6,5 8,3 10,3 L 14,3 C 16,3 18,5 18,8 L 18,20" fill="none" stroke={c} strokeWidth="1.5" strokeLinecap="round" />
-      {/* Irritation dots */}
-      <Circle cx="15" cy="10" r="0.8" fill={c} opacity="0.5" />
-      <Circle cx="13" cy="14" r="0.6" fill={c} opacity="0.4" />
-      <Circle cx="16" cy="16" r="0.7" fill={c} opacity="0.45" />
-      <Circle cx="11" cy="9" r="0.6" fill={c} opacity="0.35" />
-      {/* Zigzag for sensitivity */}
-      <Path d="M 7,16 L 8,14 L 7,12 L 8,10" fill="none" stroke={c} strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" opacity="0.4" />
+      {/* Eye — 眼干 */}
+      <Path d="M 2,12 C 4,8 10,6 12,6 C 14,6 20,8 22,12 C 20,16 14,18 12,18 C 10,18 4,16 2,12 Z" fill="none" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <Circle cx="12" cy="12" r="3" fill="none" stroke={c} strokeWidth="1.2" />
+      <Circle cx="12" cy="12" r="1.2" fill={c} opacity="0.6" />
+      {/* Dryness lines */}
+      <Line x1="7" y1="7" x2="9" y2="5" stroke={c} strokeWidth="1" strokeLinecap="round" opacity="0.4" />
+      <Line x1="17" y1="7" x2="15" y2="5" stroke={c} strokeWidth="1" strokeLinecap="round" opacity="0.4" />
     </G>
   ),
 };

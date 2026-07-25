@@ -59,9 +59,9 @@ const TOGGLES = [
   { key: 'headache' as const, label: '头痛', icon: 'head' as IconName, iconColor: Colors.danger },
   { key: 'bloating' as const, label: '腹胀', icon: 'bloat' as IconName, iconColor: Colors.primaryLight },
   { key: 'cravings' as const, label: '嘴馋', icon: 'cookie' as IconName, iconColor: Colors.primary },
-  { key: 'backPain' as const, label: '腰骶部酸痛', icon: 'backPain' as IconName, iconColor: Colors.primaryLight },
-  { key: 'breastPain' as const, label: '乳房胀痛', icon: 'breastPain' as IconName, iconColor: Colors.danger },
-  { key: 'skinSensitive' as const, label: '皮肤敏感', icon: 'skinSensitive' as IconName, iconColor: Colors.primary },
+  { key: 'backPain' as const, label: '腰痛', icon: 'backPain' as IconName, iconColor: Colors.primaryLight },
+  { key: 'breastPain' as const, label: '胸胀', icon: 'breastPain' as IconName, iconColor: Colors.danger },
+  { key: 'skinSensitive' as const, label: '眼干', icon: 'eyeDry' as IconName, iconColor: Colors.primary },
 ];
 
 export default function SymptomPicker({ date, visible }: Props) {
@@ -153,7 +153,7 @@ export default function SymptomPicker({ date, visible }: Props) {
                 style={[styles.toggle, val && styles.toggleActive]}
                 onPress={() => update(t.key, val ? 0 : 1)}
               >
-                <Icon name={t.icon} size={18} color={t.iconColor} />
+                <Icon name={t.icon} size={20} color={t.iconColor} />
                 <Text style={[styles.toggleLabel, val && styles.toggleLabelActive]}>{t.label}</Text>
               </PressableScale>
             );
@@ -181,10 +181,11 @@ const styles = StyleSheet.create({
   optionLabel: { fontSize: FontSize.sm, color: Colors.textMuted, fontWeight: Weight.medium },
   optionLabelActive: { color: Colors.primary, fontWeight: Weight.bold },
 
-  toggleRow: { flexDirection: 'row', gap: Spacing.sm },
+  toggleRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
   toggle: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    paddingVertical: Spacing.md, borderRadius: Radius.md, backgroundColor: Colors.cardBg, gap: Spacing.xs,
+    flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+    paddingVertical: Spacing.md, paddingHorizontal: Spacing.sm, borderRadius: Radius.md,
+    backgroundColor: Colors.cardBg, gap: Spacing.xs, minWidth: 70,
   },
   toggleActive: { backgroundColor: Colors.primaryBg, borderWidth: 1, borderColor: Colors.primary },
   toggleLabel: { fontSize: FontSize.sm, color: Colors.textMuted, fontWeight: Weight.medium },

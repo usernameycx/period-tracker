@@ -21,43 +21,44 @@ interface DietRow {
 
 function buildDietData(): { phase: Phase; day_offset: number; recommend: string[]; avoid: string[] }[] {
   return [
-    // === 经期 (7天) ===
-    { phase: 'period', day_offset: 1, recommend: ['红枣', '姜茶', '热牛奶', '红糖水'], avoid: ['冷饮', '辛辣', '咖啡', '酒精'] },
-    { phase: 'period', day_offset: 2, recommend: ['菠菜', '鸡蛋', '红糖水', '桂圆'], avoid: ['生冷食物', '酒精', '油炸食品'] },
-    { phase: 'period', day_offset: 3, recommend: ['动物肝脏', '黑木耳', '红豆', '牛肉'], avoid: ['冰品', '浓茶', '碳酸饮料'] },
-    { phase: 'period', day_offset: 4, recommend: ['瘦肉', '豆腐', '海带', '樱桃'], avoid: ['冷饮', '辛辣', '咖啡'] },
-    { phase: 'period', day_offset: 5, recommend: ['鱼肉', '鸡蛋', '菠菜', '黑芝麻'], avoid: ['生冷食物', '酒精'] },
-    { phase: 'period', day_offset: 6, recommend: ['鸡肉', '山药', '小米粥', '红枣'], avoid: ['冷饮', '辛辣', '油炸食品'] },
-    { phase: 'period', day_offset: 7, recommend: ['鸡蛋', '牛奶', '全麦面包', '桂圆'], avoid: ['冰品', '酒精', '咖啡'] },
+    // === 经期 (7天覆盖) ===
+    { phase: 'period', day_offset: 1, recommend: ['红糖姜茶', '热牛奶', '红枣桂圆汤', '小米粥'], avoid: ['冷饮', '冰镇水果', '酒精', '浓茶'] },
+    { phase: 'period', day_offset: 2, recommend: ['菠菜猪肝汤', '水煮蛋', '红豆粥', '黑芝麻糊'], avoid: ['生冷沙拉', '咖啡', '油炸食品'] },
+    { phase: 'period', day_offset: 3, recommend: ['牛肉炖胡萝卜', '黑木耳炒蛋', '山药排骨汤', '樱桃'], avoid: ['冰品', '碳酸饮料', '辛辣火锅'] },
+    { phase: 'period', day_offset: 4, recommend: ['清蒸鲈鱼', '豆腐海带汤', '燕麦牛奶', '桂圆'], avoid: ['冷饮', '浓茶', '烧烤'] },
+    { phase: 'period', day_offset: 5, recommend: ['鸡肉粥', '番茄炒蛋', '牛奶燕麦', '核桃'], avoid: ['生冷食物', '酒精', '辛辣'] },
+    { phase: 'period', day_offset: 6, recommend: ['红枣枸杞鸡汤', '全麦面包', '酸奶', '香蕉'], avoid: ['冰品', '咖啡', '油炸食品'] },
+    { phase: 'period', day_offset: 7, recommend: ['鸡蛋羹', '小米南瓜粥', '温豆浆', '苹果'], avoid: ['冷饮', '酒精', '浓茶'] },
 
-    // === 卵泡期 (9天) ===
-    { phase: 'follicular', day_offset: 1, recommend: ['黄豆', '豆浆', '全谷物', '西兰花'], avoid: ['油炸食品', '高糖食物'] },
-    { phase: 'follicular', day_offset: 2, recommend: ['鸡蛋', '牛奶', '燕麦', '核桃'], avoid: ['辛辣', '酒精'] },
-    { phase: 'follicular', day_offset: 3, recommend: ['鸡胸肉', '藜麦', '牛油果', '蓝莓'], avoid: ['油炸食品'] },
-    { phase: 'follicular', day_offset: 4, recommend: ['三文鱼', '菠菜', '杏仁', '酸奶'], avoid: ['高糖食物', '酒精'] },
-    { phase: 'follicular', day_offset: 5, recommend: ['豆腐', '菌菇', '红薯', '奇异果'], avoid: ['油炸食品'] },
-    { phase: 'follicular', day_offset: 6, recommend: ['虾仁', '芦笋', '糙米', '草莓'], avoid: ['辛辣'] },
-    { phase: 'follicular', day_offset: 7, recommend: ['鸡蛋', '黑豆', '番茄', '橙子'], avoid: ['高糖食物'] },
-    { phase: 'follicular', day_offset: 8, recommend: ['鸡胸肉', '西兰花', '燕麦', '苹果'], avoid: ['油炸食品', '酒精'] },
-    { phase: 'follicular', day_offset: 9, recommend: ['鱼肉', '菠菜', '全麦面包', '香蕉'], avoid: ['辛辣'] },
+    // === 卵泡期 (9天覆盖) ===
+    { phase: 'follicular', day_offset: 1, recommend: ['黄豆浆', '全麦吐司', '蓝莓', '水煮蛋'], avoid: ['油炸食品', '高糖甜点'] },
+    { phase: 'follicular', day_offset: 2, recommend: ['燕麦坚果粥', '鸡胸肉沙拉', '猕猴桃', '酸奶'], avoid: ['辛辣食物', '酒精'] },
+    { phase: 'follicular', day_offset: 3, recommend: ['藜麦饭', '西兰花炒虾仁', '牛油果', '草莓'], avoid: ['油炸食品', '碳酸饮料'] },
+    { phase: 'follicular', day_offset: 4, recommend: ['三文鱼', '菠菜拌芝麻', '杏仁', '酸奶'], avoid: ['高糖食物', '酒精'] },
+    { phase: 'follicular', day_offset: 5, recommend: ['豆腐菌菇汤', '糙米饭', '蒸红薯', '奇异果'], avoid: ['油炸食品', '辛辣'] },
+    { phase: 'follicular', day_offset: 6, recommend: ['芦笋虾仁', '杂粮饭', '番茄', '橙子'], avoid: ['高盐食物', '酒精'] },
+    { phase: 'follicular', day_offset: 7, recommend: ['黑豆排骨汤', '炒鸡蛋', '蒸玉米', '葡萄'], avoid: ['高糖甜点', '油炸'] },
+    { phase: 'follicular', day_offset: 8, recommend: ['鸡胸肉', '西兰花', '全麦面包', '苹果'], avoid: ['辛辣', '酒精'] },
+    { phase: 'follicular', day_offset: 9, recommend: ['鱼肉豆腐', '菠菜', '燕麦粥', '香蕉'], avoid: ['油炸食品', '咖啡'] },
 
-    // === 排卵日 (3天) ===
-    { phase: 'ovulation', day_offset: 1, recommend: ['生蚝', '坚果', '深色蔬菜', '莓果'], avoid: ['酒精', '咖啡', '辛辣'] },
-    { phase: 'ovulation', day_offset: 2, recommend: ['虾', '鸡蛋', '西兰花', '猕猴桃'], avoid: ['酒精', '油炸食品'] },
-    { phase: 'ovulation', day_offset: 3, recommend: ['鱼肉', '豆浆', '番茄', '葡萄'], avoid: ['咖啡', '高糖食物'] },
+    // === 排卵日 (1天) ===
+    { phase: 'ovulation', day_offset: 1, recommend: ['清蒸生蚝', '坚果拼盘', '深色绿叶菜', '蓝莓'], avoid: ['酒精', '过量咖啡', '辛辣油腻'] },
 
-    // === 黄体期 (11天) ===
-    { phase: 'luteal', day_offset: 1, recommend: ['香蕉', '坚果', '全谷物', '热牛奶'], avoid: ['咖啡', '辛辣', '酒精'] },
-    { phase: 'luteal', day_offset: 2, recommend: ['菠菜', '南瓜子', '燕麦', '鸡蛋'], avoid: ['高盐食物', '酒精'] },
-    { phase: 'luteal', day_offset: 3, recommend: ['黑巧克力', '核桃', '酸奶', '蓝莓'], avoid: ['咖啡', '油炸食品'] },
-    { phase: 'luteal', day_offset: 4, recommend: ['三文鱼', '牛油果', '糙米', '花椰菜'], avoid: ['辛辣', '高糖食物'] },
-    { phase: 'luteal', day_offset: 5, recommend: ['鸡肉', '红薯', '西兰花', '苹果'], avoid: ['酒精', '咖啡'] },
-    { phase: 'luteal', day_offset: 6, recommend: ['豆腐', '海带', '鸡蛋', '奇异果'], avoid: ['高盐食物'] },
-    { phase: 'luteal', day_offset: 7, recommend: ['鱼肉', '菠菜', '小米粥', '橙子'], avoid: ['咖啡', '辛辣'] },
-    { phase: 'luteal', day_offset: 8, recommend: ['红枣', '桂圆', '姜茶', '牛奶'], avoid: ['酒精', '生冷食物'] },
-    { phase: 'luteal', day_offset: 9, recommend: ['瘦肉', '黑木耳', '红豆', '樱桃'], avoid: ['咖啡', '油炸食品'] },
-    { phase: 'luteal', day_offset: 10, recommend: ['鸡蛋', '豆浆', '全麦面包', '草莓'], avoid: ['高糖食物'] },
-    { phase: 'luteal', day_offset: 11, recommend: ['热牛奶', '香蕉', '燕麦', '坚果'], avoid: ['酒精', '辛辣', '咖啡'] },
+    // === 黄体期 (14天完整) ===
+    { phase: 'luteal', day_offset: 1, recommend: ['香蕉燕麦粥', '南瓜子', '全麦面包', '热牛奶'], avoid: ['咖啡', '辛辣食物', '酒精'] },
+    { phase: 'luteal', day_offset: 2, recommend: ['菠菜炒蛋', '核桃', '糙米饭', '鸡胸肉'], avoid: ['高盐零食', '酒精', '浓茶'] },
+    { phase: 'luteal', day_offset: 3, recommend: ['黑巧克力', '杏仁', '希腊酸奶', '蓝莓'], avoid: ['咖啡', '油炸食品', '甜饮料'] },
+    { phase: 'luteal', day_offset: 4, recommend: ['三文鱼', '牛油果沙拉', '杂粮饭', '花椰菜'], avoid: ['辛辣', '高糖甜点'] },
+    { phase: 'luteal', day_offset: 5, recommend: ['烤鸡肉', '蒸红薯', '蒜蓉西兰花', '苹果'], avoid: ['酒精', '咖啡', '咸菜'] },
+    { phase: 'luteal', day_offset: 6, recommend: ['豆腐海带汤', '水煮蛋', '猕猴桃', '燕麦'], avoid: ['高盐食物', '腌制品'] },
+    { phase: 'luteal', day_offset: 7, recommend: ['清蒸鱼', '菠菜汤', '小米粥', '橙子'], avoid: ['咖啡', '辛辣', '油炸'] },
+    { phase: 'luteal', day_offset: 8, recommend: ['红枣桂圆茶', '温豆浆', '蒸蛋羹', '樱桃'], avoid: ['酒精', '生冷食物', '冰饮'] },
+    { phase: 'luteal', day_offset: 9, recommend: ['瘦肉粥', '黑木耳炒蛋', '红豆汤', '全麦饼'], avoid: ['咖啡', '油炸食品', '甜食'] },
+    { phase: 'luteal', day_offset: 10, recommend: ['鸡蛋', '无糖豆浆', '全麦吐司', '草莓'], avoid: ['高糖食物', '辛辣', '酒精'] },
+    { phase: 'luteal', day_offset: 11, recommend: ['热牛奶', '香蕉', '燕麦粥', '核桃仁'], avoid: ['咖啡', '浓茶', '辛辣'] },
+    { phase: 'luteal', day_offset: 12, recommend: ['桂圆红枣汤', '蒸南瓜', '鸡蛋白', '苏打饼'], avoid: ['冷饮', '油炸', '咖啡'] },
+    { phase: 'luteal', day_offset: 13, recommend: ['小米红枣粥', '温酸奶', '蒸山药', '苹果泥'], avoid: ['辛辣', '酒精', '冰品'] },
+    { phase: 'luteal', day_offset: 14, recommend: ['姜枣茶', '全麦面包', '水煮蛋', '温热蜂蜜水'], avoid: ['生冷食物', '浓茶', '咖啡', '酒精'] },
   ];
 }
 
