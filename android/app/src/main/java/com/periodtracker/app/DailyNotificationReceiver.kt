@@ -177,7 +177,7 @@ class DailyNotificationReceiver : BroadcastReceiver() {
     val phaseLabels = mapOf(
         "period" to "经期",
         "follicular" to "卵泡期",
-        "ovulation" to "排卵期",
+        "ovulation" to "排卵日",
         "luteal" to "黄体期"
     )
 
@@ -374,8 +374,8 @@ class DailyNotificationReceiver : BroadcastReceiver() {
             "default" to "精力恢复期，适合开始新的运动计划"
         ),
         "ovulation" to mapOf(
-            "cold" to "排卵期注意腹部保暖，核心温度稳定更利于身体状态",
-            "hot" to "排卵期体温略高属正常，穿透气衣物保持舒适",
+            "cold" to "排卵日注意腹部保暖，核心温度稳定更利于身体状态",
+            "hot" to "排卵日体温略高属正常，穿透气衣物保持舒适",
             "rain" to "状态正好，雨天可以试试室内有氧运动",
             "default" to "今天状态会比较好，适合安排重要事务"
         ),
@@ -497,7 +497,7 @@ class DailyNotificationReceiver : BroadcastReceiver() {
 
         // Ovulation (only for non-period phases)
         if (phase != "period" && daysUntilOvulation == 0) {
-            alerts.add("排卵期代谢旺盛，注意补水，适合运动和处理重要事务")
+            alerts.add("排卵日代谢旺盛，注意补水，适合运动和处理重要事务")
         }
 
         // Append alerts with emoji prefix

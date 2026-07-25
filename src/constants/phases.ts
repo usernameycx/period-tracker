@@ -5,7 +5,7 @@ export type Phase = 'period' | 'follicular' | 'ovulation' | 'luteal';
 export const PHASE_LABELS: Record<Phase, string> = {
   period: '经期',
   follicular: '卵泡期',
-  ovulation: '排卵期',
+  ovulation: '排卵日',
   luteal: '黄体期',
 };
 
@@ -28,7 +28,7 @@ export const MIN_RECORDS_FOR_PREDICTION = 2;
 export const PHASE_COLORS: Record<Phase, string> = {
   period: '#F2D5C5',
   follicular: '#D6E4D0',
-  ovulation: '#F2DAA5',
+  ovulation: '#F0C8A0',
   luteal: '#F0DEB8',
 };
 export const FERTILITY_COLOR = '#F5EDD8'; // 备孕窗口浅色（比排卵更浅）

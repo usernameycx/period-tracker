@@ -41,7 +41,7 @@ function buildDietData(): { phase: Phase; day_offset: number; recommend: string[
     { phase: 'follicular', day_offset: 8, recommend: ['鸡胸肉', '西兰花', '燕麦', '苹果'], avoid: ['油炸食品', '酒精'] },
     { phase: 'follicular', day_offset: 9, recommend: ['鱼肉', '菠菜', '全麦面包', '香蕉'], avoid: ['辛辣'] },
 
-    // === 排卵期 (3天) ===
+    // === 排卵日 (3天) ===
     { phase: 'ovulation', day_offset: 1, recommend: ['生蚝', '坚果', '深色蔬菜', '莓果'], avoid: ['酒精', '咖啡', '辛辣'] },
     { phase: 'ovulation', day_offset: 2, recommend: ['虾', '鸡蛋', '西兰花', '猕猴桃'], avoid: ['酒精', '油炸食品'] },
     { phase: 'ovulation', day_offset: 3, recommend: ['鱼肉', '豆浆', '番茄', '葡萄'], avoid: ['咖啡', '高糖食物'] },

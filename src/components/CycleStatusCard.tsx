@@ -154,7 +154,7 @@ export default function CycleStatusCard() {
             <View style={styles.cdDivider} />
             <View style={[styles.countdownBox, { backgroundColor: Colors.botanicalBg }]}>
               <Text style={[styles.countdownNum, { color: Colors.success }]}>进行中</Text>
-              <Text style={styles.countdownLbl}>排卵期</Text>
+              <Text style={styles.countdownLbl}>排卵日</Text>
             </View>
           </>
         )}
