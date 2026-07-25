@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { getDatabase } from '../db/database';
-import { getSymptomByDate, upsertSymptom } from '../db/symptoms';
+import { getSymptomByDate, upsertSymptom, deleteSymptomByDate, isSymptomEmpty } from '../db/symptoms';
 import { SymptomRecord } from '../constants/symptoms';
 import { Colors, Spacing, Radius, FontSize, Weight, } from '../constants/theme';
 import PressableScale from './PressableScale';
@@ -83,13 +83,16 @@ export default function SymptomPicker({ date, visible }: Props) {
   }, [date, visible]);
 
   const update = async (field: string, value: string | number | null) => {
-    setData(prev => {
-      const updated = { ...(prev || {} as SymptomRecord), [field]: value } as SymptomRecord;
-      return updated;
-    });
+    const updated = { ...(data || {} as SymptomRecord), [field]: value } as SymptomRecord;
+    setData(updated);
     try {
       const db = await getDatabase();
       await upsertSymptom(db, date, { [field]: value });
+      // If all fields are now empty, delete the row entirely
+      if (isSymptomEmpty(updated)) {
+        await deleteSymptomByDate(db, date);
+        setData(null);
+      }
     } catch (e) {
       console.warn('SymptomPicker.update failed:', e);
     }

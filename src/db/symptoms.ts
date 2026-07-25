@@ -41,3 +41,15 @@ export async function getSymptomCount(db: SQLiteDatabase): Promise<number> {
 export async function clearAllSymptoms(db: SQLiteDatabase): Promise<void> {
   await db.runAsync('DELETE FROM symptoms');
 }
+
+export async function deleteSymptomByDate(db: SQLiteDatabase, date: string): Promise<void> {
+  await db.runAsync('DELETE FROM symptoms WHERE date = ?', [date]);
+}
+
+/** Returns true if the symptom record has no meaningful data (all nulls and zeros) */
+export function isSymptomEmpty(data: SymptomRecord): boolean {
+  return !data.flow && !data.cramps && !data.mood && !data.energy
+    && !data.headache && !data.bloating && !data.cravings
+    && !data.backPain && !data.breastPain && !data.skinSensitive
+    && !data.notes;
+}
