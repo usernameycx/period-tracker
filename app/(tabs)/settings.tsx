@@ -91,18 +91,19 @@ export default function SettingsPage() {
   };
   const handleImport = () => setImportModalVisible(true);
   const handleImportFile = async () => {
-    setImportModalVisible(false);
-    setBusy(true);
     try {
       const result = await DocumentPicker.getDocumentAsync({ type: 'application/json' });
-      if (result.canceled) { setBusy(false); return; }
+      if (result.canceled) return;
+      setBusy(true);
       const file = result.assets[0];
       const content = await (new File(file.uri)).text();
       await importData(content);
       await Promise.all([refresh(), refreshSettings()]);
+      setImportModalVisible(false);
       setToast({ title: '导入完成', message: '数据已成功恢复' });
     } catch (e: any) {
       setToast({ title: '导入失败', message: e.message || '请检查文件格式' });
+      setImportModalVisible(false);
     } finally {
       setBusy(false);
     }
