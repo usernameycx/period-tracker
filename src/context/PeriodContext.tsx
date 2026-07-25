@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef, type ReactNode } from 'react';
 import { getDatabase } from '../db/database';
-import { PeriodRecord, getAllPeriodRecords, insertPeriodRecord, deletePeriodRecord, clearAllPeriodRecords } from '../db/period-records';
-import { schedulePeriodReminders } from '../services/notifications';
+import { PeriodRecord, getAllPeriodRecords, insertPeriodRecord, updatePeriodEndDate, deletePeriodRecord, clearAllPeriodRecords } from '../db/period-records';
 import { parseDate, diffDays } from '../utils/date';
 
 /** Minimum plausible cycle length — prevents accidental multi-marking within one month */
@@ -15,6 +14,7 @@ interface PeriodCtx {
   error: string | null;
   addRecord: (startDate: string) => Promise<void>;
   removeRecord: (id: number) => Promise<void>;
+  updateEndDate: (startDate: string, endDate: string) => Promise<void>;
   clearAll: () => Promise<void>;
   refresh: () => Promise<void>;
 }
@@ -41,7 +41,6 @@ export function PeriodProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-    try { await schedulePeriodReminders(); } catch { /* non-critical */ }
   }, []);
 
   /** Debounced refresh — merges rapid successive calls into a single DB query */
@@ -76,7 +75,7 @@ export function PeriodProvider({ children }: { children: ReactNode }) {
       setRecords(prev => {
         const exists = prev.find(r => r.start_date === startDate);
         if (exists) return prev;
-        return [...prev, { id: -1, start_date: startDate, created_at: new Date().toISOString() }];
+        return [...prev, { id: -1, start_date: startDate, end_date: null, created_at: new Date().toISOString() }];
       });
     } catch (e: any) {
       const msg = e?.message || '';
@@ -101,6 +100,16 @@ export function PeriodProvider({ children }: { children: ReactNode }) {
     refresh();
   }, [refresh]);
 
+  const updateEndDate = useCallback(async (startDate: string, endDate: string) => {
+    const db = await getDatabase();
+    await updatePeriodEndDate(db, startDate, endDate);
+    // Optimistic
+    setRecords(prev => prev.map(r =>
+      r.start_date === startDate ? { ...r, end_date: endDate } : r
+    ));
+    refresh();
+  }, [refresh]);
+
   const clearAll = useCallback(async () => {
     const db = await getDatabase();
     await clearAllPeriodRecords(db);
@@ -108,8 +117,8 @@ export function PeriodProvider({ children }: { children: ReactNode }) {
   }, [refresh]);
 
   const value = useMemo(() => ({
-    records, loading, error, addRecord, removeRecord, clearAll, refresh
-  }), [records, loading, error, addRecord, removeRecord, clearAll, refresh]);
+    records, loading, error, addRecord, removeRecord, updateEndDate, clearAll, refresh
+  }), [records, loading, error, addRecord, removeRecord, updateEndDate, clearAll, refresh]);
 
   return (
     <Ctx.Provider value={value}>

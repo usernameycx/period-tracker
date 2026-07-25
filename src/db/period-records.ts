@@ -3,6 +3,7 @@ import { SQLiteDatabase } from 'expo-sqlite';
 export interface PeriodRecord {
   id: number;
   start_date: string;
+  end_date: string | null;
   created_at: string;
 }
 
@@ -19,6 +20,17 @@ export async function insertPeriodRecord(
   await db.runAsync(
     'INSERT INTO period_records (start_date) VALUES (?)',
     [startDate]
+  );
+}
+
+export async function updatePeriodEndDate(
+  db: SQLiteDatabase,
+  startDate: string,
+  endDate: string
+): Promise<void> {
+  await db.runAsync(
+    'UPDATE period_records SET end_date = ? WHERE start_date = ?',
+    [endDate, startDate]
   );
 }
 

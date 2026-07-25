@@ -21,8 +21,35 @@ function getValidCycleStarts(records: PeriodRecord[]): PeriodRecord[] {
   return valid;
 }
 
-export function getAveragePeriodDays(_records?: PeriodRecord[]): number {
-  return DEFAULT_PERIOD_DAYS;
+export function getAveragePeriodDays(records?: PeriodRecord[]): number {
+  if (!records || records.length === 0) return DEFAULT_PERIOD_DAYS;
+  // Collect periods that have an end_date
+  const days: number[] = [];
+  for (const r of records) {
+    if (r.end_date) {
+      const len = diffDays(parseDate(r.end_date), parseDate(r.start_date)) + 1;
+      if (len >= 1 && len <= 10) days.push(len);
+    }
+  }
+  if (days.length === 0) {
+    // Fall back to estimated period days from consecutive records
+    const sortedDir = [...records].sort((a, b) => a.start_date.localeCompare(b.start_date));
+    const estimated: number[] = [];
+    for (let i = 1; i < sortedDir.length; i++) {
+      const len = diffDays(parseDate(sortedDir[i].start_date), parseDate(sortedDir[i - 1].start_date));
+      // If records are within a plausible cycle, estimate period as first 5 days (conservative)
+      // This is a fallback; actual end_date is much more accurate
+      if (len >= 18 && len <= 40) estimated.push(Math.min(7, Math.max(3, Math.round(len * 0.2))));
+    }
+    if (estimated.length > 0) {
+      return Math.round(estimated.reduce((a, b) => a + b, 0) / estimated.length);
+    }
+    return DEFAULT_PERIOD_DAYS;
+  }
+  const avg = Math.round(days.reduce((a, b) => a + b, 0) / days.length);
+  // Blend toward default when data is sparse (< 3 data points)
+  const blend = Math.min(1, days.length / 3);
+  return Math.round(avg * blend + DEFAULT_PERIOD_DAYS * (1 - blend));
 }
 
 export function getAverageCycleLength(records: PeriodRecord[]): number | null {
@@ -126,7 +153,7 @@ export function getPhaseForCalendarDay(
 
   // Use only valid cycle starts to avoid implausibly-short "cycles"
   const valid = getValidCycleStarts(records);
-  const PERIOD_DAYS = DEFAULT_PERIOD_DAYS;
+  const avgPeriodDays = getAveragePeriodDays(records);
 
   // Find which cycle this date belongs to
   for (let i = 0; i < valid.length; i++) {
@@ -134,6 +161,11 @@ export function getPhaseForCalendarDay(
 
     // Date is before this cycle → not in any cycle yet
     if (d < cycleStart) return null;
+
+    // Period length for this specific record
+    const periodDays = valid[i].end_date
+      ? diffDays(parseDate(valid[i].end_date!), cycleStart) + 1
+      : avgPeriodDays;
 
     // Determine cycle end (next recorded start, or predicted)
     let cycleEnd: Date;
@@ -151,8 +183,8 @@ export function getPhaseForCalendarDay(
       const daysUntilEnd = diffDays(cycleEnd, d);
       const nextDate = formatDate(cycleEnd);
 
-      // Period: days 1..PERIOD_DAYS
-      if (daysFromStart >= 1 && daysFromStart <= PERIOD_DAYS) {
+      // Period: days 1..periodDays
+      if (daysFromStart >= 1 && daysFromStart <= periodDays) {
         return { phase: 'period', dayOffset: daysFromStart, daysUntilPeriod: daysUntilEnd, nextPeriodDate: nextDate };
       }
 
@@ -165,7 +197,7 @@ export function getPhaseForCalendarDay(
 
       // Follicular
       if (daysUntilEnd > ovStart) {
-        return { phase: 'follicular', dayOffset: Math.max(1, daysFromStart - PERIOD_DAYS), daysUntilPeriod: daysUntilEnd, nextPeriodDate: nextDate };
+        return { phase: 'follicular', dayOffset: Math.max(1, daysFromStart - periodDays), daysUntilPeriod: daysUntilEnd, nextPeriodDate: nextDate };
       }
 
       // Luteal

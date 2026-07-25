@@ -36,7 +36,7 @@ class DailyNotificationReceiver : BroadcastReceiver() {
         const val KEY_CITY = "city"
 
         // Cycle constants — must match src/constants/phases.ts
-        const val DEFAULT_PERIOD_DAYS = 7
+        const val DEFAULT_PERIOD_DAYS = 5
         const val DEFAULT_CYCLE_DAYS = 28
         const val OVULATION_BEFORE_PERIOD = 14
         const val OVULATION_SPAN = 3
@@ -155,10 +155,10 @@ class DailyNotificationReceiver : BroadcastReceiver() {
             // 3. Fetch weather
             val weather = fetchWeather(city)
 
-            // 4. Build notification body
-            val body = buildBody(phaseInfo.phase, weather)
+            // 4. Build notification body (phase-adaptive)
+            val body = buildRichBody(phaseInfo.phase, phaseInfo.dayOffset, records, weather)
 
-            // 5. Show notification
+            // 5. Show notification (collapsed shows first line, expanded shows all)
             showNotification(context, title, body)
 
             // 6. Re-schedule for tomorrow (setExact is one-shot)
@@ -181,7 +181,7 @@ class DailyNotificationReceiver : BroadcastReceiver() {
         "luteal" to "黄体期"
     )
 
-    private fun readPeriodRecords(context: Context): List<Date> {
+    private fun readPeriodRecords(context: Context): List<Pair<Date, Date?>> {
         // expo-sqlite SDK 57 stores dbs in files/SQLite, not databases/
         val sqliteDir = File(context.filesDir, "SQLite")
         val dbFile = File(sqliteDir, "period_tracker.db")
@@ -193,12 +193,14 @@ class DailyNotificationReceiver : BroadcastReceiver() {
         val db = SQLiteDatabase.openDatabase(
             dbFile.absolutePath, null, SQLiteDatabase.OPEN_READWRITE
         )
-        val records = mutableListOf<Date>()
+        val records = mutableListOf<Pair<Date, Date?>>()
         val fmt = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-        db.rawQuery("SELECT start_date FROM period_records ORDER BY start_date ASC", null).use { cursor ->
+        db.rawQuery("SELECT start_date, end_date FROM period_records ORDER BY start_date ASC", null).use { cursor ->
             while (cursor.moveToNext()) {
                 try {
-                    records.add(fmt.parse(cursor.getString(0))!!)
+                    val start = fmt.parse(cursor.getString(0))!!
+                    val end = if (cursor.isNull(1)) null else fmt.parse(cursor.getString(1))
+                    records.add(Pair(start, end))
                 } catch (_: Exception) {}
             }
         }
@@ -206,18 +208,23 @@ class DailyNotificationReceiver : BroadcastReceiver() {
         return records
     }
 
-    private fun calculatePhase(today: Calendar, records: List<Date>): PhaseInfo {
+    private fun calculatePhase(today: Calendar, records: List<Pair<Date, Date?>>): PhaseInfo {
         if (records.isEmpty()) return PhaseInfo("follicular", 1)
 
-        val lastStart = records.last()
+        // Extract start dates for cycle length calculation
+        val starts = records.map { it.first }
+
+        val lastStart = starts.last()
         val cycleLength = if (records.size >= 2) {
-            val prev = records[records.size - 2]
+            val prev = starts[starts.size - 2]
             val diff = (lastStart.time - prev.time) / TimeUnit.DAYS.toMillis(1)
             diff.coerceIn(21, 35).toInt()
         } else {
             DEFAULT_CYCLE_DAYS
         }
-        val avgPeriodDays = DEFAULT_PERIOD_DAYS
+
+        // Dynamic period days: average of historical end_dates
+        val periodDays = computeAvgPeriodDays(records)
 
         // predicted next start
         val nextStart = GregorianCalendar().apply {
@@ -238,13 +245,28 @@ class DailyNotificationReceiver : BroadcastReceiver() {
         if (dayInCycle < 0) return PhaseInfo("follicular", 1)
 
         val phase = when {
-            dayInCycle < avgPeriodDays -> "period"
+            dayInCycle < periodDays -> "period"
             dayInCycle < cycleLength - OVULATION_BEFORE_PERIOD - OVULATION_SPAN / 2 -> "follicular"
             dayInCycle < cycleLength - OVULATION_BEFORE_PERIOD + OVULATION_SPAN / 2 -> "ovulation"
             else -> "luteal"
         }
 
         return PhaseInfo(phase, dayInCycle + 1)
+    }
+
+    private fun computeAvgPeriodDays(records: List<Pair<Date, Date?>>): Int {
+        val days = mutableListOf<Int>()
+        for ((start, end) in records) {
+            if (end != null) {
+                val len = ((end.time - start.time) / TimeUnit.DAYS.toMillis(1)).toInt() + 1
+                if (len in 1..10) days.add(len)
+            }
+        }
+        if (days.isEmpty()) return DEFAULT_PERIOD_DAYS
+        val avg = days.average().toInt()
+        // Blend toward default when sparse
+        val blend = kotlin.math.min(1.0, days.size / 3.0)
+        return (avg * blend + DEFAULT_PERIOD_DAYS * (1 - blend)).toInt()
     }
 
     // ─── Weather fetch ───
@@ -330,28 +352,28 @@ class DailyNotificationReceiver : BroadcastReceiver() {
 
     private val phaseAdvice = mapOf(
         "period" to mapOf(
-            "cold" to "经期注意腹部保暖，喝杯姜茶暖暖身子",
-            "hot" to "经期避免贪凉，空调温度别太低",
-            "rain" to "经期抵抗力较弱，淋雨后记得及时擦干换衣",
-            "default" to "经期多休息，照顾好自己"
+            "cold" to "注意腹部和腰部保暖，热敷可以缓解不适",
+            "hot" to "经期避免空调直吹，少吃冷饮和冰镇水果",
+            "rain" to "经期淋雨后及时擦干换衣，喝杯姜茶驱寒",
+            "default" to "少碰冷水，多休息，照顾好自己"
         ),
         "follicular" to mapOf(
-            "cold" to "天气转凉，运动前充分热身防止拉伤",
-            "hot" to "卵泡期代谢旺盛，记得多喝水补充水分",
+            "cold" to "天气冷运动前充分热身，防止肌肉拉伤",
+            "hot" to "代谢旺盛易出汗，记得多喝温水补充水分",
             "rain" to "雨天适合在家做瑜伽或拉伸，别让天气打断节奏",
-            "default" to "卵泡期精力充沛，适合运动锻炼"
+            "default" to "精力恢复期，适合开始新的运动计划"
         ),
         "ovulation" to mapOf(
-            "cold" to "排卵期注意保暖，核心温度稳定更利于身体状态",
-            "hot" to "排卵期体温略高，穿透气衣物保持舒适",
-            "rain" to "排卵期状态正好，雨天可以试试室内有氧运动",
-            "default" to "排卵期精力充沛，适合运动和处理重要事务"
+            "cold" to "排卵期注意腹部保暖，核心温度稳定更利于身体状态",
+            "hot" to "排卵期体温略高属正常，穿透气衣物保持舒适",
+            "rain" to "状态正好，雨天可以试试室内有氧运动",
+            "default" to "今天状态会比较好，适合安排重要事务"
         ),
         "luteal" to mapOf(
-            "cold" to "黄体期容易手脚冰凉，泡杯热饮暖暖身",
-            "hot" to "黄体期避免暴晒，情绪容易受高温影响",
-            "rain" to "黄体期情绪易波动，雨天听听音乐放松心情",
-            "default" to "黄体期可能会有情绪波动，适当休息不是软弱"
+            "cold" to "黄体期容易手脚冰凉，泡杯热饮暖暖身，泡泡脚",
+            "hot" to "黄体期情绪易受高温影响，避免暴晒和剧烈运动",
+            "rain" to "雨天容易触发情绪波动，听听轻音乐放松",
+            "default" to "减少咖啡因和甜食，睡眠充足情绪更稳定"
         )
     )
 
@@ -366,13 +388,104 @@ class DailyNotificationReceiver : BroadcastReceiver() {
         }
     }
 
-    private fun buildBody(phase: String, weather: WeatherInfo?): String {
+    /**
+     * Build a rich notification body that adapts to the current cycle context.
+     * Includes: weather + phase advice + period countdown / end-of-period / delayed / ovulation.
+     */
+    private fun buildRichBody(phase: String, dayOffset: Int, records: List<Pair<Date, Date?>>, weather: WeatherInfo?): String {
+        val lines = mutableListOf<String>()
+
+        // Primary: weather + phase advice
         val advice = getLifeAdvice(phase, weather)
-        return if (weather != null) {
-            "${weather.icon} ${weather.condition} ${weather.temperature.toInt()}° · $advice"
+        val primary = if (weather != null) {
+            "${weather.condition} ${weather.temperature.toInt()}° · $advice"
         } else {
             advice
         }
+        lines.add(primary)
+
+        if (records.isEmpty()) return primary
+
+        // Calculate predictions for secondary alerts
+        val starts = records.map { it.first }
+        val lastStart = starts.last()
+        val cycleLength = if (records.size >= 2) {
+            val prev = starts[starts.size - 2]
+            val diff = (lastStart.time - prev.time) / TimeUnit.DAYS.toMillis(1)
+            diff.coerceIn(21, 35).toInt()
+        } else {
+            DEFAULT_CYCLE_DAYS
+        }
+        val periodDays = computeAvgPeriodDays(records)
+        val today = Calendar.getInstance()
+
+        val nextStart = GregorianCalendar().apply {
+            time = lastStart
+            add(Calendar.DAY_OF_YEAR, cycleLength)
+        }
+        val daysUntilNext = ((nextStart.timeInMillis - today.timeInMillis)
+            / TimeUnit.DAYS.toMillis(1)).toInt()
+
+        // A: 经期结束提醒 — predicted last day of period
+        val periodEndDay = GregorianCalendar().apply {
+            time = lastStart
+            add(Calendar.DAY_OF_YEAR, periodDays - 1)
+        }
+        val daysUntilPeriodEnd = ((periodEndDay.timeInMillis - today.timeInMillis)
+            / TimeUnit.DAYS.toMillis(1)).toInt()
+
+        // B: 周期预提醒 — 3 days / 1 day before period
+        // C: 月经推迟 — period was supposed to start today but no record
+        val hasTodayRecord = records.any { (start, _) ->
+            val fmt = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+            fmt.format(start.time) == fmt.format(today.time)
+        }
+
+        // Ovulation day
+        val ovulationDay = GregorianCalendar().apply {
+            time = nextStart.time
+            add(Calendar.DAY_OF_YEAR, -OVULATION_BEFORE_PERIOD)
+        }
+        val daysUntilOvulation = ((ovulationDay.timeInMillis - today.timeInMillis)
+            / TimeUnit.DAYS.toMillis(1)).toInt()
+
+        // Collect secondary alerts (most important first)
+        val alerts = mutableListOf<String>()
+
+        when {
+            // C: Period delayed — predicted start date has passed, no record today
+            daysUntilNext < 0 && !hasTodayRecord && phase != "period" -> {
+                alerts.add("经期推迟了${-daysUntilNext}天，避免生冷食物，少熬夜")
+            }
+            daysUntilNext == 0 && !hasTodayRecord && phase != "period" -> {
+                alerts.add("今天经期该来了，备好卫生用品，别碰冷水")
+            }
+            // B: 1 day before
+            daysUntilNext == 1 -> {
+                alerts.add("明天可能是经期第一天，今天少喝咖啡浓茶")
+            }
+            // B: 2-3 days before
+            daysUntilNext in 2..3 -> {
+                alerts.add("距经期还有${daysUntilNext}天，可以准备些暖宝宝和红糖姜茶")
+            }
+        }
+
+        // A: End of period (only show when in period and near the end)
+        if (phase == "period" && dayOffset >= periodDays - 1) {
+            alerts.add("经期快结束了，体力开始恢复，可以适当活动")
+        }
+
+        // Ovulation (only for non-period phases)
+        if (phase != "period" && daysUntilOvulation == 0) {
+            alerts.add("排卵期代谢旺盛，注意补水，适合运动和处理重要事务")
+        }
+
+        // Append alerts with emoji prefix
+        for (alert in alerts) {
+            lines.add(alert)
+        }
+
+        return lines.joinToString("\n")
     }
 
     // ─── Notification display ───

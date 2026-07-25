@@ -2,7 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { usePeriod } from '../context/PeriodContext';
 import { useCurrentPhaseOrDefault } from '../hooks/useCurrentPhase';
-import { PHASE_LABELS, PHASE_ICONS, OVULATION_BEFORE_PERIOD, OVULATION_SPAN, DEFAULT_PERIOD_DAYS, PHASE_COLORS } from '../constants/phases';
+import { getAveragePeriodDays } from '../services/prediction';
+import { PHASE_LABELS, PHASE_ICONS, OVULATION_BEFORE_PERIOD, OVULATION_SPAN, PHASE_COLORS } from '../constants/phases';
 import { Colors, Spacing, FontSize, Radius, Shadow, Weight, LineHeight } from '../constants/theme';
 import { todayStr } from '../utils/date';
 import Icon from './Icon';
@@ -15,7 +16,6 @@ function computeCountdowns(phaseInfo: { phase: string; dayOffset: number; daysUn
   let daysUntilOvulation: number | null = null;
   switch (phaseInfo.phase) {
     case 'period':
-      // Ovulation is ~14 days into the cycle; subtract days already past
       daysUntilOvulation = Math.max(0, OV_START - Math.floor(OVULATION_SPAN / 2) - phaseInfo.dayOffset);
       break;
     case 'follicular':
@@ -32,7 +32,7 @@ function computeCountdowns(phaseInfo: { phase: string; dayOffset: number; daysUn
 }
 
 export default function CycleStatusCard() {
-  const { records, loading, addRecord } = usePeriod();
+  const { records, loading, addRecord, updateEndDate } = usePeriod();
   const phaseInfo = useCurrentPhaseOrDefault();
   const today = todayStr();
   const alreadyRecorded = records.some(r => r.start_date === today);
@@ -45,6 +45,15 @@ export default function CycleStatusCard() {
       : '',
     [records]
   );
+
+  // Check if currently in an ongoing period (start recorded, no end_date)
+  const ongoingRecord = useMemo(() => {
+    const sorted = [...records].sort((a, b) => b.start_date.localeCompare(a.start_date));
+    return sorted.find(r => !r.end_date) || null;
+  }, [records]);
+  const isPeriodOngoing = phaseInfo?.phase === 'period' && !!ongoingRecord;
+
+  const avgPeriodDays = getAveragePeriodDays(records);
 
   if (loading || records.length === 0) {
     return null;
@@ -63,17 +72,27 @@ export default function CycleStatusCard() {
 
   const phaseDuration = (() => {
     switch (phaseInfo.phase) {
-      case 'period': return DEFAULT_PERIOD_DAYS;
+      case 'period': return avgPeriodDays;
       case 'ovulation': return OVULATION_SPAN;
       case 'luteal': return OVULATION_BEFORE_PERIOD - Math.floor(OVULATION_SPAN / 2);
       case 'follicular': {
         const afterPeriod = OVULATION_BEFORE_PERIOD + Math.floor(OVULATION_SPAN / 2);
-        return Math.max(1, afterPeriod - DEFAULT_PERIOD_DAYS);
+        return Math.max(1, afterPeriod - avgPeriodDays);
       }
     }
   })();
 
   const { daysUntilPeriod, daysUntilOvulation } = computeCountdowns(phaseInfo);
+
+  const handleEndPeriod = async () => {
+    if (!ongoingRecord) return;
+    try {
+      await updateEndDate(ongoingRecord.start_date, today);
+    } catch (e: any) {
+      setErrorMessage(e.message || '操作失败，请稍后再试');
+      setErrorVisible(true);
+    }
+  };
 
   return (
     <View style={styles.card}>
@@ -112,7 +131,7 @@ export default function CycleStatusCard() {
             <Text style={styles.countdownNum}>{daysUntilPeriod}</Text>
             <Text style={styles.countdownLbl}>天后经期</Text>
           </View>
-        ) : daysUntilPeriod <= 0 && daysUntilPeriod > -DEFAULT_PERIOD_DAYS ? (
+        ) : daysUntilPeriod <= 0 && daysUntilPeriod > -avgPeriodDays ? (
           <View style={[styles.countdownBox, { backgroundColor: Colors.dangerBg }]}>
             <Text style={[styles.countdownNum, { color: Colors.danger }]}>进行中</Text>
             <Text style={styles.countdownLbl}>经期第{-daysUntilPeriod + 1}天</Text>
@@ -138,6 +157,14 @@ export default function CycleStatusCard() {
           </>
         )}
       </View>
+
+      {/* End-period button for ongoing period */}
+      {isPeriodOngoing && (
+        <PressableScale style={styles.endPeriodBtn} onPress={handleEndPeriod}>
+          <Icon name="check" size={16} color={Colors.white} />
+          <Text style={styles.endPeriodText}>经期结束了</Text>
+        </PressableScale>
+      )}
 
       {!alreadyRecorded && phaseInfo.phase !== 'period' && (
         <PressableScale style={styles.quickBtn} onPress={async () => {
@@ -239,4 +266,12 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md, gap: Spacing.sm,
   },
   quickBtnText: { color: Colors.white, fontWeight: Weight.bold, fontSize: FontSize.base },
+
+  /* ── End period ── */
+  endPeriodBtn: {
+    marginTop: Spacing.lg, backgroundColor: Colors.botanical,
+    borderRadius: Radius.md, flexDirection: 'row', alignItems: 'center',
+    justifyContent: 'center', paddingVertical: Spacing.md, gap: Spacing.sm,
+  },
+  endPeriodText: { fontSize: FontSize.sm2, fontWeight: Weight.bold, color: Colors.white },
 });

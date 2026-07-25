@@ -3,17 +3,11 @@
  *
  * A "cycle" is defined by consecutive pairs of period-start dates.
  * Cycle length = days between two consecutive start dates.
- * Period length = days from start_date to the day before the next start_date
- *                 >= the recorded start_date and in the same period block.
- *
- * Period days counting rule:
- * We trace forward from a recorded start_date. Each day is counted as a
- * period day until we encounter another start_date that opens a NEW
- * period (the start of the next cycle). We do NOT count days after that
- * new start as belonging to the previous period.
+ * Period length = user-recorded end_date - start_date + 1, or
+ *                 gap between consecutive start dates if no end_date.
  */
+
 import { PeriodRecord } from '../db/period-records';
-import { DEFAULT_PERIOD_DAYS } from '../constants/phases';
 
 export interface PeriodStats {
   avgCycleLength: number | null;
@@ -32,11 +26,18 @@ const REGULARITY_THRESHOLD = 3; // ± days
 
 export function computeStats(records: PeriodRecord[]): PeriodStats {
   if (records.length < 2) {
+    // Single record: still report period days if end_date is set
+    const periodLengths: number[] = [];
+    if (records.length === 1 && records[0].end_date) {
+      const len = diffDays(parseDate(records[0].end_date), parseDate(records[0].start_date)) + 1;
+      if (len >= 1 && len <= 10) periodLengths.push(len);
+    }
     return {
-      avgCycleLength: null, avgPeriodDays: null,
-      totalCycles: 0, cycleLengths: [], periodLengths: [],
+      avgCycleLength: null, avgPeriodDays: periodLengths.length > 0 ? periodLengths[0] : null,
+      totalCycles: 0, cycleLengths: [], periodLengths,
       minCycleLength: null, maxCycleLength: null,
-      minPeriodDays: null, maxPeriodDays: null,
+      minPeriodDays: periodLengths.length > 0 ? Math.min(...periodLengths) : null,
+      maxPeriodDays: periodLengths.length > 0 ? Math.max(...periodLengths) : null,
       regularity: 'unknown',
     };
   }
@@ -63,46 +64,31 @@ export function computeStats(records: PeriodRecord[]): PeriodStats {
     if (diff > 0) cycleLengths.push(diff);
   }
 
-  // Build date set for O(1) lookup
-  const dateSet = new Set(unique.map(r => r.start_date));
-
-  // Period lengths: for each start_date, count consecutive days that belong
-  // to this period before the NEXT start_date appears.
+  // Period lengths: prefer user-recorded end_date, fall back to gap estimation
   const periodLengths: number[] = [];
   for (let i = 0; i < unique.length; i++) {
-    const start = parseDate(unique[i].start_date);
-    const nextStart = i < unique.length - 1
-      ? parseDate(unique[i + 1].start_date)
-      : undefined;
+    const r = unique[i];
+    const start = parseDate(r.start_date);
 
-    // Walk forward day by day until we hit another recorded start
-    let days = 0;
-    const cursor = new Date(start);
-    while (true) {
-      const cursorStr = formatDate(cursor);
-      // Check if this day is a start_date of a DIFFERENT record (O(1) lookup)
-      if (cursorStr !== unique[i].start_date && dateSet.has(cursorStr)) break;
-
-      // If we reached the next known start and it's not the same record,
-      // that ends this period
-      if (nextStart && cursorStr === unique[i + 1].start_date) break;
-
-      days++;
-      cursor.setDate(cursor.getDate() + 1);
-
-      // Safety: max period length is ~14 days
-      if (days > 14) break;
+    if (r.end_date) {
+      // User explicitly set the end date — use it directly
+      const len = diffDays(parseDate(r.end_date), start) + 1;
+      if (len >= 1 && len <= 10) periodLengths.push(len);
+      continue;
     }
 
-    // Last record with no next start: use default period length
-    if (!nextStart && days > 14) {
-      days = DEFAULT_PERIOD_DAYS;
+    // No end_date — estimate from gap to next record, or skip
+    if (i < unique.length - 1) {
+      const nextStart = parseDate(unique[i + 1].start_date);
+      const gap = Math.round((nextStart.getTime() - start.getTime()) / MS_PER_DAY);
+      // Gap represents full cycle, but period is only the first part
+      // Use a conservative estimate: if gap is 21-35 days, period is ~20% of gap
+      if (gap >= 18 && gap <= 40) {
+        const est = Math.max(3, Math.min(10, Math.round(gap * 0.2)));
+        periodLengths.push(est);
+      }
     }
-
-    // Sanity: period should be >= 1 and <= 10 days
-    if (days >= 1 && days <= 10) {
-      periodLengths.push(days);
-    }
+    // Last record with no end_date: skip (can't estimate reliably)
   }
 
   // For regularity, compare each cycle length to the average
@@ -144,9 +130,6 @@ function parseDate(d: string): Date {
   return new Date(y, m - 1, day);
 }
 
-function formatDate(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
+function diffDays(a: Date, b: Date): number {
+  return Math.round((a.getTime() - b.getTime()) / MS_PER_DAY);
 }

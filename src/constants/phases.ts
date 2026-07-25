@@ -16,7 +16,7 @@ export const PHASE_ICONS: Record<Phase, IconName> = {
   luteal: 'today',
 };
 
-export const DEFAULT_PERIOD_DAYS = 7;
+export const DEFAULT_PERIOD_DAYS = 5;
 export const DEFAULT_CYCLE_DAYS = 28;
 export const OVULATION_BEFORE_PERIOD = 14;
 export const OVULATION_SPAN = 3; // 排卵期共3天

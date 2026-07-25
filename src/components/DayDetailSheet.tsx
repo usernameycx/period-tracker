@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { View, Text, ScrollView, StyleSheet, Modal, Animated, Dimensions, Pressable } from 'react-native';
 import { usePeriod } from '../context/PeriodContext';
 import { useWeather } from '../context/WeatherContext';
@@ -22,7 +22,7 @@ interface Props {
 }
 
 export default function DayDetailSheet({ visible, date, onClose }: Props) {
-  const { records, addRecord, removeRecord } = usePeriod();
+  const { records, addRecord, removeRecord, updateEndDate } = usePeriod();
   const { weather } = useWeather();
   const [diet, setDiet] = useState<DietRule | null>(null);
   const [confirmVisible, setConfirmVisible] = useState(false);
@@ -35,6 +35,24 @@ export default function DayDetailSheet({ visible, date, onClose }: Props) {
   const recordedStart = records.find(r => r.start_date === dateStr);
   const phaseInfo = getPhaseForCalendarDay(date, records);
   const lifeAdvice = weather && phaseInfo ? getLifeAdvice(phaseInfo.phase, weather) : null;
+
+  // Find ongoing period (start recorded, no end_date yet)
+  const ongoingRecord = useMemo(() => {
+    const sorted = [...records].sort((a, b) => b.start_date.localeCompare(a.start_date));
+    return sorted.find(r => !r.end_date) || null;
+  }, [records]);
+  const isInOngoingPeriod = !recordedStart && ongoingRecord &&
+    dateStr >= ongoingRecord.start_date && dateStr !== ongoingRecord.start_date;
+
+  const handleEndPeriod = async () => {
+    if (!ongoingRecord) return;
+    try {
+      await updateEndDate(ongoingRecord.start_date, dateStr);
+    } catch (e: any) {
+      setErrorMessage(e.message || '操作失败，请稍后再试');
+      setErrorVisible(true);
+    }
+  };
 
   useEffect(() => {
     const anim = Animated.parallel([
@@ -120,7 +138,17 @@ export default function DayDetailSheet({ visible, date, onClose }: Props) {
                   </PressableScale>
 
                   {recordedStart && (
-                    <Text style={styles.hint}>经期持续 {getAveragePeriodDays()} 天，其余阶段自动推算</Text>
+                    <Text style={styles.hint}>经期持续 {getAveragePeriodDays(records)} 天，其余阶段自动推算</Text>
+                  )}
+
+                  {isInOngoingPeriod && (
+                    <PressableScale
+                      style={styles.endPeriodBtn}
+                      onPress={handleEndPeriod}
+                    >
+                      <Icon name="check" size={16} color={Colors.white} />
+                      <Text style={styles.endPeriodText}>标记经期在此结束</Text>
+                    </PressableScale>
                   )}
                 </View>
 
@@ -255,7 +283,13 @@ const styles = StyleSheet.create({
   toggleText: { fontSize: FontSize.base, fontWeight: Weight.bold, color: Colors.ink },
   toggleTextActive: { color: Colors.botanical },
   toggleHint: { fontSize: FontSize.xs, color: Colors.success, marginTop: 2, textAlign: 'center' },
-  hint: { fontSize: FontSize.xs, color: Colors.textMuted, textAlign: 'center' },
+  hint: { fontSize: FontSize.xs, color: Colors.textMuted, textAlign: 'center', marginTop: Spacing.sm },
+  endPeriodBtn: {
+    marginTop: Spacing.md, backgroundColor: Colors.botanical,
+    borderRadius: Radius.md, flexDirection: 'row', alignItems: 'center',
+    justifyContent: 'center', paddingVertical: Spacing.md, gap: Spacing.sm,
+  },
+  endPeriodText: { fontSize: FontSize.sm2, fontWeight: Weight.bold, color: Colors.white },
 
   /* ── Scrollable ── */
   scrollArea: {},
