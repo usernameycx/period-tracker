@@ -140,22 +140,26 @@ All icons defined in `src/components/Icon.tsx` as SVG paths in 24×24 viewBox. E
 | Cramps | 无/轻微/中等/严重 | check-circle/wave/zigzag/lightning |
 | Mood | 开心/平静/烦躁/难过/焦虑 | smile/zen/storm/frown/nervous |
 | Energy | 充沛/正常/疲惫 | battery-full/battery/battery-low |
-| Toggles | 头痛/腹胀/嘴馋 | head/bloat/cookie |
+| Toggles | 头痛/腹胀/腰痛/胸胀/眼干 | head/bloat/backPain/breastPain/eyeDry |
 
 Mappings live in `SymptomPicker.tsx` CATEGORIES/TOGGLES arrays.
 
 ## Key Design Decisions / Recent Fixes
 
-1. **Splash screen**: Native splash uses `splash_bg.xml` (layer-list: #F8F2EA bg + centered splashscreen_logo). JS-side `preventAutoHideAsync()` + 3s delay in `_layout.tsx`.
-2. **Calendar today mark**: Today is auto-selected on mount. Selection style is black border + bold text. No separate today style.
-3. **Week strip**: Always shows current system week, not affected by user selection. Read-only display.
-4. **Tab return reset**: All 3 tabs use `useFocusEffect` to scroll to top on re-focus. Calendar also resets selectedDate and currentMonth.
-5. **Phase countdown logic**: When `phase === 'period'`, always show "进行中 经期第N天" (use dayOffset directly). Otherwise use daysUntilPeriod for countdown.
-6. **Ovulation countdown during period**: `computeCountdowns` separates period from follicular — uses dayOffset for period (14 - dayOffset days until ovulation).
-7. **CycleStatusCard error**: Uses `ConfirmModal` instead of system `Alert.alert()` for consistency.
-8. **Can't predict backwards**: `useCurrentPhase` returns null if today is before the first recorded cycle start.
-9. **Dynamic period days**: Users can mark period end via calendar DayDetailSheet or home CycleStatusCard. `end_date` stored in DB, used by prediction, stats, and notifications. Button limited to 2-9 days from period start.
-10. **Notification architecture**: Single native `AlarmManager` alarm fires daily. Receiver reads DB (OPEN_READWRITE for WAL), fetches weather, builds rich notification with phase + weather + diet + cycle events. No separate expo-notifications for period reminders.
+1. **Splash screen**: Native `splash_bg.xml` (warm beige + centered logo). No JS overlay.
+2. **Calendar today mark**: Today auto-selected on mount. Black border + bold text.
+3. **Week strip**: Always current system week, read-only.
+4. **Tab return reset**: All 3 tabs `useFocusEffect` to scroll to top. Calendar also resets selectedDate and currentMonth.
+5. **Countdown format**: "距离下次经期X天" / "距离下次排卵X天". Number bold, unit muted.
+6. **Ovulation = 1 day**: `OVULATION_SPAN = 1`, luteal = 14 days. Fertility window (day before) colored separately.
+7. **Dynamic period days**: `end_date` in DB. Button limited to 2-9 days from period start.
+8. **Notification**: Single native `AlarmManager` alarm. Receiver reads DB (OPEN_READWRITE for WAL), fetches weather, builds rich content: weather + advice + diet + cycle events.
+9. **Diet rules**: Full 31-day pool across all phases. Luteal covers all 14 days.
+10. **Export/Import**: `expo-file-system` writes JSON file → `expo-sharing` shares. Import supports text paste + file picker.
+11. **Weather advice**: Temperature-aware (6 tiers, >38° to <0°).
+12. **Phase colors**: 经期 coral, 卵泡期 green, 排卵日 peach, 备孕窗口 cream, 黄体期 goose yellow.
+13. **Symptoms**: TOGGLES layout icon-above-text. 5 items in one row: 头痛/腹胀/腰痛/胸胀/眼干.
+14. **Version**: 2.0.0 (versionCode 2).
 
 ## EAS Build
 
