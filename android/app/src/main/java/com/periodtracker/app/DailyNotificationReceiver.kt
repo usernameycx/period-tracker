@@ -377,6 +377,13 @@ class DailyNotificationReceiver : BroadcastReceiver() {
         )
     )
 
+    private val dietTips = mapOf(
+        "period" to "推荐红枣、姜茶、热牛奶，少吃冷饮、咖啡、辛辣",
+        "follicular" to "多吃蛋白质和绿叶蔬菜，帮助身体恢复活力",
+        "ovulation" to "多吃高纤维蔬菜和优质蛋白，保持身体轻盈",
+        "luteal" to "多吃坚果、香蕉、深色巧克力，稳定情绪"
+    )
+
     private fun getLifeAdvice(phase: String, weather: WeatherInfo?): String {
         val adviceMap = phaseAdvice[phase] ?: return "保持好心情"
 
@@ -404,7 +411,10 @@ class DailyNotificationReceiver : BroadcastReceiver() {
         }
         lines.add(primary)
 
-        if (records.isEmpty()) return primary
+        // Diet tip
+        dietTips[phase]?.let { lines.add(it) }
+
+        if (records.isEmpty()) return lines.joinToString("\n")
 
         // Calculate predictions for secondary alerts
         val starts = records.map { it.first }
