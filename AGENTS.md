@@ -93,7 +93,37 @@ assets/
 
 ## Phase Prediction Logic
 
-`DEFAULT_PERIOD_DAYS = 5`, `DEFAULT_CYCLE_DAYS = 28`, `OVULATION_BEFORE_PERIOD = 14`
+`DEFAULT_PERIOD_DAYS = 5`, `DEFAULT_CYCLE_DAYS = 28`, `OVULATION_BEFORE_PERIOD = 14`, `OVULATION_SPAN = 1`
+
+Scientific defaults (28-day cycle):
+| Phase | Days | Cycle Day |
+|-------|------|-----------|
+| 经期 | 5 | Day 1-5 |
+| 卵泡期 | 8 | Day 6-13 |
+| 排卵日 | 1 | Day 14 |
+| 黄体期 | 14 | Day 15-28 |
+
+Key algorithm details:
+- Ovulation is a single day anchored at `OVULATION_BEFORE_PERIOD` (14) days before predicted next period.
+- `diffDays` counts date gaps (not inclusive), so thresholds use `OVULATION_BEFORE_PERIOD + 1 = 15`.
+- Luteal phase is fixed ~14 days (physiologically the most stable phase).
+- Follicular phase is variable — it stretches/shrinks based on actual period end date.
+- `FERTILITY_WINDOW = 3` only affects calendar coloring (day before ovulation gets a lighter shade); does NOT affect phase calculation.
+
+### Dynamic period days
+
+`period_records` has an `end_date` column (nullable). When user marks period end:
+- `getAveragePeriodDays(records)` computes mean from records having `end_date`.
+- Falls back to gap-estimation (20% of cycle), then to `DEFAULT_PERIOD_DAYS = 5`.
+- Blend formula: with < 3 data points, weighted toward default to prevent overfitting sparse data.
+- `getPhaseForCalendarDay` uses per-record `end_date` when available, otherwise global average.
+- `computeStats` also uses `end_date` directly for period length statistics.
+
+### Prediction accuracy
+- 1 record → default 28-day cycle, 5-day period
+- 2+ records → real cycle length from start-date gaps
+- 3+ records with end_date → real period length from averages
+- More records → less blending, closer to pure average
 
 1. `getPhaseForCalendarDay(date, records)` — maps a date to a phase using recorded cycle starts. Returns null if date is outside all known cycles.
 2. `useCurrentPhase()` — calculates today's phase. First tries `getPhaseForCalendarDay`, then falls back to `getPhaseForDate` predictive model.
@@ -124,6 +154,8 @@ Mappings live in `SymptomPicker.tsx` CATEGORIES/TOGGLES arrays.
 6. **Ovulation countdown during period**: `computeCountdowns` separates period from follicular — uses dayOffset for period (14 - dayOffset days until ovulation).
 7. **CycleStatusCard error**: Uses `ConfirmModal` instead of system `Alert.alert()` for consistency.
 8. **Can't predict backwards**: `useCurrentPhase` returns null if today is before the first recorded cycle start.
+9. **Dynamic period days**: Users can mark period end via calendar DayDetailSheet or home CycleStatusCard. `end_date` stored in DB, used by prediction, stats, and notifications. Button limited to 2-9 days from period start.
+10. **Notification architecture**: Single native `AlarmManager` alarm fires daily. Receiver reads DB (OPEN_READWRITE for WAL), fetches weather, builds rich notification with phase + weather + diet + cycle events. No separate expo-notifications for period reminders.
 
 ## EAS Build
 
@@ -138,3 +170,29 @@ Build log: https://expo.dev/accounts/y-y/projects/period-tracker/builds
 - No duplicate `.png`/`.webp` in mipmap dirs
 - `package-lock.json` is in sync with `package.json`
 - `app.json` has no `splash` key (native config is in XML files)
+
+## Notification System
+
+### Architecture
+- **Native `AlarmManager`** (`DailyAlarmModule.kt` + `DailyNotificationReceiver.kt`) — single daily alarm at user-set time.
+- **JS fallback** (`expo-notifications` DAILY trigger) — for iOS / when native module unavailable.
+- **No separate period reminders** — the daily notification covers: phase + weather + diet + countdown (3d/1d) + end-of-period + delayed + ovulation — all computed real-time by the native receiver at fire time.
+
+### Notification content (native receiver builds at fire time)
+| Line | Content |
+|------|---------|
+| 1 | Weather + phase-specific life advice (×4 phases, ×4 weather variants) |
+| 2 | Diet tip per phase |
+| 3 (conditional) | Period countdown (2-3 days) / 1-day warning / end-of-period / delayed / ovulation |
+
+### Permissions
+- `POST_NOTIFICATIONS` — normal notification permission
+- `SCHEDULE_EXACT_ALARM` — Android 12+ for precise alarm timing
+- Auto-start / battery optimization exemption — prompted in onboarding
+
+### Key files
+| File | Role |
+|------|------|
+| `DailyAlarmModule.kt` | JS↔Native bridge (schedule/cancel/hasExactAlarmPermission) |
+| `DailyNotificationReceiver.kt` | Alarm receiver — reads DB, fetches weather, builds & shows notification |
+| `src/services/notifications.ts` | JS-side scheduling orchestration |
