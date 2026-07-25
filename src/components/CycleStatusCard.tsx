@@ -134,7 +134,7 @@ export default function CycleStatusCard() {
           </View>
         ) : daysUntilPeriod > 0 ? (
           <View style={styles.countdownBox}>
-            <Text style={styles.countdownNum}>{daysUntilPeriod}天</Text>
+            <Text style={styles.countdownNum}>{daysUntilPeriod}<Text style={styles.countdownUnit}>天</Text></Text>
             <Text style={styles.countdownLbl}>距离下次经期</Text>
           </View>
         ) : daysUntilPeriod <= 0 && daysUntilPeriod > -avgPeriodDays ? (
@@ -148,7 +148,7 @@ export default function CycleStatusCard() {
           <>
             <View style={styles.cdDivider} />
             <View style={styles.countdownBox}>
-              <Text style={styles.countdownNum}>{daysUntilOvulation}天</Text>
+              <Text style={styles.countdownNum}>{daysUntilOvulation}<Text style={styles.countdownUnit}>天</Text></Text>
               <Text style={styles.countdownLbl}>距离下次排卵</Text>
             </View>
           </>
@@ -263,6 +263,7 @@ const styles = StyleSheet.create({
   cdDivider: { width: Spacing.md, alignSelf: 'stretch' },
   countdownNum: { fontSize: 36, fontWeight: Weight.extrabold, color: Colors.ink, letterSpacing: -1 },
   countdownLbl: { fontSize: FontSize.xs, color: Colors.textMuted, marginTop: 2 },
+  countdownUnit: { fontSize: FontSize.sm, fontWeight: Weight.medium, color: Colors.textMuted },
 
   /* ── Quick mark ── */
   quickBtn: {

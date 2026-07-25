@@ -17,7 +17,8 @@
           "color": "#C2905A"
         }
       ],
-      "./plugins/withSplashWindowBackground"
+      "./plugins/withSplashWindowBackground",
+      "expo-sharing"
     ],
     "ios": {
       "supportsTablet": false,

@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { ScrollView, View, Text, StyleSheet, Modal, TextInput, Share, ActivityIndicator } from 'react-native';
+import { ScrollView, View, Text, StyleSheet, Modal, TextInput, ActivityIndicator } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { Paths, File } from 'expo-file-system';
+import { shareAsync } from 'expo-sharing';
 import { useSettings } from '../../src/context/SettingsContext';
 import CityPicker from '../../src/components/CityPicker';
 import PressableScale from '../../src/components/PressableScale';
@@ -79,12 +80,10 @@ export default function SettingsPage() {
       const json = await exportData();
       const file = new File(Paths.cache, 'fayetide_backup.json');
       file.write(json);
-      await Share.share({ url: file.uri, title: 'FayeTide 数据备份' });
+      await shareAsync(file.uri, { mimeType: 'application/json', dialogTitle: 'FayeTide 数据备份' });
       setToast({ title: '导出成功', message: '备份文件已保存' });
     } catch (e: any) {
-      if (e?.message !== 'User did not share') {
-        setToast({ title: '导出失败', message: e.message || '导出失败' });
-      }
+      setToast({ title: '导出失败', message: e.message || '导出失败' });
     } finally {
       setBusy(false);
     }
