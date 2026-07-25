@@ -191,7 +191,7 @@ class DailyNotificationReceiver : BroadcastReceiver() {
         }
 
         val db = SQLiteDatabase.openDatabase(
-            dbFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY
+            dbFile.absolutePath, null, SQLiteDatabase.OPEN_READWRITE
         )
         val records = mutableListOf<Date>()
         val fmt = SimpleDateFormat("yyyy-MM-dd", Locale.US)
