@@ -111,22 +111,23 @@ export function getPhaseForDate(
     return { phase: 'period', dayOffset: -daysUntilNext + 1, daysUntilPeriod: daysUntilNext, nextPeriodDate: nextDate };
   }
 
-  // Ovulation (single day)
-  if (daysUntilNext === OVULATION_BEFORE_PERIOD) {
+  // Ovulation (single day — diffDays counts gap, so +1 for medical day 14)
+  const dayThreshold = OVULATION_BEFORE_PERIOD + 1;
+  if (daysUntilNext === dayThreshold) {
     return { phase: 'ovulation', dayOffset: 1, daysUntilPeriod: daysUntilNext, nextPeriodDate: nextDate };
   }
 
   // Fertility window (day before ovulation only)
-  const fertility = daysUntilNext === OVULATION_BEFORE_PERIOD + 1;
+  const fertility = daysUntilNext === dayThreshold + 1;
 
   // Follicular
-  if (daysUntilNext > OVULATION_BEFORE_PERIOD) {
+  if (daysUntilNext > dayThreshold) {
     const dayOffset = daysFromStart - avgPeriodDays;
     return { phase: 'follicular', dayOffset: Math.max(1, dayOffset), daysUntilPeriod: daysUntilNext, nextPeriodDate: nextDate, fertility };
   }
 
   // Luteal
-  return { phase: 'luteal', dayOffset: Math.max(1, OVULATION_BEFORE_PERIOD - daysUntilNext), daysUntilPeriod: daysUntilNext, nextPeriodDate: nextDate, fertility };
+  return { phase: 'luteal', dayOffset: Math.max(1, dayThreshold - daysUntilNext), daysUntilPeriod: daysUntilNext, nextPeriodDate: nextDate, fertility };
 }
 
 export interface CalendarPhaseInfo {
@@ -190,14 +191,14 @@ export function getPhaseForCalendarDay(
         return { phase: 'period', dayOffset: daysFromStart, daysUntilPeriod: daysUntilEnd, nextPeriodDate: nextDate };
       }
 
-      // Ovulation window (single day)
-      const ovDay = OVULATION_BEFORE_PERIOD;
+      // Ovulation (diffDays counts gap, so +1 for medical day 14)
+      const ovDay = OVULATION_BEFORE_PERIOD + 1;
       if (daysUntilEnd === ovDay) {
         return { phase: 'ovulation', dayOffset: 1, daysUntilPeriod: daysUntilEnd, nextPeriodDate: nextDate };
       }
 
       // Fertility window (day before ovulation only — luteal stays 14 days)
-      const inFertility = daysUntilEnd === OVULATION_BEFORE_PERIOD + 1;
+      const inFertility = daysUntilEnd === ovDay + 1;
 
       // Follicular
       if (daysUntilEnd > ovDay) {
@@ -205,7 +206,7 @@ export function getPhaseForCalendarDay(
       }
 
       // Luteal
-      return { phase: 'luteal', dayOffset: Math.max(1, OVULATION_BEFORE_PERIOD - daysUntilEnd), daysUntilPeriod: daysUntilEnd, nextPeriodDate: nextDate, fertility: inFertility };
+      return { phase: 'luteal', dayOffset: Math.max(1, ovDay - daysUntilEnd), daysUntilPeriod: daysUntilEnd, nextPeriodDate: nextDate, fertility: inFertility };
     }
   }
 

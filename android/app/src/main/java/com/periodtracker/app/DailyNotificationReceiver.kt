@@ -244,10 +244,12 @@ class DailyNotificationReceiver : BroadcastReceiver() {
 
         if (dayInCycle < 0) return PhaseInfo("follicular", 1)
 
+        // ovulation day (0-indexed): 28-14-1 = 13 = cycle day 14
+        val ovDay = cycleLength - OVULATION_BEFORE_PERIOD - 1
         val phase = when {
             dayInCycle < periodDays -> "period"
-            dayInCycle < cycleLength - OVULATION_BEFORE_PERIOD - 1 -> "follicular"
-            dayInCycle == cycleLength - OVULATION_BEFORE_PERIOD - 1 -> "ovulation"
+            dayInCycle < ovDay -> "follicular"
+            dayInCycle == ovDay -> "ovulation"
             else -> "luteal"
         }
 
@@ -255,7 +257,7 @@ class DailyNotificationReceiver : BroadcastReceiver() {
             "period" -> dayInCycle + 1
             "follicular" -> dayInCycle - periodDays + 1
             "ovulation" -> 1
-            "luteal" -> dayInCycle - (cycleLength - OVULATION_BEFORE_PERIOD) + 1
+            "luteal" -> dayInCycle - ovDay
             else -> 1
         }
 
