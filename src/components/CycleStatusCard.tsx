@@ -76,8 +76,10 @@ export default function CycleStatusCard() {
       case 'ovulation': return OVULATION_SPAN;
       case 'luteal': return OVULATION_BEFORE_PERIOD;
       case 'follicular': {
-        const afterPeriod = OVULATION_BEFORE_PERIOD + Math.floor(OVULATION_SPAN / 2);
-        return Math.max(1, afterPeriod - avgPeriodDays);
+        // Follicular = from period end to the day before ovulation
+        // In a default 28-day cycle: 28 - avgPeriodDays - OVULATION_SPAN - OVULATION_BEFORE_PERIOD would be 28-5-1-14=8
+        // But cycle length varies, so we use OVULATION_BEFORE_PERIOD as the anchor
+        return Math.max(1, OVULATION_BEFORE_PERIOD - avgPeriodDays - 1);
       }
     }
   })();
