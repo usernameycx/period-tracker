@@ -74,7 +74,7 @@ export default function CycleStatusCard() {
     switch (phaseInfo.phase) {
       case 'period': return avgPeriodDays;
       case 'ovulation': return OVULATION_SPAN;
-      case 'luteal': return OVULATION_BEFORE_PERIOD - Math.floor(OVULATION_SPAN / 2);
+      case 'luteal': return OVULATION_BEFORE_PERIOD;
       case 'follicular': {
         const afterPeriod = OVULATION_BEFORE_PERIOD + Math.floor(OVULATION_SPAN / 2);
         return Math.max(1, afterPeriod - avgPeriodDays);

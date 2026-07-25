@@ -1,9 +1,9 @@
 import React, { useMemo, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, PanResponder, Animated } from 'react-native';
 import { usePeriod } from '../context/PeriodContext';
-import { getPhaseForCalendarDay } from '../services/prediction';
+import { getPhaseForCalendarDay, CalendarPhaseInfo } from '../services/prediction';
 import { parseDate, formatDate, isSameDay } from '../utils/date';
-import { Phase, PHASE_LABELS, PHASE_COLORS } from '../constants/phases';
+import { Phase, PHASE_LABELS, PHASE_COLORS, FERTILITY_COLOR } from '../constants/phases';
 import { Colors, Spacing, FontSize, Radius, Shadow, Weight } from '../constants/theme';
 import PressableScale from './PressableScale';
 import Icon from './Icon';
@@ -28,7 +28,7 @@ export default function CalendarView({ onDayPress, selectedDate, currentMonth, o
   const { records } = usePeriod();
 
   const phaseMap = useMemo(() => {
-    const map = new Map<string, { phase: Phase; dayOffset: number }>();
+    const map = new Map<string, CalendarPhaseInfo>();
     if (records.length === 0) return map;
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
@@ -123,7 +123,7 @@ export default function CalendarView({ onDayPress, selectedDate, currentMonth, o
               const dateStr = formatDate(date);
               const info = phaseMap.get(dateStr);
               const isSelected = isSameDay(date, selectedDate);
-              const bgColor = info ? PHASE_COLORS[info.phase] : 'transparent';
+              const bgColor = info?.fertility ? FERTILITY_COLOR : (info ? PHASE_COLORS[info.phase] : 'transparent');
               const isRecorded = recordDateSet.has(dateStr);
 
               return (

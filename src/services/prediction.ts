@@ -1,5 +1,5 @@
 import { PeriodRecord } from '../db/period-records';
-import { Phase, DEFAULT_PERIOD_DAYS, DEFAULT_CYCLE_DAYS, OVULATION_BEFORE_PERIOD, OVULATION_SPAN, MIN_RECORDS_FOR_PREDICTION } from '../constants/phases';
+import { Phase, DEFAULT_PERIOD_DAYS, DEFAULT_CYCLE_DAYS, OVULATION_BEFORE_PERIOD, FERTILITY_WINDOW, MIN_RECORDS_FOR_PREDICTION } from '../constants/phases';
 import { parseDate, diffDays, addDays, formatDate } from '../utils/date';
 
 /** Minimum plausible cycle length — skip records closer than this when computing phases */
@@ -111,22 +111,25 @@ export function getPhaseForDate(
     return { phase: 'period', dayOffset: -daysUntilNext + 1, daysUntilPeriod: daysUntilNext, nextPeriodDate: nextDate };
   }
 
-  // Ovulation window (counted backward from next period, same as calendar)
-  const ovulationStart = OVULATION_BEFORE_PERIOD + Math.floor(OVULATION_SPAN / 2);
-  const ovulationEnd = OVULATION_BEFORE_PERIOD - Math.floor(OVULATION_SPAN / 2);
-  if (daysUntilNext <= ovulationStart && daysUntilNext >= ovulationEnd) {
-    return { phase: 'ovulation', dayOffset: ovulationStart - daysUntilNext + 1, daysUntilPeriod: daysUntilNext, nextPeriodDate: nextDate };
+  // Ovulation (single day)
+  if (daysUntilNext === OVULATION_BEFORE_PERIOD) {
+    return { phase: 'ovulation', dayOffset: 1, daysUntilPeriod: daysUntilNext, nextPeriodDate: nextDate };
   }
 
-  // Follicular: after period, before ovulation — use daysFromStart like calendar
-  if (daysUntilNext > ovulationStart) {
+  // Fertility window — same as calendar detection
+  const halfFertility = Math.floor(FERTILITY_WINDOW / 2);
+  const fStart = OVULATION_BEFORE_PERIOD + halfFertility;
+  const fEnd = OVULATION_BEFORE_PERIOD - halfFertility;
+  const fertility = daysUntilNext !== OVULATION_BEFORE_PERIOD && daysUntilNext <= fStart && daysUntilNext >= fEnd;
+
+  // Follicular
+  if (daysUntilNext > OVULATION_BEFORE_PERIOD) {
     const dayOffset = daysFromStart - avgPeriodDays;
-    return { phase: 'follicular', dayOffset: Math.max(1, dayOffset), daysUntilPeriod: daysUntilNext, nextPeriodDate: nextDate };
+    return { phase: 'follicular', dayOffset: Math.max(1, dayOffset), daysUntilPeriod: daysUntilNext, nextPeriodDate: nextDate, fertility };
   }
 
-  // Luteal: after ovulation, before next period
-  const dayOffset = ovulationEnd - daysUntilNext;
-  return { phase: 'luteal', dayOffset: Math.max(1, dayOffset), daysUntilPeriod: daysUntilNext, nextPeriodDate: nextDate };
+  // Luteal
+  return { phase: 'luteal', dayOffset: Math.max(1, OVULATION_BEFORE_PERIOD - daysUntilNext), daysUntilPeriod: daysUntilNext, nextPeriodDate: nextDate, fertility };
 }
 
 export interface CalendarPhaseInfo {
@@ -136,6 +139,8 @@ export interface CalendarPhaseInfo {
   daysUntilPeriod: number;
   /** The date when the next period is expected (formatted YYYY-MM-DD) */
   nextPeriodDate: string;
+  /** True when within the fertility window but NOT ovulation day itself */
+  fertility?: boolean;
 }
 
 /** Compute phase for a calendar day. Only colors dates within recorded cycles;
@@ -188,20 +193,25 @@ export function getPhaseForCalendarDay(
         return { phase: 'period', dayOffset: daysFromStart, daysUntilPeriod: daysUntilEnd, nextPeriodDate: nextDate };
       }
 
-      // Ovulation window
-      const ovStart = OVULATION_BEFORE_PERIOD + Math.floor(OVULATION_SPAN / 2);
-      const ovEnd = OVULATION_BEFORE_PERIOD - Math.floor(OVULATION_SPAN / 2);
-      if (daysUntilEnd <= ovStart && daysUntilEnd >= ovEnd) {
-        return { phase: 'ovulation', dayOffset: ovStart - daysUntilEnd + 1, daysUntilPeriod: daysUntilEnd, nextPeriodDate: nextDate };
+      // Ovulation window (single day)
+      const ovDay = OVULATION_BEFORE_PERIOD;
+      if (daysUntilEnd === ovDay) {
+        return { phase: 'ovulation', dayOffset: 1, daysUntilPeriod: daysUntilEnd, nextPeriodDate: nextDate };
       }
 
+      // Fertility window (day before / after ovulation — calendar color only)
+      const halfFertility = Math.floor(FERTILITY_WINDOW / 2);
+      const fertilityStart = ovDay + halfFertility;
+      const fertilityEnd = ovDay - halfFertility;
+      const inFertility = daysUntilEnd !== ovDay && daysUntilEnd <= fertilityStart && daysUntilEnd >= fertilityEnd;
+
       // Follicular
-      if (daysUntilEnd > ovStart) {
-        return { phase: 'follicular', dayOffset: Math.max(1, daysFromStart - periodDays), daysUntilPeriod: daysUntilEnd, nextPeriodDate: nextDate };
+      if (daysUntilEnd > ovDay) {
+        return { phase: 'follicular', dayOffset: Math.max(1, daysFromStart - periodDays), daysUntilPeriod: daysUntilEnd, nextPeriodDate: nextDate, fertility: inFertility };
       }
 
       // Luteal
-      return { phase: 'luteal', dayOffset: Math.max(1, ovEnd - daysUntilEnd), daysUntilPeriod: daysUntilEnd, nextPeriodDate: nextDate };
+      return { phase: 'luteal', dayOffset: Math.max(1, OVULATION_BEFORE_PERIOD - daysUntilEnd), daysUntilPeriod: daysUntilEnd, nextPeriodDate: nextDate, fertility: inFertility };
     }
   }
 

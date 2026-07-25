@@ -39,7 +39,7 @@ class DailyNotificationReceiver : BroadcastReceiver() {
         const val DEFAULT_PERIOD_DAYS = 5
         const val DEFAULT_CYCLE_DAYS = 28
         const val OVULATION_BEFORE_PERIOD = 14
-        const val OVULATION_SPAN = 3
+        const val OVULATION_SPAN = 1
 
         fun scheduleAlarm(context: Context, hour: Int, minute: Int) {
             val alarmMgr = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -246,12 +246,20 @@ class DailyNotificationReceiver : BroadcastReceiver() {
 
         val phase = when {
             dayInCycle < periodDays -> "period"
-            dayInCycle < cycleLength - OVULATION_BEFORE_PERIOD - OVULATION_SPAN / 2 -> "follicular"
-            dayInCycle < cycleLength - OVULATION_BEFORE_PERIOD + OVULATION_SPAN / 2 -> "ovulation"
+            dayInCycle < cycleLength - OVULATION_BEFORE_PERIOD -> "follicular"
+            dayInCycle == cycleLength - OVULATION_BEFORE_PERIOD -> "ovulation"
             else -> "luteal"
         }
 
-        return PhaseInfo(phase, dayInCycle + 1)
+        val dayOffset = when (phase) {
+            "period" -> dayInCycle + 1
+            "follicular" -> dayInCycle - periodDays + 1
+            "ovulation" -> 1
+            "luteal" -> dayInCycle - (cycleLength - OVULATION_BEFORE_PERIOD)
+            else -> 1
+        }
+
+        return PhaseInfo(phase, dayOffset)
     }
 
     private fun computeAvgPeriodDays(records: List<Pair<Date, Date?>>): Int {
