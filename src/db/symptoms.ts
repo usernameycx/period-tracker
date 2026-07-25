@@ -14,35 +14,18 @@ export async function upsertSymptom(
   date: string,
   fields: Partial<Omit<SymptomRecord, 'id' | 'date' | 'created_at'>>
 ): Promise<void> {
+  const keys = Object.keys(fields).filter(k => k in fields);
+  if (keys.length === 0) return;
+
+  const setClauses = keys.map(k => `${k} = ?`).join(', ');
+  const values = keys.map(k => (fields as any)[k]);
+  const params = [date, ...values, ...values];
+
   await db.runAsync(
-    `INSERT INTO symptoms (date, flow, cramps, mood, energy, headache, bloating, cravings, backPain, breastPain, skinSensitive, notes)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-     ON CONFLICT(date) DO UPDATE SET
-       flow = COALESCE(excluded.flow, flow),
-       cramps = COALESCE(excluded.cramps, cramps),
-       mood = COALESCE(excluded.mood, mood),
-       energy = COALESCE(excluded.energy, energy),
-       headache = COALESCE(excluded.headache, headache),
-       bloating = COALESCE(excluded.bloating, bloating),
-       cravings = COALESCE(excluded.cravings, cravings),
-       backPain = COALESCE(excluded.backPain, backPain),
-       breastPain = COALESCE(excluded.breastPain, breastPain),
-       skinSensitive = COALESCE(excluded.skinSensitive, skinSensitive),
-       notes = COALESCE(excluded.notes, notes)`,
-    [
-      date,
-      fields.flow || null,
-      fields.cramps || null,
-      fields.mood || null,
-      fields.energy || null,
-      fields.headache ?? 0,
-      fields.bloating ?? 0,
-      fields.cravings ?? 0,
-      fields.backPain ?? 0,
-      fields.breastPain ?? 0,
-      fields.skinSensitive ?? 0,
-      fields.notes || null,
-    ]
+    `INSERT INTO symptoms (date, ${keys.join(', ')})
+     VALUES (?, ${keys.map(() => '?').join(', ')})
+     ON CONFLICT(date) DO UPDATE SET ${setClauses}`,
+    params
   );
 }
 

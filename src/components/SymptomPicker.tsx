@@ -82,7 +82,7 @@ export default function SymptomPicker({ date, visible }: Props) {
     return () => { cancelled = true; };
   }, [date, visible]);
 
-  const update = async (field: string, value: string | number) => {
+  const update = async (field: string, value: string | number | null) => {
     setData(prev => {
       const updated = { ...(prev || {} as SymptomRecord), [field]: value } as SymptomRecord;
       return updated;
@@ -125,7 +125,7 @@ export default function SymptomPicker({ date, visible }: Props) {
                   <PressableScale
                     key={opt.key}
                     style={[styles.option, currentVal === opt.key && styles.optionActive]}
-                    onPress={() => update(cat.key, opt.key)}
+                    onPress={() => update(cat.key, currentVal === opt.key ? null : opt.key)}
                   >
                     <Icon name={opt.icon} size={20} color={currentVal === opt.key ? Colors.primary : opt.iconColor} />
                     <Text style={[styles.optionLabel, currentVal === opt.key && styles.optionLabelActive]}>
