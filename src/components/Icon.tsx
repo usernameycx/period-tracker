@@ -665,26 +665,36 @@ const PATHS: Record<IconName, (color: string) => React.ReactElement> = {
 
   backPain: (c) => (
     <G>
-      {/* Lower back/spine — 腰痛 */}
-      <Path d="M 6,8 C 7,5 9,4 9,3 L 15,3 C 15,4 17,5 18,8" fill="none" stroke={c} strokeWidth="1.5" strokeLinecap="round" />
-      <Line x1="9" y1="3" x2="9" y2="12" stroke={c} strokeWidth="1.5" strokeLinecap="round" />
-      <Line x1="15" y1="3" x2="15" y2="12" stroke={c} strokeWidth="1.5" strokeLinecap="round" />
-      <Path d="M 10,12 C 10,15 14,15 14,12" fill="none" stroke={c} strokeWidth="1.5" strokeLinecap="round" />
-      {/* Pain spark */}
-      <Line x1="19" y1="5" x2="21" y2="3" stroke={c} strokeWidth="1.2" strokeLinecap="round" opacity="0.5" />
-      <Line x1="21" y1="5" x2="19" y2="3" stroke={c} strokeWidth="1.2" strokeLinecap="round" opacity="0.5" />
+      {/* Person with hand on lower back — 腰痛 */}
+      {/* Body */}
+      <Circle cx="12" cy="4" r="2.5" fill="none" stroke={c} strokeWidth="1.5" />
+      <Line x1="12" y1="6.5" x2="12" y2="14" stroke={c} strokeWidth="1.5" strokeLinecap="round" />
+      {/* Arms — one on back */}
+      <Path d="M 12,9 L 7,7 L 5,10" fill="none" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      {/* Legs */}
+      <Line x1="12" y1="14" x2="9" y2="20" stroke={c} strokeWidth="1.5" strokeLinecap="round" />
+      <Line x1="12" y1="14" x2="15" y2="20" stroke={c} strokeWidth="1.5" strokeLinecap="round" />
+      {/* Pain lines at lower back */}
+      <Line x1="9.5" y1="11" x2="8" y2="9.5" stroke={c} strokeWidth="1" strokeLinecap="round" opacity="0.5" />
+      <Line x1="10" y1="12.5" x2="8.5" y2="12" stroke={c} strokeWidth="1" strokeLinecap="round" opacity="0.4" />
     </G>
   ),
 
   breastPain: (c) => (
     <G>
-      {/* Chest outline — 胸胀 */}
-      <Path d="M 6,16 C 6,10 9,7 12,7 C 15,7 18,10 18,16" fill="none" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      <Path d="M 4,12 L 20,12" stroke={c} strokeWidth="1" strokeLinecap="round" opacity="0.3" />
-      {/* Tenderness dots */}
-      <Circle cx="9" cy="11" r="0.8" fill={c} opacity="0.5" />
-      <Circle cx="12" cy="10" r="0.7" fill={c} opacity="0.45" />
-      <Circle cx="15" cy="11" r="0.8" fill={c} opacity="0.5" />
+      {/* Torso with chest emphasis — 胸胀 */}
+      {/* Body outline */}
+      <Circle cx="12" cy="4" r="2.5" fill="none" stroke={c} strokeWidth="1.5" />
+      <Line x1="12" y1="6.5" x2="12" y2="14" stroke={c} strokeWidth="1.5" strokeLinecap="round" />
+      {/* Chest area — curved lines suggesting breasts */}
+      <Path d="M 8,8 C 8,9.5 9.5,10.5 10,11" fill="none" stroke={c} strokeWidth="1.3" strokeLinecap="round" opacity="0.6" />
+      <Path d="M 16,8 C 16,9.5 14.5,10.5 14,11" fill="none" stroke={c} strokeWidth="1.3" strokeLinecap="round" opacity="0.6" />
+      {/* Swelling dots */}
+      <Circle cx="9.5" cy="9" r="0.7" fill={c} opacity="0.5" />
+      <Circle cx="14.5" cy="9" r="0.7" fill={c} opacity="0.5" />
+      {/* Pain lines */}
+      <Line x1="7" y1="10" x2="5.5" y2="9.5" stroke={c} strokeWidth="1" strokeLinecap="round" opacity="0.45" />
+      <Line x1="17" y1="10" x2="18.5" y2="9.5" stroke={c} strokeWidth="1" strokeLinecap="round" opacity="0.45" />
     </G>
   ),
 

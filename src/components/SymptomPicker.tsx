@@ -58,7 +58,6 @@ const CATEGORIES = [
 const TOGGLES = [
   { key: 'headache' as const, label: '头痛', icon: 'head' as IconName, iconColor: Colors.danger },
   { key: 'bloating' as const, label: '腹胀', icon: 'bloat' as IconName, iconColor: Colors.primaryLight },
-  { key: 'cravings' as const, label: '嘴馋', icon: 'cookie' as IconName, iconColor: Colors.primary },
   { key: 'backPain' as const, label: '腰痛', icon: 'backPain' as IconName, iconColor: Colors.primaryLight },
   { key: 'breastPain' as const, label: '胸胀', icon: 'breastPain' as IconName, iconColor: Colors.danger },
   { key: 'skinSensitive' as const, label: '眼干', icon: 'eyeDry' as IconName, iconColor: Colors.primary },
