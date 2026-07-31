@@ -25,7 +25,7 @@ A period/cycle tracker for Chinese users. Tracks menstrual cycles, predicts phas
 **Consequences:**
 - `app.json` must NOT have `splash`, `orientation`, `icon`, `scheme`, `userInterfaceStyle`, `plugins`, `ios`, `android` as root keys — EAS ignores them when `android/` exists
 - Native splash is configured in `android/app/src/main/res/drawable/splash_bg.xml` + `values/styles.xml` + `values/colors.xml`
-- `expo-splash-screen` package handles JS-side splash control (preventAutoHideAsync/hideAsync in `app/_layout.tsx`)
+- `expo-splash-screen` npm package is REMOVED — splash is purely native (splash_bg.xml), no JS overlay
 - `eas.json` preview profile uses `buildType: "apk"` without custom gradleCommand
 
 ## Project Structure
@@ -158,8 +158,9 @@ Mappings live in `SymptomPicker.tsx` CATEGORIES/TOGGLES arrays.
 10. **Export/Import**: `expo-file-system` writes JSON file → `expo-sharing` shares. Import supports text paste + file picker.
 11. **Weather advice**: Temperature-aware (6 tiers, >38° to <0°).
 12. **Phase colors**: 经期 coral, 卵泡期 green, 排卵日 peach, 备孕窗口 cream, 黄体期 goose yellow.
-13. **Symptoms**: TOGGLES layout icon-above-text. 5 items in one row: 头痛/腹胀/腰痛/胸胀/眼干.
-14. **Version**: 2.0.0 (versionCode 2).
+13. **Symptoms**: TOGGLES layout icon-above-text. 5 items in one row: 头痛/腹胀/腰痛/胸胀/眼干. All options can be deselected by tapping again.
+14. **Symptom empty-row cleanup**: When all symptom fields become null/0 (user deselects everything), the DB row is auto-deleted — no junk records.
+15. **Version**: 2.0.0 (versionCode 2).
 
 ## EAS Build
 
