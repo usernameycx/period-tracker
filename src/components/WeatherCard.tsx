@@ -38,7 +38,7 @@ export default function WeatherCard() {
         <View style={styles.emptyWrap}>
           <Icon name="weather" size={28} color={Colors.textHint} />
           <Text style={styles.emptyText}>{error ?? '暂无天气数据'}</Text>
-          <Pressable style={styles.retryBtn} onPress={refresh}>
+          <Pressable style={styles.retryBtn} onPress={() => refresh()}>
             <Icon name="refresh" size={14} color={Colors.primary} />
             <Text style={styles.retryText}>重试</Text>
           </Pressable>
@@ -63,7 +63,7 @@ export default function WeatherCard() {
           <Icon name="location" size={10} color={Colors.primary} />
           <Text style={styles.locText}>{city}</Text>
         </PressableScale>
-        <Text style={styles.dateText}>{new Date().getMonth() + 1}月{new Date().getDate()}日</Text>
+        <Text style={styles.dateText}>{new Date().getMonth() + 1}月{new Date().getDate()}日 周{['日','一','二','三','四','五','六'][new Date().getDay()]}</Text>
       </View>
 
       {/* Hero: icon + temp */}
@@ -71,8 +71,8 @@ export default function WeatherCard() {
         <Text style={styles.emoji}>{weather.icon}</Text>
         <View style={styles.heroContent}>
           <View style={styles.tempRow}>
-            <Text style={styles.temp}>{weather.temperature}°</Text>
-            {showFeelsLike && <Text style={styles.feels}>体感 {weather.feelsLike}°</Text>}
+            <Text style={styles.temp}>{weather.temperature}℃</Text>
+            {showFeelsLike && <Text style={styles.feels}>体感 {weather.feelsLike}℃</Text>}
           </View>
           <Text style={styles.condition}>{weather.condition}</Text>
         </View>
@@ -142,7 +142,7 @@ export default function WeatherCard() {
               </PressableScale>
               <PressableScale style={styles.modalConfirm} onPress={() => {
                 const t = cityInput.trim();
-                if (t) { setCity(t); refresh(); }
+                if (t) { setCity(t); refresh(t); }
                 setCityModal(false);
               }}>
                 <Text style={styles.modalConfirmT}>确认</Text>

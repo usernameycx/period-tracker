@@ -66,15 +66,24 @@ export default function CalendarView({ onDayPress, selectedDate, currentMonth, o
   goNextRef.current = () => onMonthChange(new Date(year, month + 1, 1));
 
   const swipePan = useMemo(() => PanResponder.create({
+    // 低位移阈值：轻扫即可判定为横向滑动（但保留 15px，避免点选日期时误触）
     onStartShouldSetPanResponder: () => false,
-    onMoveShouldSetPanResponder: (_, gs) => Math.abs(gs.dx) > 30 && Math.abs(gs.dx) > Math.abs(gs.dy),
-    onPanResponderMove: (_, gs) => { panX.setValue(gs.dx * 0.4); },
+    onMoveShouldSetPanResponder: (_, gs) => Math.abs(gs.dx) > 15 && Math.abs(gs.dx) > Math.abs(gs.dy) * 1.2,
+    // 1:1 跟手（原 0.4，滑动时有明显延迟感）
+    onPanResponderMove: (_, gs) => { panX.setValue(gs.dx); },
     onPanResponderRelease: (_, gs) => {
-      if (gs.dx > 80) {
-        Animated.timing(panX, { toValue: 400, duration: 180, useNativeDriver: true })
+      const vx = gs.vx; // 松手速度，模拟 freeMode 惯性滑动
+      if (vx > 0.5 && gs.dx > 15) {
+        Animated.timing(panX, { toValue: 400, duration: 140, useNativeDriver: true })
           .start(() => { panX.setValue(0); goPrevRef.current(); });
-      } else if (gs.dx < -80) {
-        Animated.timing(panX, { toValue: -400, duration: 180, useNativeDriver: true })
+      } else if (vx < -0.5 && gs.dx < -15) {
+        Animated.timing(panX, { toValue: -400, duration: 140, useNativeDriver: true })
+          .start(() => { panX.setValue(0); goNextRef.current(); });
+      } else if (gs.dx > 45) {
+        Animated.timing(panX, { toValue: 400, duration: 160, useNativeDriver: true })
+          .start(() => { panX.setValue(0); goPrevRef.current(); });
+      } else if (gs.dx < -45) {
+        Animated.timing(panX, { toValue: -400, duration: 160, useNativeDriver: true })
           .start(() => { panX.setValue(0); goNextRef.current(); });
       } else {
         Animated.spring(panX, { toValue: 0, useNativeDriver: true, bounciness: 0 }).start();

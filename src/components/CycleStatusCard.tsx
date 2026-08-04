@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { usePeriod } from '../context/PeriodContext';
+import { usePeriod, MissingEndDateError } from '../context/PeriodContext';
 import { useCurrentPhaseOrDefault } from '../hooks/useCurrentPhase';
 import { getAveragePeriodDays } from '../services/prediction';
-import { PHASE_LABELS, PHASE_ICONS, OVULATION_BEFORE_PERIOD, OVULATION_SPAN, PHASE_COLORS } from '../constants/phases';
+import { PHASE_LABELS, PHASE_ICONS, OVULATION_BEFORE_PERIOD, OVULATION_SPAN, PHASE_COLORS, DEFAULT_PERIOD_DAYS } from '../constants/phases';
 import { Colors, Spacing, FontSize, Radius, Shadow, Weight, LineHeight } from '../constants/theme';
 import { todayStr, parseDate, diffDays } from '../utils/date';
 import Icon from './Icon';
@@ -32,12 +32,14 @@ function computeCountdowns(phaseInfo: { phase: string; dayOffset: number; daysUn
 }
 
 export default function CycleStatusCard() {
-  const { records, loading, addRecord, updateEndDate } = usePeriod();
+  const { records, loading, addRecord, addRecordIgnoringMissingEnd, updateEndDate } = usePeriod();
   const phaseInfo = useCurrentPhaseOrDefault();
   const today = todayStr();
   const alreadyRecorded = records.some(r => r.start_date === today);
   const [errorVisible, setErrorVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [missingEndVisible, setMissingEndVisible] = useState(false);
+  const [missingEndPrev, setMissingEndPrev] = useState<string | null>(null);
 
   const firstRecordDate = useMemo(
     () => records.length > 0
@@ -174,15 +176,42 @@ export default function CycleStatusCard() {
 
       {!alreadyRecorded && phaseInfo.phase !== 'period' && (
         <PressableScale style={styles.quickBtn} onPress={async () => {
-          try { await addRecord(today); } catch (e: any) {
-            setErrorMessage(e.message || '标记失败，请稍后再试');
-            setErrorVisible(true);
+          try {
+            await addRecord(today);
+          } catch (e: any) {
+            if (e instanceof MissingEndDateError) {
+              setMissingEndPrev(e.prevStart);
+              setMissingEndVisible(true);
+            } else {
+              setErrorMessage(e.message || '标记失败，请稍后再试');
+              setErrorVisible(true);
+            }
           }
         }}>
           <Icon name="blood" size={18} color={Colors.white} />
           <Text style={styles.quickBtnText}>今天来了</Text>
         </PressableScale>
       )}
+
+      <ConfirmModal
+        visible={missingEndVisible}
+        title="请先设置上个周期结束日期"
+        message={`你有一个周期（${missingEndPrev ?? ''}开始）还没有设置结束日期。\n\n建议先在日历上标记它的结束日期；如果忽略，将按默认 ${DEFAULT_PERIOD_DAYS} 天补齐，已结束的周期不会被后续操作修改。是否继续记录？`}
+        icon="warning"
+        variant="danger"
+        cancelLabel="取消"
+        confirmLabel="忽略并继续"
+        onCancel={() => setMissingEndVisible(false)}
+        onConfirm={async () => {
+          setMissingEndVisible(false);
+          try {
+            await addRecordIgnoringMissingEnd(today);
+          } catch (e: any) {
+            setErrorMessage(e.message || '标记失败，请稍后再试');
+            setErrorVisible(true);
+          }
+        }}
+      />
 
       <ConfirmModal
         visible={errorVisible}

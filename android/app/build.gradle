@@ -179,4 +179,7 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+
+    // 高德定位 SDK（任务6：定位功能）。key 在 AndroidManifest.xml 的 com.amap.api.v2.apikey 中配置。
+    implementation("com.amap.api:location:6.4.2")
 }

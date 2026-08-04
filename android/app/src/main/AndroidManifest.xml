@@ -8,6 +8,10 @@
   <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
   <uses-permission android:name="android.permission.VIBRATE"/>
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="32" tools:replace="android:maxSdkVersion"/>
+  <!-- 高德定位所需权限 -->
+  <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+  <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+  <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
   <queries>
     <intent>
       <action android:name="android.intent.action.VIEW"/>
@@ -16,6 +20,8 @@
     </intent>
   </queries>
   <application android:name=".MainApplication" android:label="@string/app_name" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:allowBackup="true" android:theme="@style/Theme.App.SplashScreen" android:supportsRtl="true" android:enableOnBackInvokedCallback="false">
+    <!-- 高德定位 Android key（绑定包名 com.periodtracker.app + EAS 签名 SHA1 30:7E:9E:30:2F:53:1B:81:EC:0F:CD:27:A8:CF:07:94:C2:B7:05:7A） -->
+    <meta-data android:name="com.amap.api.v2.apikey" android:value="3e7856ffc4ef548b31c2cfeb0a7b5103"/>
     <meta-data android:name="com.google.firebase.messaging.default_notification_color" android:resource="@color/notification_icon_color"/>
     <meta-data android:name="com.google.firebase.messaging.default_notification_icon" android:resource="@drawable/notification_icon"/>
     <meta-data android:name="expo.modules.notifications.default_notification_color" android:resource="@color/notification_icon_color"/>

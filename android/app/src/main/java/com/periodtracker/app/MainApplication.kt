@@ -23,6 +23,7 @@ class MainApplication : Application(), ReactApplication {
         PackageList(this).packages.apply {
           // Custom native modules
           add(DailyAlarmPackage())
+          add(AMapLocationPackage())
         }
     )
   }

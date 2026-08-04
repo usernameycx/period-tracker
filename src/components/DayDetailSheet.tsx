@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { View, Text, ScrollView, StyleSheet, Modal, Animated, Dimensions, Pressable } from 'react-native';
-import { usePeriod } from '../context/PeriodContext';
+import { usePeriod, MissingEndDateError } from '../context/PeriodContext';
 import { useWeather } from '../context/WeatherContext';
 import { getDatabase } from '../db/database';
 import { getDietRules, DietRule } from '../db/diet-rules';
 import { getPhaseForCalendarDay, getAveragePeriodDays } from '../services/prediction';
 import { formatDate, parseDate, diffDays } from '../utils/date';
-import { Phase, PHASE_LABELS, PHASE_ICONS } from '../constants/phases';
+import { Phase, PHASE_LABELS, PHASE_ICONS, DEFAULT_PERIOD_DAYS } from '../constants/phases';
 import { getLifeAdvice } from '../services/advice';
 import PressableScale from './PressableScale';
 import { Colors, Spacing, Radius, FontSize, Shadow, Weight, LineHeight } from '../constants/theme';
@@ -22,12 +22,15 @@ interface Props {
 }
 
 export default function DayDetailSheet({ visible, date, onClose }: Props) {
-  const { records, addRecord, removeRecord, updateEndDate } = usePeriod();
+  const { records, addRecord, addRecordIgnoringMissingEnd, removeRecord, updateEndDate } = usePeriod();
   const { weather } = useWeather();
   const [diet, setDiet] = useState<DietRule | null>(null);
   const [confirmVisible, setConfirmVisible] = useState(false);
   const [errorVisible, setErrorVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('标记失败，请稍后再试');
+  // 上个周期缺结束日期时的提醒弹窗（任务：已结束周期不受后续操作修改）
+  const [missingEndVisible, setMissingEndVisible] = useState(false);
+  const [missingEndPrev, setMissingEndPrev] = useState<string | null>(null);
   const translateY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
 
@@ -86,10 +89,28 @@ export default function DayDetailSheet({ visible, date, onClose }: Props) {
     if (recordedStart) {
       setConfirmVisible(true);
     } else {
-      try { await addRecord(dateStr); } catch (e: any) {
-        setErrorMessage(e.message || '标记失败，请稍后再试');
-        setErrorVisible(true);
+      try {
+        await addRecord(dateStr);
+      } catch (e: any) {
+        if (e instanceof MissingEndDateError) {
+          setMissingEndPrev(e.prevStart);
+          setMissingEndVisible(true);
+        } else {
+          setErrorMessage(e.message || '标记失败，请稍后再试');
+          setErrorVisible(true);
+        }
       }
+    }
+  };
+
+  /** 用户选择"忽略提醒"：按默认天数补齐上个周期结束日期，再记录新周期 */
+  const handleMissingEndIgnore = async () => {
+    setMissingEndVisible(false);
+    try {
+      await addRecordIgnoringMissingEnd(dateStr);
+    } catch (e: any) {
+      setErrorMessage(e.message || '标记失败，请稍后再试');
+      setErrorVisible(true);
     }
   };
 
@@ -229,6 +250,18 @@ export default function DayDetailSheet({ visible, date, onClose }: Props) {
       confirmLabel="确定取消"
       onCancel={() => setConfirmVisible(false)}
       onConfirm={handleRemoveConfirm}
+    />
+
+    <ConfirmModal
+      visible={missingEndVisible}
+      title="请先设置上个周期结束日期"
+      message={`你有一个周期（${missingEndPrev ?? ''}开始）还没有设置结束日期。\n\n建议先在日历上标记它的结束日期；如果忽略，将按默认 ${DEFAULT_PERIOD_DAYS} 天补齐，已结束的周期不会被后续操作修改。是否继续记录？`}
+      icon="warning"
+      variant="danger"
+      cancelLabel="取消"
+      confirmLabel="忽略并继续"
+      onCancel={() => setMissingEndVisible(false)}
+      onConfirm={handleMissingEndIgnore}
     />
 
     <ConfirmModal
