@@ -29,12 +29,14 @@
     "@react-native-community/cli": "^20.2.0",
     "@types/react": "~19.2.2",
     "sharp": "^0.35.3",
+    "tsx": "^4.19.2",
     "typescript": "~6.0.3"
   },
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
-    "ios": "expo run:ios"
+    "ios": "expo run:ios",
+    "test": "tsx --test tests/**/*.test.ts"
   },
   "private": true
 }
