@@ -36,6 +36,10 @@ class AMapLocationModule(reactContext: ReactApplicationContext) :
         Handler(Looper.getMainLooper()).post {
             try {
                 val ctx = reactApplicationContext
+                // 高德隐私合规（6.3.0+ 强制）：调用任何 SDK 接口前必须先设置
+                // updatePrivacyShow / updatePrivacyAgree 且参数为 true，否则初始化失败
+                AMapLocationClient.updatePrivacyShow(ctx, true, true)
+                AMapLocationClient.updatePrivacyAgree(ctx, true)
                 val c = AMapLocationClient(ctx)
                 client = c
                 c.setLocationListener(this)
