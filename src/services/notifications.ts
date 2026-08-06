@@ -48,7 +48,15 @@ export async function requestNotificationPermission(): Promise<boolean> {
     return result.status === 'granted';
   } catch (e) {
     console.warn('requestNotificationPermission failed:', e);
-    return false;
+    // 超时后稍候复查一次：弹窗可能已延迟弹出并授权（“幽灵授权”场景），
+    // 否则本次启动会跳过通知调度且无任何提示
+    await new Promise(r => setTimeout(r, 1500));
+    try {
+      const { status } = await Notifications.getPermissionsAsync();
+      return status === 'granted';
+    } catch {
+      return false;
+    }
   }
 }
 

@@ -20,6 +20,9 @@ const native = () => (NativeModules as any).AMapLocation as {
   destroy: () => void;
 } | null;
 
+/** 模块级 in-flight 互斥：启动定位与手动定位并发时共享同一次请求，避免原生单例互踩/误取消 */
+let inFlightPromise: Promise<LocationResponse> | null = null;
+
 /** 定位是否可用：仅 Android 且高德原生模块已注册（iOS / 未构建原生模块时返回 false，调用方自动降级） */
 export function isLocationAvailable(): boolean {
   return Platform.OS === 'android' && !!native();
@@ -48,15 +51,29 @@ export async function requestLocationPermission(): Promise<boolean> {
     return granted === PermissionsAndroid.RESULTS.GRANTED;
   } catch (e) {
     console.warn('requestLocationPermission failed:', e);
-    return false;
+    // 超时后复查一次：弹窗可能已延迟弹出并授权（“幽灵授权”场景），避免误报未授权
+    try {
+      return await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION);
+    } catch {
+      return false;
+    }
   }
 }
 
 /**
  * 单次定位，返回城市 + 坐标。
  * 失败时返回 { result: null, error: 原因 } —— 调用方应保留最后一次正常天气数据。
+ * 并发调用共享同一次请求（in-flight 互斥），避免与原生模块单例冲突。
  */
-export async function getCurrentLocation(): Promise<LocationResponse> {
+export function getCurrentLocation(): Promise<LocationResponse> {
+  if (inFlightPromise) return inFlightPromise;
+  inFlightPromise = doGetCurrentLocation().finally(() => {
+    inFlightPromise = null;
+  });
+  return inFlightPromise;
+}
+
+async function doGetCurrentLocation(): Promise<LocationResponse> {
   const module = native();
   if (!module) return { result: null, error: '当前环境不支持定位（需 Android + 高德 SDK）' };
   try {
@@ -66,9 +83,10 @@ export async function getCurrentLocation(): Promise<LocationResponse> {
     }
     return { result, error: null };
   } catch (e: any) {
+    const code = typeof e === 'object' && e?.code ? String(e.code) : '';
     const msg = typeof e === 'object' && e?.message ? String(e.message) : String(e);
     // 常见原因提示：key 绑定签名不匹配（本地 debug 包 vs EAS 正式包）
-    const hint = /INVALID_USER_KEY|KEY|key/i.test(msg) && !/location_busy/i.test(msg)
+    const hint = /INVALID_USER_KEY|KEY|key/i.test(msg) && !/LOCATION_BUSY/i.test(code)
       ? '（高德 key 校验失败：请确认 key 已绑定当前安装包的签名 SHA1）'
       : '';
     console.warn('getCurrentLocation failed:', msg);
