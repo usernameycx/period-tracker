@@ -144,7 +144,7 @@ export default function CalendarView({ onDayPress, selectedDate, currentMonth, o
                   style={[styles.dayCell, { backgroundColor: bgColor }, isSelected && styles.selectedCell]}
                   onPress={() => onDayPress(date)}
                 >
-                  <Text style={styles.dayNum}>
+                  <Text style={[styles.dayNum, isSelected && styles.selectedText]}>
                     {d}
                   </Text>
                   {isRecorded && (
@@ -200,8 +200,9 @@ const styles = StyleSheet.create({
   },
   dayNum: { fontSize: 14, color: Colors.ink, fontWeight: Weight.medium },
   dayLabel: { fontSize: 9, color: Colors.textMuted, fontWeight: Weight.medium, marginTop: 1 },
-  // 选中日（默认选中今天）：细黑边框标记，不放大方块
-  selectedCell: { borderWidth: 1, borderColor: Colors.ink, borderRadius: Radius.md },
+  // 选中日（默认选中今天）：2px 黑边框 + 数字加粗
+  selectedCell: { borderWidth: 2, borderColor: Colors.ink, borderRadius: Radius.md },
+  selectedText: { fontWeight: Weight.extrabold, color: Colors.ink },
 
   /* Record dot */
   recordDot: {
