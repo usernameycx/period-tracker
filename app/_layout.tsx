@@ -1,7 +1,6 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Platform, ToastAndroid } from 'react-native';
 import { preventAutoHideAsync, hideAsync } from 'expo-splash-screen';
 import { PeriodProvider } from '../src/context/PeriodContext';
 import { WeatherProvider, useWeather } from '../src/context/WeatherContext';
@@ -10,15 +9,9 @@ import { scheduleAllNotifications, requestNotificationPermission } from '../src/
 import { requestLocationPermission, getCurrentLocation } from '../src/services/location';
 import ErrorBoundary from '../src/components/ErrorBoundary';
 import OnboardingModal from '../src/components/OnboardingModal';
+import ToastHost, { showToast } from '../src/components/Toast';
 
 preventAutoHideAsync();
-
-/** 轻提示：Android 用 Toast（LONG 便于看清定位错误原因），其他平台静默 */
-function showToast(message: string) {
-  if (Platform.OS === 'android') {
-    ToastAndroid.show(message, ToastAndroid.LONG);
-  }
-}
 
 function NotificationScheduler({ permissionGate }: { permissionGate: boolean }) {
   const { notifyHour, notifyMinute, ready } = useSettings();
@@ -113,6 +106,8 @@ export default function RootLayout() {
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="(tabs)" />
             </Stack>
+            {/* 全局轻提示：显示 6s + 淡出动画，便于看清定位错误原因 */}
+            <ToastHost />
             {/* 引导卡片：等权限流程完成后才显示（先权限后指引） */}
             <OnboardingModal permissionGate={permissionsDone} />
           </WeatherProvider>
