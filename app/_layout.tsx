@@ -59,7 +59,7 @@ function StartupFlow({ onPermissionsDone }: { onPermissionsDone: () => void }) {
       // ① 定位权限（必须先于通知权限，避免 Android 弹窗互抢）
       const locGranted = await requestLocationPermission().catch(() => false);
       if (cancelled) return;
-      // ② 通知权限（内部带 5s 超时，失败/超时也不阻塞流程）
+      // ② 通知权限（等用户点击后返回，无超时）
       await requestNotificationPermission().catch(() => {});
       if (cancelled) return;
       // ③ 权限流程完成 → 放行首次启动引导卡片（无论授权结果如何）
