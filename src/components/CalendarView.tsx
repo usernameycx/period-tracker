@@ -200,7 +200,8 @@ const styles = StyleSheet.create({
   },
   dayNum: { fontSize: 14, color: Colors.ink, fontWeight: Weight.medium },
   dayLabel: { fontSize: 9, color: Colors.textMuted, fontWeight: Weight.medium, marginTop: 1 },
-  selectedCell: { borderWidth: 2, borderColor: Colors.ink, borderRadius: Radius.md },
+  // 选中日（默认选中今天）：细黑边框标记，不放大方块
+  selectedCell: { borderWidth: 1, borderColor: Colors.ink, borderRadius: Radius.md },
 
   /* Record dot */
   recordDot: {
