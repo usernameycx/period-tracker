@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { usePeriod, MissingEndDateError } from '../context/PeriodContext';
 import { useCurrentPhaseOrDefault } from '../hooks/useCurrentPhase';
@@ -40,6 +40,8 @@ export default function CycleStatusCard() {
   const [errorMessage, setErrorMessage] = useState('');
   const [missingEndVisible, setMissingEndVisible] = useState(false);
   const [missingEndPrev, setMissingEndPrev] = useState<string | null>(null);
+  // 防快速连点：一次操作进行中忽略后续点击（乐观更新下连点会导致“添加又删除”）
+  const busyRef = useRef(false);
 
   const firstRecordDate = useMemo(
     () => records.length > 0
@@ -176,6 +178,8 @@ export default function CycleStatusCard() {
 
       {!alreadyRecorded && phaseInfo.phase !== 'period' && (
         <PressableScale style={styles.quickBtn} onPress={async () => {
+          if (busyRef.current) return;
+          busyRef.current = true;
           try {
             await addRecord(today);
           } catch (e: any) {
@@ -186,6 +190,8 @@ export default function CycleStatusCard() {
               setErrorMessage(e.message || '标记失败，请稍后再试');
               setErrorVisible(true);
             }
+          } finally {
+            busyRef.current = false;
           }
         }}>
           <Icon name="blood" size={18} color={Colors.white} />

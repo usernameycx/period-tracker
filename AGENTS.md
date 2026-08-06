@@ -160,7 +160,7 @@ Mappings live in `SymptomPicker.tsx` CATEGORIES/TOGGLES arrays.
 12. **Phase colors**: 经期 coral, 卵泡期 green, 排卵日 peach, 备孕窗口 cream, 黄体期 goose yellow.
 13. **Symptoms**: TOGGLES layout icon-above-text. 5 items in one row: 头痛/腹胀/腰痛/胸胀/眼干. All options can be deselected by tapping again.
 14. **Symptom empty-row cleanup**: When all symptom fields become null/0 (user deselects everything), the DB row is auto-deleted — no junk records.
-15. **Version**: 2.1.0 (versionCode 3).
+15. **Version**: 2.1.1 (versionCode 4).
 
 ## EAS Build
 

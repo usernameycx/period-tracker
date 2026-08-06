@@ -33,7 +33,8 @@ interface WeatherCtx {
   weather: DisplayWeather | null;
   loading: boolean;
   error: string | null;
-  refresh: (cityName?: string) => Promise<void>;
+  /** force=true 时忽略 1 小时缓存,强制请求新数据(启动/定位后使用) */
+  refresh: (cityName?: string, force?: boolean) => Promise<void>;
 }
 
 const Ctx = createContext<WeatherCtx>({} as WeatherCtx);
@@ -57,7 +58,7 @@ export function WeatherProvider({ children }: { children: ReactNode }) {
   // 最近一次手动刷新过的城市：切城市场景已手动 refresh(cityName)，effect 跳过重复请求
   const manuallyRefreshedCity = useRef<string | null>(null);
 
-  const refresh = useCallback(async (cityName?: string) => {
+  const refresh = useCallback(async (cityName?: string, force?: boolean) => {
     const seq = ++requestSeq.current;
     setLoading(true);
     setError(null);
@@ -72,12 +73,15 @@ export function WeatherProvider({ children }: { children: ReactNode }) {
         const { lat, lon } = geo;
         lastCoords.current = { lat, lon };
 
-        const cached = await getCachedWeather(lat, lon);
-        if (isStale()) return;
-        if (cached) {
-          setRaw(cached);
-          setLoading(false);
-          return;
+        // 启动/定位后的强制刷新:忽略缓存,每次都请求最新数据
+        if (!force) {
+          const cached = await getCachedWeather(lat, lon);
+          if (isStale()) return;
+          if (cached) {
+            setRaw(cached);
+            setLoading(false);
+            return;
+          }
         }
 
         const data = await fetchRawWeather(lat, lon);

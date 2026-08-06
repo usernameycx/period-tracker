@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, StyleSheet, Modal, Linking, Platform } from 'react-native';
+import { View, Text, StyleSheet, Modal, Linking, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useSettings } from '../context/SettingsContext';
 import { Colors, Spacing, FontSize, Radius, Shadow, Weight, LineHeight } from '../constants/theme';
 import PressableScale from './PressableScale';
 import Icon from './Icon';
@@ -9,9 +8,10 @@ import type { IconName } from './Icon';
 
 const ONBOARDING_DONE_KEY = 'onboarding_done_v1';
 
+// 图标按功能语义选取，风格统一（描边线性图标）
 const STEPS: { icon: IconName; title: string; desc: string }[] = [
   {
-    icon: 'calendar',
+    icon: 'drop',
     title: '记录经期',
     desc: '在日历页点击日期，标记经期第一天\n我们会自动推算后续阶段',
   },
@@ -27,8 +27,8 @@ const STEPS: { icon: IconName; title: string; desc: string }[] = [
   },
   {
     icon: 'location',
-    title: '设置城市',
-    desc: '用于获取当地天气和生活建议',
+    title: '自动定位',
+    desc: '启动时自动定位所在城市\n获取当地天气与生活建议',
   },
   {
     icon: 'bell',
@@ -40,8 +40,6 @@ const STEPS: { icon: IconName; title: string; desc: string }[] = [
 export default function OnboardingModal() {
   const [visible, setVisible] = useState(false);
   const [step, setStep] = useState(0);
-  const { city, setCity } = useSettings();
-  const [cityInput, setCityInput] = useState(city);
 
   useEffect(() => {
     AsyncStorage.getItem(ONBOARDING_DONE_KEY).then(v => {
@@ -56,8 +54,6 @@ export default function OnboardingModal() {
   };
 
   const finish = async () => {
-    const trimmed = cityInput.trim();
-    if (trimmed) setCity(trimmed);
     await AsyncStorage.setItem(ONBOARDING_DONE_KEY, '1');
     setVisible(false);
   };
@@ -76,25 +72,19 @@ export default function OnboardingModal() {
 
   const s = STEPS[step];
   const isLast = step === STEPS.length - 1;
+  const isAutoStartStep = step === STEPS.length - 1;
 
   return (
     <Modal visible transparent animationType="fade">
       <View style={styles.overlay}>
         <View style={styles.card}>
           <View style={styles.iconWrap}>
-            <Icon name={s.icon} size={56} color={Colors.primary} />
+            <View style={styles.iconInner}>
+              <Icon name={s.icon} size={30} color={Colors.primary} />
+            </View>
           </View>
           <Text style={styles.title}>{s.title}</Text>
-          {step === 3 ? (
-            <TextInput
-              style={styles.cityInput}
-              value={cityInput}
-              onChangeText={setCityInput}
-              placeholder="输入城市名，如：南昌"
-              placeholderTextColor={Colors.textHint}
-              autoFocus
-            />
-          ) : step === 4 ? (
+          {isAutoStartStep ? (
             <View style={styles.autoStartWrap}>
               <Text style={styles.desc}>{s.desc}</Text>
               <PressableScale style={styles.settingBtn} onPress={openAppSettings}>
@@ -140,7 +130,19 @@ const styles = StyleSheet.create({
     padding: Spacing.xxxl, alignItems: 'center', width: '100%', maxWidth: 320,
     ...Shadow.card,
   },
-  iconWrap: { marginBottom: Spacing.lg },
+  iconWrap: {
+    marginBottom: Spacing.lg,
+    width: 76, height: 76, borderRadius: 38,
+    backgroundColor: Colors.primaryBg,
+    borderWidth: 2, borderColor: Colors.primaryLight,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  iconInner: {
+    width: 52, height: 52, borderRadius: 26,
+    backgroundColor: Colors.cardBg,
+    alignItems: 'center', justifyContent: 'center',
+    ...Shadow.raised,
+  },
   title: { fontSize: FontSize.xl, fontWeight: Weight.extrabold, color: Colors.text, marginBottom: Spacing.sm },
   desc: { fontSize: FontSize.md, color: Colors.textSecondary, textAlign: 'center', lineHeight: LineHeight.base },
   autoStartWrap: { alignItems: 'center', width: '100%' },
@@ -152,11 +154,6 @@ const styles = StyleSheet.create({
   settingBtnText: { fontSize: FontSize.md, color: Colors.primary, fontWeight: Weight.bold },
   hint: { fontSize: FontSize.xs, color: Colors.textMuted, marginTop: Spacing.md, textAlign: 'center' },
   dots: { flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.xxl },
-  cityInput: {
-    width: '100%', borderWidth: 2, borderColor: Colors.primaryLight, borderRadius: Radius.md,
-    padding: Spacing.md, fontSize: FontSize.base, textAlign: 'center', color: Colors.text,
-    marginTop: Spacing.md, marginBottom: Spacing.xl,
-  },
   dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.divider },
   dotActive: { backgroundColor: Colors.primary, width: 20 },
   btn: {

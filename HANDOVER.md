@@ -12,7 +12,7 @@
 |---|-----|
 | 仓库 | https://github.com/usernameycx/period-tracker |
 | 分支 | `feature/initial-app` |
-| 版本 | 2.1.0 (versionCode 3) |
+| 版本 | 2.1.1 (versionCode 4) |
 | App 名称 | FayeTide |
 | 包名 | `com.periodtracker.app` |
 

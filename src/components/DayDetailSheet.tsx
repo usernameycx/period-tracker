@@ -33,6 +33,8 @@ export default function DayDetailSheet({ visible, date, onClose }: Props) {
   const [missingEndPrev, setMissingEndPrev] = useState<string | null>(null);
   const translateY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
+  // 防重复/快速连点：一次操作进行中时忽略后续点击，避免状态不一致
+  const busyRef = useRef(false);
 
   const dateStr = formatDate(date);
   const recordedStart = records.find(r => r.start_date === dateStr);
@@ -52,12 +54,15 @@ export default function DayDetailSheet({ visible, date, onClose }: Props) {
     })();
 
   const handleEndPeriod = async () => {
-    if (!ongoingRecord) return;
+    if (!ongoingRecord || busyRef.current) return;
+    busyRef.current = true;
     try {
       await updateEndDate(ongoingRecord.start_date, dateStr);
     } catch (e: any) {
       setErrorMessage(e.message || '操作失败，请稍后再试');
       setErrorVisible(true);
+    } finally {
+      busyRef.current = false;
     }
   };
 
@@ -86,20 +91,26 @@ export default function DayDetailSheet({ visible, date, onClose }: Props) {
   }, [date, records, phaseInfo]);
 
   const handleToggle = async () => {
-    if (recordedStart) {
-      setConfirmVisible(true);
-    } else {
-      try {
-        await addRecord(dateStr);
-      } catch (e: any) {
-        if (e instanceof MissingEndDateError) {
-          setMissingEndPrev(e.prevStart);
-          setMissingEndVisible(true);
-        } else {
-          setErrorMessage(e.message || '标记失败，请稍后再试');
-          setErrorVisible(true);
+    if (busyRef.current) return;
+    busyRef.current = true;
+    try {
+      if (recordedStart) {
+        setConfirmVisible(true);
+      } else {
+        try {
+          await addRecord(dateStr);
+        } catch (e: any) {
+          if (e instanceof MissingEndDateError) {
+            setMissingEndPrev(e.prevStart);
+            setMissingEndVisible(true);
+          } else {
+            setErrorMessage(e.message || '标记失败，请稍后再试');
+            setErrorVisible(true);
+          }
         }
       }
+    } finally {
+      busyRef.current = false;
     }
   };
 
@@ -115,7 +126,17 @@ export default function DayDetailSheet({ visible, date, onClose }: Props) {
   };
 
   const handleRemoveConfirm = async () => {
-    if (recordedStart) { await removeRecord(recordedStart.id); }
+    if (!recordedStart) return;
+    if (busyRef.current) return;
+    busyRef.current = true;
+    try {
+      await removeRecord(recordedStart.id);
+    } catch (e: any) {
+      setErrorMessage(e.message || '操作失败，请稍后再试');
+      setErrorVisible(true);
+    } finally {
+      busyRef.current = false;
+    }
     setConfirmVisible(false);
   };
 

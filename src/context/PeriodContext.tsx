@@ -45,6 +45,9 @@ export function PeriodProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latestRefresh = useRef<() => Promise<void>>(() => Promise.resolve());
+  // 最近一次渲染的 records 快照：乐观更新失败时用于回滚
+  const recordsRef = useRef<PeriodRecord[]>([]);
+  recordsRef.current = records;
 
   const doRefresh = useCallback(async () => {
     try {
@@ -76,35 +79,38 @@ export function PeriodProvider({ children }: { children: ReactNode }) {
 
   const addRecord = useCallback(async (startDate: string) => {
     const db = await getDatabase();
+    // 先做校验（快速、无副作用）；校验失败直接抛出，不修改 UI
+    const all = await getAllPeriodRecords(db);
+    const newDate = parseDate(startDate);
+    assertMinCycleDistance(all, newDate);
+    // 记录新周期前，检查是否还有未设置结束日期的历史周期。
+    // 没有则提醒（MissingEndDateError → UI 弹窗）；用户忽略时走 addRecordIgnoringMissingEnd。
+    const prev = findPrevMissingEndRecord(all, newDate);
+    if (prev) {
+      throw new MissingEndDateError(prev.start_date);
+    }
+    // —— 乐观更新：先改 UI，让点击立即反馈 ——
+    const snapshot = recordsRef.current;
+    setRecords(prevState => {
+      if (prevState.some(r => r.start_date === startDate)) return prevState;
+      return [...prevState, { id: -1, start_date: startDate, end_date: null, created_at: new Date().toISOString() }];
+    });
     try {
-      const all = await getAllPeriodRecords(db);
-      const newDate = parseDate(startDate);
-      assertMinCycleDistance(all, newDate);
-      // 记录新周期前，检查是否还有未设置结束日期的历史周期。
-      // 没有则提醒（MissingEndDateError → UI 弹窗）；用户忽略时走 addRecordIgnoringMissingEnd。
-      const prev = findPrevMissingEndRecord(all, newDate);
-      if (prev) {
-        throw new MissingEndDateError(prev.start_date);
-      }
       await insertPeriodRecord(db, startDate);
-      // Optimistic: update UI immediately, then debounce DB refresh
-      setRecords(prev => {
-        const exists = prev.find(r => r.start_date === startDate);
-        if (exists) return prev;
-        return [...prev, { id: -1, start_date: startDate, end_date: null, created_at: new Date().toISOString() }];
-      });
     } catch (e: any) {
+      // 保存失败：回滚 UI 并提示
+      setRecords(snapshot);
       const msg = e?.message || '';
       if (msg.includes('UNIQUE') || msg.includes('unique')) {
-        const all = await getAllPeriodRecords(db);
-        const existing = all.find(r => r.start_date === startDate);
+        // 兜底：DB 已存在该日期（罕见的外部写入），按“再点一次取消”语义删除
+        const existing = (await getAllPeriodRecords(db)).find(r => r.start_date === startDate);
         if (existing) {
           await deletePeriodRecord(db, existing.id);
-          setRecords(prev => prev.filter(r => r.start_date !== startDate));
+          setRecords(prevState => prevState.filter(r => r.start_date !== startDate));
         }
-      } else {
-        throw e;
+        return;
       }
+      throw e;
     }
     // Debounced full refresh to sync IDs and re-schedule reminders
     refresh();
@@ -119,36 +125,67 @@ export function PeriodProvider({ children }: { children: ReactNode }) {
     // 与 addRecord 共用同一间隔校验，防止绕过 21 天最短周期约束
     assertMinCycleDistance(all, newDate);
     const prev = findPrevMissingEndRecord(all, newDate);
-    if (prev) {
-      const endDate = formatDate(addDays(parseDate(prev.start_date), DEFAULT_PERIOD_DAYS - 1));
-      await updatePeriodEndDate(db, prev.start_date, endDate);
-      // Optimistic: 立即把上个周期结束日期写进 UI
-      setRecords(prevState => prevState.map(r =>
-        r.start_date === prev.start_date ? { ...r, end_date: endDate } : r
-      ));
-    }
-    await insertPeriodRecord(db, startDate);
+    const endDate = prev ? formatDate(addDays(parseDate(prev.start_date), DEFAULT_PERIOD_DAYS - 1)) : null;
+    // —— 乐观更新：补齐结束日期 + 添加新记录，一次生效 ——
+    const snapshot = recordsRef.current;
     setRecords(prevState => {
-      const exists = prevState.find(r => r.start_date === startDate);
-      if (exists) return prevState;
-      return [...prevState, { id: -1, start_date: startDate, end_date: null, created_at: new Date().toISOString() }];
+      let next = prevState;
+      if (prev) {
+        next = next.map(r =>
+          r.start_date === prev.start_date ? { ...r, end_date: endDate! } : r
+        );
+      }
+      if (!next.some(r => r.start_date === startDate)) {
+        next = [...next, { id: -1, start_date: startDate, end_date: null, created_at: new Date().toISOString() }];
+      }
+      return next;
     });
+    try {
+      if (prev) await updatePeriodEndDate(db, prev.start_date, endDate!);
+      await insertPeriodRecord(db, startDate);
+    } catch (e) {
+      setRecords(snapshot); // 保存失败：回滚 UI
+      refresh(); // 兜底：以 DB 真实状态为准（部分写入场景）
+      throw e;
+    }
     refresh();
   }, [refresh]);
 
   const removeRecord = useCallback(async (id: number) => {
     const db = await getDatabase();
-    await deletePeriodRecord(db, id);
+    const snapshot = recordsRef.current;
+    const target = snapshot.find(r => r.id === id);
+    // —— 乐观更新：立即从 UI 移除 ——
+    setRecords(prevState => prevState.filter(r => r.id !== id));
+    try {
+      if (id !== -1) {
+        await deletePeriodRecord(db, id);
+      } else if (target?.start_date) {
+        // 乐观项（id=-1）可能尚未落库：按 start_date 找到真实记录后删除
+        const all = await getAllPeriodRecords(db);
+        const existing = all.find(r => r.start_date === target.start_date);
+        if (existing) await deletePeriodRecord(db, existing.id);
+      }
+    } catch (e) {
+      setRecords(snapshot); // 保存失败：回滚 UI
+      throw e;
+    }
     refresh();
   }, [refresh]);
 
   const updateEndDate = useCallback(async (startDate: string, endDate: string) => {
     const db = await getDatabase();
-    await updatePeriodEndDate(db, startDate, endDate);
-    // Optimistic
-    setRecords(prev => prev.map(r =>
+    const snapshot = recordsRef.current;
+    // —— 乐观更新：立即更新 UI ——
+    setRecords(prevState => prevState.map(r =>
       r.start_date === startDate ? { ...r, end_date: endDate } : r
     ));
+    try {
+      await updatePeriodEndDate(db, startDate, endDate);
+    } catch (e) {
+      setRecords(snapshot); // 保存失败：回滚 UI
+      throw e;
+    }
     refresh();
   }, [refresh]);
 
