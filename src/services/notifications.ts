@@ -36,27 +36,13 @@ export async function setupNotificationHandler(): Promise<void> {
 }
 
 export async function requestNotificationPermission(): Promise<boolean> {
+  // 无超时：正常路径等用户点击系统弹窗后返回；仅系统异常时降级继续
   try {
-    // 加超时保护：启动早期 Activity 未就绪时 requestPermissionsAsync 可能永不 resolve，
-    // 会卡死后续流程（通知弹窗/引导卡片/定位都不会执行）
-    const result = await Promise.race([
-      Notifications.requestPermissionsAsync(),
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('请求通知权限超时')), 5000)
-      ),
-    ]);
-    return result.status === 'granted';
+    const { status } = await Notifications.requestPermissionsAsync();
+    return status === 'granted';
   } catch (e) {
     console.warn('requestNotificationPermission failed:', e);
-    // 超时后稍候复查一次：弹窗可能已延迟弹出并授权（“幽灵授权”场景），
-    // 否则本次启动会跳过通知调度且无任何提示
-    await new Promise(r => setTimeout(r, 1500));
-    try {
-      const { status } = await Notifications.getPermissionsAsync();
-      return status === 'granted';
-    } catch {
-      return false;
-    }
+    return false;
   }
 }
 

@@ -28,35 +28,25 @@ export function isLocationAvailable(): boolean {
   return Platform.OS === 'android' && !!native();
 }
 
-/** 请求定位运行时权限（Android 6.0+）。拒绝时返回 false。 */
+/** 请求定位运行时权限（Android 6.0+）。拒绝时返回 false。
+ *  无超时：正常路径等用户点击弹窗后返回；仅系统异常(弹窗未弹出等)时降级继续。 */
 export async function requestLocationPermission(): Promise<boolean> {
   if (Platform.OS !== 'android') return false;
   try {
-    // 加超时保护：Activity 未就绪时系统弹窗可能无法显示，避免请求永久挂起
-    const granted = await Promise.race([
-      PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-        {
-          title: '定位权限',
-          message: 'FayeTide 需要获取您的位置，以自动显示当地天气。',
-          buttonPositive: '允许',
-          buttonNegative: '拒绝',
-          buttonNeutral: '稍后再说',
-        }
-      ),
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('请求定位权限超时')), 8000)
-      ),
-    ]);
+    const granted = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+      {
+        title: '定位权限',
+        message: 'FayeTide 需要获取您的位置，以自动显示当地天气。',
+        buttonPositive: '允许',
+        buttonNegative: '拒绝',
+        buttonNeutral: '稍后再说',
+      }
+    );
     return granted === PermissionsAndroid.RESULTS.GRANTED;
   } catch (e) {
     console.warn('requestLocationPermission failed:', e);
-    // 超时后复查一次：弹窗可能已延迟弹出并授权（“幽灵授权”场景），避免误报未授权
-    try {
-      return await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION);
-    } catch {
-      return false;
-    }
+    return false;
   }
 }
 
