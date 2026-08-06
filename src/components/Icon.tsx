@@ -122,13 +122,13 @@ const PATHS: Record<IconName, (color: string) => React.ReactElement> = {
   // ── Section Headers ─────────────────────────────────────
   cycle: (c) => (
     <G>
-      {/* 周期循环：3/4 开环圆 + 缺口处实心箭头（标准 loop 风格） */}
-      <Path
-        d="M 4,12 A 8,8 0 1,1 20,12"
-        fill="none" stroke={c} strokeWidth="1.5" strokeLinecap="round"
+      {/* 周期循环：完整圆环 + 右上角循环方向箭头（♻ 风格，完整明确） */}
+      <Circle cx="12" cy="12" r="7.5" fill="none" stroke={c} strokeWidth="1.5" />
+      {/* 右上角箭头：从圆外指向圆内，指示循环方向 */}
+      <Polyline
+        points="19.5,4.5 19.5,9.5 14.5,9.5"
+        fill="none" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
       />
-      {/* 缺口右侧朝下的箭头：指示循环方向 */}
-      <Path d="M 17,11 L 23,11 L 20,15 Z" fill={c} />
     </G>
   ),
 

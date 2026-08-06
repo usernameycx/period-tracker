@@ -39,11 +39,12 @@ test('建议不含时间依赖词汇（第X天/今天/明天/本周）', () => {
   }
 });
 
-test('建议每条 ≤20 字', () => {
+test('建议每条 30 字左右（20-40 字）', () => {
   for (let d = 1; d <= 30; d++) {
     for (const p of phases) {
-      const r = getLifeAdvice(p, weather);
-      assert.ok(r.phaseAdvice.length <= 20, `超长: "${r.phaseAdvice}" ${r.phaseAdvice.length}字 (${p})`);
+      const r = getLifeAdvice(p, weather, new Date(2026, 0, d));
+      assert.ok(r.phaseAdvice.length >= 20, `过短: "${r.phaseAdvice}" ${r.phaseAdvice.length}字 (${p})`);
+      assert.ok(r.phaseAdvice.length <= 40, `超长: "${r.phaseAdvice}" ${r.phaseAdvice.length}字 (${p})`);
     }
   }
 });
