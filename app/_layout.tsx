@@ -13,22 +13,23 @@ import OnboardingModal from '../src/components/OnboardingModal';
 
 preventAutoHideAsync();
 
-/** 轻提示：Android 用 Toast，其他平台静默 */
+/** 轻提示：Android 用 Toast（LONG 便于看清定位错误原因），其他平台静默 */
 function showToast(message: string) {
   if (Platform.OS === 'android') {
-    ToastAndroid.show(message, ToastAndroid.SHORT);
+    ToastAndroid.show(message, ToastAndroid.LONG);
   }
 }
 
-function NotificationScheduler() {
+function NotificationScheduler({ permissionGate }: { permissionGate: boolean }) {
   const { notifyHour, notifyMinute, ready } = useSettings();
 
   useEffect(() => {
-    if (!ready) return;
+    // 等 StartupFlow 的权限流程完成后再调度，避免并发请求通知权限
+    if (!ready || !permissionGate) return;
     scheduleAllNotifications(notifyHour, notifyMinute).catch(e => {
       console.warn('NotificationScheduler cold-start failed:', e);
     });
-  }, [ready]);
+  }, [ready, permissionGate]);
 
   return null;
 }
@@ -52,15 +53,16 @@ function StartupFlow({ onPermissionsDone }: { onPermissionsDone: () => void }) {
     startedRef.current = true;
     let cancelled = false;
     (async () => {
+      // 稍等片刻，确保 Activity 完全就绪（启动早期权限弹窗可能无法显示导致请求挂起）
+      await new Promise(r => setTimeout(r, 500));
+      if (cancelled) return;
       // ① 定位权限（必须先于通知权限，避免 Android 弹窗互抢）
-      const locGranted = await requestLocationPermission();
+      const locGranted = await requestLocationPermission().catch(() => false);
       if (cancelled) return;
-      // ② 通知权限
-      await requestNotificationPermission().catch(e => {
-        console.warn('notification permission request failed:', e);
-      });
+      // ② 通知权限（内部带 5s 超时，失败/超时也不阻塞流程）
+      await requestNotificationPermission().catch(() => {});
       if (cancelled) return;
-      // ③ 权限流程完成 → 放行首次启动引导卡片
+      // ③ 权限流程完成 → 放行首次启动引导卡片（无论授权结果如何）
       onPermissionsDone();
       // ④ 定位并刷新天气
       const initialCity = cityRef.current;
@@ -86,7 +88,7 @@ function StartupFlow({ onPermissionsDone }: { onPermissionsDone: () => void }) {
         refresh();
       }
     })();
-    return () => { cancelled = true; };
+    return () => { cancelled = true; startedRef.current = false; };
   }, [ready]);
 
   return null;
@@ -105,7 +107,7 @@ export default function RootLayout() {
       <SettingsProvider>
         <PeriodProvider>
           <WeatherProvider>
-            <NotificationScheduler />
+            <NotificationScheduler permissionGate={permissionsDone} />
             <StartupFlow onPermissionsDone={() => setPermissionsDone(true)} />
             <StatusBar style="dark" />
             <Stack screenOptions={{ headerShown: false }}>

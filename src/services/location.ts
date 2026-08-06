@@ -29,18 +29,25 @@ export function isLocationAvailable(): boolean {
 export async function requestLocationPermission(): Promise<boolean> {
   if (Platform.OS !== 'android') return false;
   try {
-    const granted = await PermissionsAndroid.request(
-      PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-      {
-        title: '定位权限',
-        message: 'FayeTide 需要获取您的位置，以自动显示当地天气。',
-        buttonPositive: '允许',
-        buttonNegative: '拒绝',
-        buttonNeutral: '稍后再说',
-      }
-    );
+    // 加超时保护：Activity 未就绪时系统弹窗可能无法显示，避免请求永久挂起
+    const granted = await Promise.race([
+      PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        {
+          title: '定位权限',
+          message: 'FayeTide 需要获取您的位置，以自动显示当地天气。',
+          buttonPositive: '允许',
+          buttonNegative: '拒绝',
+          buttonNeutral: '稍后再说',
+        }
+      ),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('请求定位权限超时')), 8000)
+      ),
+    ]);
     return granted === PermissionsAndroid.RESULTS.GRANTED;
-  } catch {
+  } catch (e) {
+    console.warn('requestLocationPermission failed:', e);
     return false;
   }
 }

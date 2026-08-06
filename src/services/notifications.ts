@@ -36,8 +36,20 @@ export async function setupNotificationHandler(): Promise<void> {
 }
 
 export async function requestNotificationPermission(): Promise<boolean> {
-  const { status } = await Notifications.requestPermissionsAsync();
-  return status === 'granted';
+  try {
+    // 加超时保护：启动早期 Activity 未就绪时 requestPermissionsAsync 可能永不 resolve，
+    // 会卡死后续流程（通知弹窗/引导卡片/定位都不会执行）
+    const result = await Promise.race([
+      Notifications.requestPermissionsAsync(),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('请求通知权限超时')), 5000)
+      ),
+    ]);
+    return result.status === 'granted';
+  } catch (e) {
+    console.warn('requestNotificationPermission failed:', e);
+    return false;
+  }
 }
 
 /**
@@ -91,8 +103,9 @@ export async function scheduleAllNotifications(
   minute: number,
 ): Promise<void> {
   await setupNotificationHandler();
-  const granted = await requestNotificationPermission();
-  if (!granted) return;
+  // 只检查不弹窗：权限弹窗由启动流程（StartupFlow）统一请求，避免同一启动被请求两次
+  const { status } = await Notifications.getPermissionsAsync();
+  if (status !== 'granted') return;
 
   // Android 12+: prompt for exact alarm permission once
   if (Platform.OS === 'android' && DailyAlarm) {
