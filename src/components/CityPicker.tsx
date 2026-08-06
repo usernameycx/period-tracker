@@ -41,15 +41,15 @@ export default function CityPicker() {
         return;
       }
       const loc = await getCurrentLocation();
-      if (!loc || !loc.city) {
-        setLocError('定位失败，已保留当前城市数据');
+      if (!loc.result || !loc.result.city) {
+        setLocError(`定位失败：${loc.error || '未知原因'}`);
         return;
       }
-      setCity(loc.city);
+      setCity(loc.result.city);
       setQuery('');
       setLocError(null);
       // 自动刷新该地区天气
-      refresh(loc.city);
+      refresh(loc.result.city);
     } finally {
       setLocating(false);
     }

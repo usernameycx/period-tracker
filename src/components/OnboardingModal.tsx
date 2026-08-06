@@ -5,6 +5,7 @@ import { Colors, Spacing, FontSize, Radius, Shadow, Weight, LineHeight } from '.
 import PressableScale from './PressableScale';
 import Icon from './Icon';
 import type { IconName } from './Icon';
+import { requestNotificationPermission } from '../services/notifications';
 
 const ONBOARDING_DONE_KEY = 'onboarding_done_v1';
 
@@ -43,7 +44,13 @@ export default function OnboardingModal() {
 
   useEffect(() => {
     AsyncStorage.getItem(ONBOARDING_DONE_KEY).then(v => {
-      if (!v) setVisible(true);
+      if (!v) {
+        setVisible(true);
+        // 首次启动：主动弹出系统通知权限申请（与定位权限并列的首次引导）
+        requestNotificationPermission().catch(e => {
+          console.warn('OnboardingModal notification permission request failed:', e);
+        });
+      }
     }).catch(() => {});
   }, []);
 

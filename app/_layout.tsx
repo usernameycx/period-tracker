@@ -59,19 +59,19 @@ function LocationStarter() {
       }
       const loc = await getCurrentLocation();
       if (cancelled) return;
-      if (loc && loc.city) {
+      if (loc.result && loc.result.city) {
         // 定位完成 → 立即更新城市并强制刷新天气
         // 定位期间用户已手动切城市：不覆盖用户选择，仅强制刷新当前城市
         const userChanged = cityRef.current !== initialCity;
         if (userChanged) {
           refresh(cityRef.current, true);
         } else {
-          setCity(loc.city);
-          refresh(loc.city, true);
+          setCity(loc.result.city);
+          refresh(loc.result.city, true);
         }
       } else {
-        // 定位失败：保留最后一次正常数据
-        showToast('定位失败，已保留上次地区天气');
+        // 定位失败：保留最后一次正常数据，并给出具体原因便于诊断
+        showToast(`定位失败：${loc.error || '未知原因'}，已保留上次地区天气`);
         refresh();
       }
     })();

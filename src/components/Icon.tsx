@@ -122,18 +122,19 @@ const PATHS: Record<IconName, (color: string) => React.ReactElement> = {
   // ── Section Headers ─────────────────────────────────────
   cycle: (c) => (
     <G>
-      {/* Circular arrows */}
+      {/* 周期循环：右上 + 左下两段圆弧，端点带方向箭头（与 refresh 风格统一） */}
       <Path
-        d="M 17,6 A 7,7 0 0,1 12,19 A 7,7 0 0,1 5,14"
+        d="M 20,12 A 8,8 0 0,1 12,4"
         fill="none" stroke={c} strokeWidth="1.5" strokeLinecap="round"
       />
       <Path
-        d="M 7,18 A 7,7 0 0,1 12,5 A 7,7 0 0,1 19,10"
+        d="M 4,12 A 8,8 0 0,0 12,20"
         fill="none" stroke={c} strokeWidth="1.5" strokeLinecap="round"
       />
-      {/* Arrowheads */}
-      <Polyline points="17,4 17,8 13,8" fill="none" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      <Polyline points="7,20 7,16 11,16" fill="none" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      {/* 顶部箭头（顺时针） */}
+      <Polyline points="12,1 12,4 15,4" fill="none" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      {/* 底部箭头（逆时针） */}
+      <Polyline points="12,23 12,20 9,20" fill="none" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </G>
   ),
 
