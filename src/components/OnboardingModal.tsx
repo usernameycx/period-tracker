@@ -5,9 +5,13 @@ import { Colors, Spacing, FontSize, Radius, Shadow, Weight, LineHeight } from '.
 import PressableScale from './PressableScale';
 import Icon from './Icon';
 import type { IconName } from './Icon';
-import { requestNotificationPermission } from '../services/notifications';
 
 const ONBOARDING_DONE_KEY = 'onboarding_done_v1';
+
+interface Props {
+  /** 权限流程完成后才放行显示（先定位权限 → 通知权限 → 引导卡片） */
+  permissionGate?: boolean;
+}
 
 // 图标按功能语义选取，风格统一（描边线性图标）
 const STEPS: { icon: IconName; title: string; desc: string }[] = [
@@ -38,21 +42,16 @@ const STEPS: { icon: IconName; title: string; desc: string }[] = [
   },
 ];
 
-export default function OnboardingModal() {
+export default function OnboardingModal({ permissionGate = true }: Props) {
   const [visible, setVisible] = useState(false);
   const [step, setStep] = useState(0);
 
   useEffect(() => {
     AsyncStorage.getItem(ONBOARDING_DONE_KEY).then(v => {
-      if (!v) {
-        setVisible(true);
-        // 首次启动：主动弹出系统通知权限申请（与定位权限并列的首次引导）
-        requestNotificationPermission().catch(e => {
-          console.warn('OnboardingModal notification permission request failed:', e);
-        });
-      }
+      // 仅首次启动（未完成引导）且权限流程已完成后显示
+      if (!v && permissionGate) setVisible(true);
     }).catch(() => {});
-  }, []);
+  }, [permissionGate]);
 
   const openAppSettings = () => {
     if (Platform.OS === 'android') {

@@ -2,7 +2,6 @@ import React, { useRef, useEffect } from 'react';
 import { Tabs } from 'expo-router';
 import { Animated, Pressable } from 'react-native';
 import { SelectedDateProvider } from '../../src/context/SelectedDateContext';
-import OnboardingModal from '../../src/components/OnboardingModal';
 import Icon, { IconName } from '../../src/components/Icon';
 import { Colors, Radius, Spacing, FontSize, Weight } from '../../src/constants/theme';
 
@@ -41,7 +40,6 @@ function TabButton(props: any) {
 export default function TabLayout() {
   return (
     <SelectedDateProvider>
-      <OnboardingModal />
       <Tabs screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: Colors.primary,
