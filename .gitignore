@@ -1,50 +1,74 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
-
-# dependencies
+# ---------- dependencies ----------
 node_modules/
+.pnp/
+.pnp.js
 
-# Expo
+# ---------- Expo ----------
 .expo/
 dist/
 web-build/
 expo-env.d.ts
+*.hbc
 
-# Native
+# ---------- Metro / bundler ----------
+.metro-health-check*
+metro.config.js.bak
+
+# ---------- native build output ----------
+# android/ 是提交进 git 的（自定义了原生启动屏），但构建产物一律不入库
+android/build/
+android/app/build/
+android/.gradle/
+android/.cxx/
+android/app/.cxx/
+android/app/src/main/java/inline/
+.kt/
 .kotlin/
-*.orig.*
+.gradle/
+*.jsbundle
+*.hprof
+
+# ---------- secrets ----------
+.env
+.env.*
+!.env.example
+android/local.properties
 *.jks
 *.p8
 *.p12
 *.key
 *.mobileprovision
+*.pem
 
-# Metro
-.metro-health-check*
+# ---------- IDE / editors ----------
+.idea/
+*.iml
+.vscode/
+out/
 
-# debug
+# ---------- AI / agent 工具目录（仅本地使用） ----------
+.claude/
+.reasonix/
+.impeccable/
+.superpowers/
+.trash/
+AGENTS.local.md
+
+# ---------- OS ----------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------- logs / misc ----------
 npm-debug.*
 yarn-debug.*
 yarn-error.*
-
-# macOS
-.DS_Store
-*.pem
-
-# local env files
-.env*.local
-
-# typescript
 *.tsbuildinfo
+coverage/
+*.log
 
-# generated native folders
-/ios
-
-# agent metadata
-.reasonix/
-
-# Android build artifacts
-android/app/.cxx/
-
-# Screenshots and test APKs in root
+# ---------- 仓库根目录的临时截图与安装包 ----------
+# 正式截图请放 docs/screenshots/
 /*.png
 /*.apk
+splash-preview.*
