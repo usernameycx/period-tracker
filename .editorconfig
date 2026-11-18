@@ -1,0 +1,22 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+
+[*.{js,jsx,ts,tsx,json,yml,yaml,css,md}]
+indent_size = 2
+
+[*.{kt,kts,gradle}]
+indent_size = 4
+
+[*.md]
+# Markdown 里行尾两个空格是有意义的换行
+trim_trailing_whitespace = false
+
+[*.{png,jpg,jpeg,webp,gif}]
+# 二进制文件不做任何处理
+insert_final_newline = false

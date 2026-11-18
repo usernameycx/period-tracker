@@ -1,0 +1,83 @@
+name: Bug 报告
+description: 报告一个可以复现的问题
+title: '[Bug] '
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈！请尽量把信息填完整，很多问题差的就是那一行版本号。
+        **请勿在 Issue 中粘贴任何 API key。**
+
+  - type: input
+    id: app_version
+    attributes:
+      label: App 版本
+      description: 设置页底部可以看到（例如 2.1.1）
+      placeholder: 2.1.1
+    validations:
+      required: true
+
+  - type: input
+    id: android_version
+    attributes:
+      label: Android 版本与机型
+      placeholder: Android 14 / 小米 14
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: 问题出在哪部分
+      options:
+        - 周期记录 / 日历
+        - 阶段预测
+        - 症状记录
+        - 天气 / 定位
+        - 每日通知
+        - 数据备份 / 导入导出
+        - 界面显示
+        - 其他
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      placeholder: |
+        1. 打开日历页
+        2. 点击某日期标记经期
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望结果
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际结果
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志 / 截图
+      description: 可以用 `adb logcat | grep -i fayetide` 抓相关日志；截图直接拖进来
+      render: shell
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: 确认
+      options:
+        - label: 我确认内容里没有任何 API key 或个人信息
+          required: true
