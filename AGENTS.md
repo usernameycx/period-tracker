@@ -23,10 +23,10 @@ A period/cycle tracker for Chinese users. Tracks menstrual cycles, predicts phas
 `android/` is **committed to git** (NOT in .gitignore). This was done to customize the native splash screen. EAS Build uses the committed native files directly.
 
 **Consequences:**
-- `app.json` must NOT have `splash`, `orientation`, `icon`, `scheme`, `userInterfaceStyle`, `plugins`, `ios`, `android` as root keys — EAS ignores them when `android/` exists
-- Native splash is configured in `android/app/src/main/res/drawable/splash_bg.xml` + `values/styles.xml` + `values/colors.xml`
-- `expo-splash-screen` npm package is REMOVED — splash is purely native (splash_bg.xml), no JS overlay
+- Native splash is configured in `android/app/src/main/res/drawable/splash_bg.xml` + `values/styles.xml` + `values/colors.xml`; `expo-splash-screen` is only used to hide the native splash from JS (`app/_layout.tsx`)
+- Because `android/` exists, `expo prebuild` would overwrite native changes — edit the native files directly instead
 - `eas.json` preview profile uses `buildType: "apk"` without custom gradleCommand
+- API keys never live in committed files: `AMAP_WEB_KEY` comes from `.env` via `app.config.js`, `AMAP_API_KEY` from `android/local.properties` / env (see `docs/SECURITY.md`)
 
 ## Project Structure
 
