@@ -8,6 +8,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
 import android.database.sqlite.SQLiteDatabase
 import android.os.Build
 import android.os.PowerManager
@@ -153,7 +154,7 @@ class DailyNotificationReceiver : BroadcastReceiver() {
             val title = "$phaseLabel · 第${phaseInfo.dayOffset}天"
 
             // 3. Fetch weather
-            val weather = fetchWeather(city)
+            val weather = fetchWeather(context, city)
 
             // 4. Build notification body (phase-adaptive)
             val body = buildRichBody(phaseInfo.phase, phaseInfo.dayOffset, records, weather)
@@ -283,11 +284,32 @@ class DailyNotificationReceiver : BroadcastReceiver() {
 
     data class WeatherInfo(val condition: String, val icon: String, val temperature: Double)
 
-    private fun fetchWeather(city: String): WeatherInfo? {
+    /**
+     * 高德「Web 服务」key 从 AndroidManifest 的 meta-data 读取
+     * （构建期由 AMAP_WEB_KEY 注入），代码里不留任何 key。
+     */
+    private fun amapWebKey(context: Context): String = try {
+        val info = context.packageManager.getApplicationInfo(
+            context.packageName,
+            PackageManager.GET_META_DATA
+        )
+        info.metaData?.getString("com.fayetide.amap.webkey").orEmpty()
+    } catch (e: Exception) {
+        Log.w(TAG, "读取 AMAP_WEB_KEY 失败", e)
+        ""
+    }
+
+    private fun fetchWeather(context: Context, city: String): WeatherInfo? {
         try {
+            val amapKey = amapWebKey(context)
+            if (amapKey.isBlank()) {
+                Log.w(TAG, "AMAP_WEB_KEY 未配置，跳过通知里的天气")
+                return null
+            }
+
             // Geocode city
             val geoUrl = "https://restapi.amap.com/v3/geocode/geo" +
-                "?key=db1451c008d9d0615616b92b12622e65" +
+                "?key=$amapKey" +
                 "&address=${java.net.URLEncoder.encode(city, "UTF-8")}"
             val geoJson = httpGet(geoUrl) ?: return null
 

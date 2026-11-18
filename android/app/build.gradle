@@ -5,6 +5,19 @@ apply plugin: "com.facebook.react"
 def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
 
 /**
+ * 读取本地的高德 key —— 仓库里不保存任何 key。
+ * 查找顺序：gradle 属性（~/.gradle/gradle.properties）→ android/local.properties → 环境变量。
+ * EAS Build 走环境变量（在 expo.dev 的 Environment Variables 里配置）。
+ */
+def amapLocalProps = new Properties()
+def amapLocalFile = rootProject.file("local.properties")
+if (amapLocalFile.exists()) {
+    amapLocalFile.withInputStream { amapLocalProps.load(it) }
+}
+def amapSdkKey = project.findProperty("AMAP_API_KEY") ?: amapLocalProps.getProperty("AMAP_API_KEY") ?: System.getenv("AMAP_API_KEY") ?: ""
+def amapWebKey = project.findProperty("AMAP_WEB_KEY") ?: amapLocalProps.getProperty("AMAP_WEB_KEY") ?: System.getenv("AMAP_WEB_KEY") ?: ""
+
+/**
  * This is the configuration block to customize your React Native Android app.
  * By default you don't need to apply any configuration, just uncomment the lines you need.
  */
@@ -97,8 +110,11 @@ android {
 
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
 
-        // 高德定位 key：从 gradle.properties 的 AMAP_API_KEY 注入，manifest 用 ${amapApiKey} 引用
-        manifestPlaceholders = [amapApiKey: project.findProperty("AMAP_API_KEY") ?: ""]
+        // 高德 key 一律从本地配置注入，绝不写进仓库。
+        // 读取优先级：环境变量 > android/local.properties > ~/.gradle/gradle.properties
+        //   AMAP_API_KEY  —— 高德「Android 定位 SDK」key（绑定包名 + 签名 SHA1）
+        //   AMAP_WEB_KEY  —— 高德「Web 服务」key（地理编码 / 天气 HTTP 接口）
+        manifestPlaceholders = [amapApiKey: amapSdkKey, amapWebKey: amapWebKey]
     }
     signingConfigs {
         debug {

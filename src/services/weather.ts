@@ -28,8 +28,8 @@ const AMAP_KEY = (Constants.expoConfig?.extra as { amapApiKey?: string })?.amapA
 /** Convert city name to {lat, lon} using Amap (高德) geocoding API. */
 export async function geocodeCity(cityName: string): Promise<{ lat: number; lon: number } | null> {
   if (!AMAP_KEY) {
-    console.warn('geocodeCity: missing amapApiKey in app.json extra');
-    return null;
+    // 没配 key 时直接抛出可读错误，避免看起来像"城市名写错了"
+    throw new Error('未配置高德 Web 服务 key（AMAP_WEB_KEY），请在 .env 中配置后重新构建');
   }
   try {
     const url = `https://restapi.amap.com/v3/geocode/geo?key=${AMAP_KEY}&address=${encodeURIComponent(cityName)}&output=JSON`;
