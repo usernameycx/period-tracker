@@ -1,10 +1,6 @@
 <div align="center">
 
-<img src="docs/screenshots/logo.png" width="290" alt="FayeTide" />
-
-# FayeTide
-
-**顺着潮汐，认识自己的身体节律。**
+<img src="docs/screenshots/banner.png" width="760" alt="FayeTide" />
 
 本地优先的中文经期追踪 App —— 周期预测、症状记录、农历黄历、天气感知的生活建议，全部离线跑在你的手机里。
 

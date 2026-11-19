@@ -1,5 +1,10 @@
 # Lunar Tidal
 
+> **历史文档**：这是 2026 年 7 月为第一版标记（洋红 + 深蓝 "Lunar Tidal Observatory"）写的设计阐述。
+> 该方案已废弃——最终上线的品牌标记改为**金色圆盘**（暖金 + 米白 + 鼠尾草绿），
+> 源文件见 `scripts/icon-mark.svg`，图标由 `scripts/generate-icons.js` 生成。
+> 保留本文仅作设计过程记录，勿据此配色。
+
 ## A Design Philosophy for Cyclical Elegance
 
 **Lunar Tidal** articulates a visual language born from the quiet conversation between celestial bodies and earthly rhythms. It is an aesthetic of gravitational pull — where every form, every curve, every chromatic choice feels as though it has been shaped by invisible forces over millennia. The work must appear as though it emerged not from a single sitting but from patient observation, the product of deep expertise and painstaking attention to every subtle transition.
