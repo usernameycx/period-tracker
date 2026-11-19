@@ -44,6 +44,11 @@ export default function CalendarView({ onDayPress, selectedDate, currentMonth, o
   }, [records, currentMonth]);
 
   const recordDateSet = useMemo(() => new Set(records.map(r => r.start_date)), [records]);
+  /** 已标记的经期结束日（用于日历上的"结束"标记） */
+  const endDateSet = useMemo(
+    () => new Set(records.filter(r => !!r.end_date).map(r => r.end_date as string)),
+    [records]
+  );
 
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
@@ -124,6 +129,14 @@ export default function CalendarView({ onDayPress, selectedDate, currentMonth, o
           <View style={[styles.legendDot, { backgroundColor: FERTILITY_COLOR }]} />
           <Text style={styles.legendText}>备孕窗口</Text>
         </View>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendMarker, styles.legendMarkerStart]} />
+          <Text style={styles.legendText}>开始</Text>
+        </View>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendMarker, styles.legendMarkerEnd]} />
+          <Text style={styles.legendText}>结束</Text>
+        </View>
       </View>
 
       {/* Grid */}
@@ -138,6 +151,7 @@ export default function CalendarView({ onDayPress, selectedDate, currentMonth, o
               const isSelected = isSameDay(date, selectedDate);
               const bgColor = info?.fertility ? FERTILITY_COLOR : (info ? PHASE_COLORS[info.phase] : 'transparent');
               const isRecorded = recordDateSet.has(dateStr);
+              const isEnded = endDateSet.has(dateStr);
 
               return (
                 <PressableScale key={d}
@@ -149,6 +163,9 @@ export default function CalendarView({ onDayPress, selectedDate, currentMonth, o
                   </Text>
                   {isRecorded && (
                     <View style={styles.recordDot} />
+                  )}
+                  {isEnded && !isRecorded && (
+                    <View style={styles.endDot} />
                   )}
                   {info?.phase === 'ovulation' && (
                     <Text style={styles.dayLabel}>排卵日</Text>
@@ -186,10 +203,14 @@ const styles = StyleSheet.create({
   weekendLabel: { color: Colors.primaryLight },
 
   /* Legend */
-  legend: { flexDirection: 'row', justifyContent: 'center', gap: Spacing.md, marginBottom: Spacing.sm },
+  legend: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', columnGap: Spacing.md, rowGap: Spacing.xs, marginBottom: Spacing.sm },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs },
   legendDot: { width: 10, height: 10, borderRadius: 5 },
   legendText: { fontSize: FontSize.xs, color: Colors.textMuted },
+  // 开始 / 结束标记的图例：实心点 vs 空心圈，与日历格子里的标记一致
+  legendMarker: { width: 9, height: 9, borderRadius: 5 },
+  legendMarkerStart: { backgroundColor: Colors.danger },
+  legendMarkerEnd: { borderWidth: 1.5, borderColor: Colors.danger, backgroundColor: 'transparent' },
 
   /* Grid */
   grid: { gap: 3 },
@@ -208,6 +229,11 @@ const styles = StyleSheet.create({
   recordDot: {
     position: 'absolute', bottom: 3, width: 5, height: 5,
     borderRadius: Radius.xxs, backgroundColor: Colors.danger,
+  },
+  /* 经期结束标记：与开始标记同色但空心，形状上区分 */
+  endDot: {
+    position: 'absolute', bottom: 2, width: 6, height: 6, borderRadius: 3,
+    borderWidth: 1.5, borderColor: Colors.danger, backgroundColor: 'transparent',
   },
 
   /* Swipe */

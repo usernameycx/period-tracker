@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef, type ReactNode } from 'react';
 import { getDatabase } from '../db/database';
-import { PeriodRecord, getAllPeriodRecords, insertPeriodRecord, updatePeriodEndDate, deletePeriodRecord, clearAllPeriodRecords } from '../db/period-records';
+import { PeriodRecord, getAllPeriodRecords, insertPeriodRecord, updatePeriodEndDate, clearPeriodEndDate, deletePeriodRecord, clearAllPeriodRecords } from '../db/period-records';
 import { parseDate, diffDays, addDays, formatDate } from '../utils/date';
 import { DEFAULT_PERIOD_DAYS } from '../constants/phases';
 import { findPrevMissingEndRecord, assertMinCycleDistance } from '../services/period-validation';
@@ -32,6 +32,8 @@ interface PeriodCtx {
   addRecordIgnoringMissingEnd: (startDate: string) => Promise<void>;
   removeRecord: (id: number) => Promise<void>;
   updateEndDate: (startDate: string, endDate: string) => Promise<void>;
+  /** 取消某个周期已标记的结束日（"已标记为经期结束"再次点击时使用） */
+  clearEndDate: (startDate: string) => Promise<void>;
   clearAll: () => Promise<void>;
   refresh: () => Promise<void>;
 }
@@ -189,6 +191,22 @@ export function PeriodProvider({ children }: { children: ReactNode }) {
     refresh();
   }, [refresh]);
 
+  /** 取消结束日：把该周期恢复为"进行中"（end_date = NULL） */
+  const clearEndDate = useCallback(async (startDate: string) => {
+    const db = await getDatabase();
+    const snapshot = recordsRef.current;
+    setRecords(prevState => prevState.map(r =>
+      r.start_date === startDate ? { ...r, end_date: null } : r
+    ));
+    try {
+      await clearPeriodEndDate(db, startDate);
+    } catch (e) {
+      setRecords(snapshot);
+      throw e;
+    }
+    refresh();
+  }, [refresh]);
+
   const clearAll = useCallback(async () => {
     const db = await getDatabase();
     await clearAllPeriodRecords(db);
@@ -196,8 +214,8 @@ export function PeriodProvider({ children }: { children: ReactNode }) {
   }, [refresh]);
 
   const value = useMemo(() => ({
-    records, loading, error, addRecord, addRecordIgnoringMissingEnd, removeRecord, updateEndDate, clearAll, refresh
-  }), [records, loading, error, addRecord, addRecordIgnoringMissingEnd, removeRecord, updateEndDate, clearAll, refresh]);
+    records, loading, error, addRecord, addRecordIgnoringMissingEnd, removeRecord, updateEndDate, clearEndDate, clearAll, refresh
+  }), [records, loading, error, addRecord, addRecordIgnoringMissingEnd, removeRecord, updateEndDate, clearEndDate, clearAll, refresh]);
 
   return (
     <Ctx.Provider value={value}>

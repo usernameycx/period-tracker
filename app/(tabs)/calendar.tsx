@@ -55,12 +55,14 @@ export default function CalendarPage() {
             const isToday = ds === todayStr;
             const isSel = ds === formatDate(selectedDate);
             const isRecorded = records.some(r => r.start_date === ds);
+            const isEnded = records.some(r => r.end_date === ds);
             return (
               <View key={i} style={styles.weekDay}>
                 <Text style={[styles.weekLabel, (i === 0 || i === 6) && styles.weekLabelWknd]}>{weekDayLabels[i]}</Text>
                 <View style={[styles.weekNumWrap, isToday && styles.weekNumToday]}>
                   <Text style={[styles.weekNum, isToday && styles.weekNumTodayText]}>{d.getDate()}</Text>
                   {isRecorded && <View style={styles.weekDot} />}
+                  {isEnded && !isRecorded && <View style={styles.weekEndDot} />}
                 </View>
               </View>
             );
@@ -124,6 +126,7 @@ const styles = StyleSheet.create({
   weekNum: { fontSize: FontSize.sm2, fontWeight: Weight.medium, color: Colors.ink },
   weekNumTodayText: { color: Colors.white, fontWeight: Weight.bold },
   weekDot: { width: 5, height: 5, borderRadius: Radius.xxs, backgroundColor: Colors.danger, position: 'absolute', bottom: 3 },
+  weekEndDot: { width: 6, height: 6, borderRadius: 3, borderWidth: 1.5, borderColor: Colors.danger, backgroundColor: 'transparent', position: 'absolute', bottom: 2 },
 
   todayStrip: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',

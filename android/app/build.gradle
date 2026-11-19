@@ -110,13 +110,24 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
+    // Windows 本地构建才固定 CMake 3.31.6（自带 ninja 1.12+，支持 >260 字符路径）。
+    // 默认的 3.22.1 带 ninja 1.10，编 arm64 的新架构 codegen 会因对象文件路径超长失败
+    // （react-native-gesture-handler 的 shadow node）。Linux/EAS 构建保持默认，避免多下载一个 CMake。
+    if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+        externalNativeBuild {
+            cmake {
+                version "3.31.6"
+            }
+        }
+    }
+
     namespace 'com.periodtracker.app'
     defaultConfig {
         applicationId 'com.periodtracker.app'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 4
-        versionName "2.1.1"
+        versionCode 5
+        versionName "3.0.0"
 
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
 

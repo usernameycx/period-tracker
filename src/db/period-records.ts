@@ -34,6 +34,17 @@ export async function updatePeriodEndDate(
   );
 }
 
+/** 取消已标记的经期结束日（恢复为"进行中"状态） */
+export async function clearPeriodEndDate(
+  db: SQLiteDatabase,
+  startDate: string
+): Promise<void> {
+  await db.runAsync(
+    'UPDATE period_records SET end_date = NULL WHERE start_date = ?',
+    [startDate]
+  );
+}
+
 export async function deletePeriodRecord(db: SQLiteDatabase, id: number): Promise<void> {
   await db.runAsync('DELETE FROM period_records WHERE id = ?', [id]);
 }

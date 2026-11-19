@@ -22,7 +22,7 @@ interface Props {
 }
 
 export default function DayDetailSheet({ visible, date, onClose }: Props) {
-  const { records, addRecord, addRecordIgnoringMissingEnd, removeRecord, updateEndDate } = usePeriod();
+  const { records, addRecord, addRecordIgnoringMissingEnd, removeRecord, updateEndDate, clearEndDate } = usePeriod();
   const { weather } = useWeather();
   const [diet, setDiet] = useState<DietRule | null>(null);
   const [confirmVisible, setConfirmVisible] = useState(false);
@@ -42,22 +42,43 @@ export default function DayDetailSheet({ visible, date, onClose }: Props) {
   const lifeAdvice = weather && phaseInfo ? getLifeAdvice(phaseInfo.phase, weather) : null;
 
   // Find ongoing period (start recorded, no end_date yet)
-  const ongoingRecord = useMemo(() => {
+  /**
+   * 选中日期所属的那条经期记录（落在第 2~9 天窗口内）。
+   * 结束日按"这条记录的 start_date"定位，而不是"最近一条未结束的记录"——
+   * 这样标记结束后按钮仍能停留在同一天，并支持再次点击取消。
+   */
+  const endTargetRecord = useMemo(() => {
     const sorted = [...records].sort((a, b) => b.start_date.localeCompare(a.start_date));
-    return sorted.find(r => !r.end_date) || null;
-  }, [records]);
-  const isInOngoingPeriod = !recordedStart && ongoingRecord &&
-    dateStr >= ongoingRecord.start_date && dateStr !== ongoingRecord.start_date &&
-    (() => {
-      const len = diffDays(parseDate(dateStr), parseDate(ongoingRecord.start_date)) + 1;
+    return sorted.find(r => {
+      if (dateStr < r.start_date) return false;
+      const len = diffDays(parseDate(dateStr), parseDate(r.start_date)) + 1;
       return len >= 2 && len <= 9;
-    })();
+    }) || null;
+  }, [records, dateStr]);
+
+  /** 这一天正是已记录的结束日 → 按钮显示"已标记"状态，再次点击可取消 */
+  const isMarkedEndHere = !!endTargetRecord?.end_date && endTargetRecord.end_date === dateStr;
+  /** 该周期还没标记结束 → 可以把结束日定在这一天 */
+  const canMarkEnd = !!endTargetRecord && !endTargetRecord.end_date;
 
   const handleEndPeriod = async () => {
-    if (!ongoingRecord || busyRef.current) return;
+    if (!endTargetRecord || busyRef.current) return;
     busyRef.current = true;
     try {
-      await updateEndDate(ongoingRecord.start_date, dateStr);
+      await updateEndDate(endTargetRecord.start_date, dateStr);
+    } catch (e: any) {
+      setErrorMessage(e.message || '操作失败，请稍后再试');
+      setErrorVisible(true);
+    } finally {
+      busyRef.current = false;
+    }
+  };
+
+  const handleClearEndPeriod = async () => {
+    if (!endTargetRecord || busyRef.current) return;
+    busyRef.current = true;
+    try {
+      await clearEndDate(endTargetRecord.start_date);
     } catch (e: any) {
       setErrorMessage(e.message || '操作失败，请稍后再试');
       setErrorVisible(true);
@@ -188,7 +209,17 @@ export default function DayDetailSheet({ visible, date, onClose }: Props) {
                     <Text style={styles.hint}>经期持续 {getAveragePeriodDays(records)} 天，其余阶段自动推算</Text>
                   )}
 
-                  {isInOngoingPeriod && (
+                  {isMarkedEndHere ? (
+                    <PressableScale
+                      style={[styles.endPeriodBtn, styles.endPeriodBtnDone]}
+                      onPress={handleClearEndPeriod}
+                    >
+                      <Icon name="check" size={16} color={Colors.botanical} />
+                      <Text style={[styles.endPeriodText, styles.endPeriodTextDone]}>
+                        已标记为经期结束（再次点击可取消）
+                      </Text>
+                    </PressableScale>
+                  ) : canMarkEnd ? (
                     <PressableScale
                       style={styles.endPeriodBtn}
                       onPress={handleEndPeriod}
@@ -196,7 +227,7 @@ export default function DayDetailSheet({ visible, date, onClose }: Props) {
                       <Icon name="check" size={16} color={Colors.white} />
                       <Text style={styles.endPeriodText}>标记经期在此结束</Text>
                     </PressableScale>
-                  )}
+                  ) : null}
                 </View>
 
                 {diet ? (
@@ -346,9 +377,18 @@ const styles = StyleSheet.create({
   endPeriodBtn: {
     marginTop: Spacing.md, backgroundColor: Colors.botanical,
     borderRadius: Radius.md, flexDirection: 'row', alignItems: 'center',
-    justifyContent: 'center', paddingVertical: Spacing.md, gap: Spacing.sm,
+    justifyContent: 'center', paddingVertical: Spacing.md, paddingHorizontal: Spacing.sm, gap: Spacing.sm,
   },
   endPeriodText: { fontSize: FontSize.sm2, fontWeight: Weight.bold, color: Colors.white },
+  // 已标记结束：换成浅底 + 描边的"已完成"样式，与"已标记为经期第一天"保持同一套视觉语言
+  endPeriodBtnDone: {
+    backgroundColor: Colors.botanicalBg,
+    borderWidth: 1.5, borderColor: Colors.success,
+  },
+  endPeriodTextDone: {
+    color: Colors.botanical, fontSize: FontSize.sm,
+    fontWeight: Weight.semibold, flexShrink: 1, textAlign: 'center',
+  },
 
   /* ── Scrollable ── */
   scrollArea: {},

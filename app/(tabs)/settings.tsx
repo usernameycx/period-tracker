@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { ScrollView, View, Text, StyleSheet, Modal, TextInput, ActivityIndicator } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { Paths, File } from 'expo-file-system';
@@ -9,45 +9,103 @@ import CityPicker from '../../src/components/CityPicker';
 import PressableScale from '../../src/components/PressableScale';
 import TimeWheelPicker from '../../src/components/TimeWheelPicker';
 import ConfirmModal from '../../src/components/ConfirmModal';
+import OptionListModal from '../../src/components/OptionListModal';
+import type { OptionItem } from '../../src/components/OptionListModal';
 import { exportData, importData } from '../../src/utils/backup';
 import { scheduleAllNotifications } from '../../src/services/notifications';
 import { usePeriod } from '../../src/context/PeriodContext';
 import { getDatabase } from '../../src/db/database';
-import { getSymptomCount, clearAllSymptoms } from '../../src/db/symptoms';
+import { getAllSymptoms, clearAllSymptoms, deleteSymptomByDate } from '../../src/db/symptoms';
+import { buildCycleOptions, buildSymptomDayOptions, formatMonthDayWeek, formatFullDate } from '../../src/services/data-management';
+import { getAveragePeriodDays } from '../../src/services/prediction';
+import type { SymptomRecord } from '../../src/constants/symptoms';
 import { seedDietRules } from '../../src/db/diet-rules';
 import { Colors, Spacing, FontSize, Radius, Shadow, Weight, LineHeight } from '../../src/constants/theme';
 import Icon from '../../src/components/Icon';
 
 export default function SettingsPage() {
   const { notifyHour, setNotifyHour, notifyMinute, setNotifyMinute, refresh: refreshSettings } = useSettings();
-  const { refresh, clearAll, records } = usePeriod();
-  const [symptomCount, setSymptomCount] = useState(0);
+  const { refresh, clearAll, removeRecord, records } = usePeriod();
+  const [symptomRows, setSymptomRows] = useState<SymptomRecord[]>([]);
   const [importModalVisible, setImportModalVisible] = useState(false);
   const [importText, setImportText] = useState('');
   const [notifyModal, setNotifyModal] = useState(false);
   const [busy, setBusy] = useState(false);
-
-  type ConfirmType = 'clearPeriods' | 'clearSymptoms' | 'resetAll' | null;
-  const [confirmType, setConfirmType] = useState<ConfirmType>(null);
+  // 数据管理：picker 选择 → confirm 二次确认 → 执行
+  const [dataPicker, setDataPicker] = useState<'periods' | 'symptoms' | null>(null);
+  const [pendingCycleKey, setPendingCycleKey] = useState<string | null>(null);
+  const [pendingSymptomKey, setPendingSymptomKey] = useState<string | null>(null);
+  const [symptomVersion, setSymptomVersion] = useState(0);
+  const [resetConfirm, setResetConfirm] = useState(false);
   const [toast, setToast] = useState<{ title: string; message: string } | null>(null);
 
   const scrollRef = useRef<ScrollView>(null);
 
+  const loadSymptoms = useCallback(async () => {
+    try {
+      const db = await getDatabase();
+      const rows = await getAllSymptoms(db);
+      setSymptomRows(rows);
+    } catch (e) {
+      console.warn('symptom list fetch failed:', e);
+    }
+  }, []);
+
+  // 进入页面即刷新：在日历页新增症状后切回来，这里的"天数"要立刻同步
   useFocusEffect(useCallback(() => {
     scrollRef.current?.scrollTo({ y: 0, animated: false });
-  }, []));
+    loadSymptoms();
+  }, [loadSymptoms]));
 
   useEffect(() => {
-    (async () => {
-      try { const db = await getDatabase(); setSymptomCount(await getSymptomCount(db)); }
-      catch (e) { console.warn('symptomCount fetch failed:', e); }
-    })();
+    loadSymptoms();
+  }, [records, symptomVersion, loadSymptoms]);
+
+  const symptomCount = symptomRows.length;
+
+  const cycleOptions = useMemo<OptionItem[]>(() => {
+    const cycles = buildCycleOptions(records, getAveragePeriodDays(records));
+    if (cycles.length === 0) return [];
+    return [
+      {
+        key: 'all',
+        title: `全部周期（${cycles.length} 个）`,
+        subtitle: '删除后阶段预测会重新计算',
+        icon: 'cycle',
+        danger: true,
+      },
+      ...cycles.map(c => ({
+        key: `id:${c.id}`,
+        title: c.label,
+        subtitle: c.subtitle,
+        icon: 'drop' as const,
+        section: c.section,
+      })),
+    ];
   }, [records]);
 
+  const symptomOptions = useMemo<OptionItem[]>(() => {
+    const days = buildSymptomDayOptions(symptomRows);
+    if (days.length === 0) return [];
+    return [
+      {
+        key: 'all',
+        title: `全部记录（${days.length} 天）`,
+        subtitle: '想只删某一天，选下面的日期',
+        icon: 'clipboard',
+        danger: true,
+      },
+      ...days.map(d => ({
+        key: `date:${d.date}`,
+        title: d.label,
+        subtitle: d.subtitle,
+        icon: 'today' as const,
+        section: d.section,
+      })),
+    ];
+  }, [symptomRows]);
+
   const pad = (n: number) => String(n).padStart(2, '0');
-  const handleClearPeriods = () => setConfirmType('clearPeriods');
-  const handleClearSymptoms = () => setConfirmType('clearSymptoms');
-  const handleResetAll = () => setConfirmType('resetAll');
 
   const handleNotifyDone = async () => {
     setNotifyModal(false);
@@ -56,23 +114,82 @@ export default function SettingsPage() {
     });
   };
 
-  const executeConfirm = async () => {
-    const type = confirmType; setConfirmType(null);
-    if (!type) return;
+  // ── 删除经期记录：某个周期 / 全部 ──
+  const executeDeleteCycle = async () => {
+    const key = pendingCycleKey;
+    setPendingCycleKey(null);
+    if (!key) return;
     try {
-      if (type === 'clearPeriods') { await clearAll(); setToast({ title: '已清除', message: '经期记录已删除' }); }
-      else if (type === 'clearSymptoms') { const db = await getDatabase(); await clearAllSymptoms(db); setSymptomCount(0); setToast({ title: '已清除', message: '症状记录已删除' }); }
-      else if (type === 'resetAll') { const db = await getDatabase(); await clearAll(); await clearAllSymptoms(db); await db.runAsync('DELETE FROM diet_rules'); await seedDietRules(db); setSymptomCount(0); await refresh(); setToast({ title: '已重置', message: '所有数据已恢复为初始状态' }); }
-    } catch (e: any) { setToast({ title: '操作失败', message: e.message || '请稍后再试' }); }
+      if (key === 'all') {
+        await clearAll();
+        setToast({ title: '已删除', message: '全部经期记录已删除' });
+      } else {
+        const id = Number(key.replace('id:', ''));
+        const label = buildCycleOptions(records, getAveragePeriodDays(records)).find(o => o.id === id)?.label;
+        await removeRecord(id);
+        setToast({ title: '已删除', message: label ? `${label} 的周期已删除` : '该周期已删除' });
+      }
+    } catch (e: any) {
+      setToast({ title: '操作失败', message: e.message || '请稍后再试' });
+    }
   };
 
-  const getConfirmConfig = () => {
-    switch (confirmType) {
-      case 'clearPeriods': return { title: '清除经期记录', message: `将删除 ${records.length} 条经期标记，症状记录和饮食规则不受影响`, icon: 'drop' as const };
-      case 'clearSymptoms': return { title: '清除症状记录', message: `将删除 ${symptomCount} 条症状记录，经期标记不受影响`, icon: 'clipboard' as const };
-      case 'resetAll': return { title: '重置全部数据', message: `将删除所有数据（${records.length} 条经期 + ${symptomCount} 条症状），并重置饮食规则为默认值。此操作不可恢复。`, icon: 'warning' as const, variant: 'danger' as const };
-      default: return null;
+  // ── 删除症状记录：某一天 / 全部 ──
+  const executeDeleteSymptom = async () => {
+    const key = pendingSymptomKey;
+    setPendingSymptomKey(null);
+    if (!key) return;
+    try {
+      const db = await getDatabase();
+      if (key === 'all') {
+        await clearAllSymptoms(db);
+        setToast({ title: '已删除', message: '全部症状记录已删除' });
+      } else {
+        const date = key.replace('date:', '');
+        await deleteSymptomByDate(db, date);
+        setToast({ title: '已删除', message: `${formatMonthDayWeek(date)} 的症状记录已删除` });
+      }
+      setSymptomVersion(v => v + 1);
+    } catch (e: any) {
+      setToast({ title: '操作失败', message: e.message || '请稍后再试' });
     }
+  };
+
+  const executeResetAll = async () => {
+    setResetConfirm(false);
+    try {
+      const db = await getDatabase();
+      await clearAll();
+      await clearAllSymptoms(db);
+      await db.runAsync('DELETE FROM diet_rules');
+      await seedDietRules(db);
+      setSymptomVersion(v => v + 1);
+      await refresh();
+      setToast({ title: '已重置', message: '所有数据已恢复为初始状态' });
+    } catch (e: any) {
+      setToast({ title: '操作失败', message: e.message || '请稍后再试' });
+    }
+  };
+
+  const cycleConfirmMessage = () => {
+    if (!pendingCycleKey) return '';
+    if (pendingCycleKey === 'all') {
+      return `将删除全部 ${records.length} 个经期周期，删除后阶段预测会重新计算。此操作不可恢复。`;
+    }
+    const id = Number(pendingCycleKey.replace('id:', ''));
+    const target = buildCycleOptions(records).find(c => c.id === id);
+    return target
+      ? `确定删除 ${formatFullDate(target.startDate)} 起的这个周期吗？删除后阶段预测会重新计算，此操作不可恢复。`
+      : '确定删除该周期吗？';
+  };
+
+  const symptomConfirmMessage = () => {
+    if (!pendingSymptomKey) return '';
+    if (pendingSymptomKey === 'all') {
+      return `将删除全部 ${symptomCount} 天的症状记录，经期标记不受影响。此操作不可恢复。`;
+    }
+    const date = pendingSymptomKey.replace('date:', '');
+    return `确定删除 ${formatMonthDayWeek(date)} 这一天的症状记录吗？经期标记与其他日期不受影响。`;
   };
 
   const handleExport = async () => {
@@ -150,14 +267,22 @@ export default function SettingsPage() {
         <Text style={styles.sectionTitle}>数据管理</Text>
       </View>
       <View style={styles.card}>
-        <PressableScale style={styles.rowItem} onPress={handleClearPeriods}>
+        <PressableScale style={styles.rowItem} onPress={() => setDataPicker('periods')}>
           <View style={styles.rowIconBox}><Icon name="drop" size={16} color={Colors.primary} /></View>
-          <View style={styles.rowText}><Text style={styles.rowTitle}>清除经期记录</Text><Text style={styles.rowHint}>{records.length} 条记录</Text></View>
+          <View style={styles.rowText}>
+            <Text style={styles.rowTitle}>删除经期记录</Text>
+            <Text style={styles.rowHint}>{records.length} 个周期 · 可选择删某个或全部</Text>
+          </View>
+          <Icon name="chevron" size={16} color={Colors.textHint} />
         </PressableScale>
         <View style={styles.rowDivider} />
-        <PressableScale style={styles.rowItem} onPress={handleClearSymptoms}>
+        <PressableScale style={styles.rowItem} onPress={() => setDataPicker('symptoms')}>
           <View style={styles.rowIconBox}><Icon name="clipboard" size={16} color={Colors.primary} /></View>
-          <View style={styles.rowText}><Text style={styles.rowTitle}>清除症状记录</Text><Text style={styles.rowHint}>{symptomCount} 条记录</Text></View>
+          <View style={styles.rowText}>
+            <Text style={styles.rowTitle}>删除症状记录</Text>
+            <Text style={styles.rowHint}>{symptomCount} 天 · 可选择删某天或全部</Text>
+          </View>
+          <Icon name="chevron" size={16} color={Colors.textHint} />
         </PressableScale>
       </View>
 
@@ -166,7 +291,7 @@ export default function SettingsPage() {
         <Icon name="warning" size={14} color={Colors.danger} />
         <Text style={[styles.sectionTitle, { color: Colors.danger }]}>危险操作</Text>
       </View>
-      <PressableScale style={styles.dangerRow} onPress={handleResetAll}>
+      <PressableScale style={styles.dangerRow} onPress={() => setResetConfirm(true)}>
         <View style={[styles.rowIconBox, { backgroundColor: Colors.dangerBg }]}><Icon name="warning" size={16} color={Colors.danger} /></View>
         <View style={styles.rowText}><Text style={styles.dangerTitle}>重置全部数据</Text><Text style={styles.rowHint}>经期 + 症状 + 饮食规则恢复默认</Text></View>
       </PressableScale>
@@ -214,13 +339,66 @@ export default function SettingsPage() {
         </View>
       </Modal>
 
-      {/* ── Confirm ── */}
-      {(() => { const c = getConfirmConfig(); if (!c) return null; return (
-        <ConfirmModal visible={confirmType !== null} title={c.title} message={c.message}
-          icon={c.icon} variant={'variant' in c ? c.variant : 'default'}
-          confirmLabel={confirmType === 'resetAll' ? '确认重置' : '确定清除'}
-          onCancel={() => setConfirmType(null)} onConfirm={executeConfirm} />
-      ); })()}
+      {/* ── 选择要删除的周期 ── */}
+      <OptionListModal
+        visible={dataPicker === 'periods'}
+        title="删除经期记录"
+        hint="选择一个周期单独删除，或删除全部"
+        icon="drop"
+        options={cycleOptions}
+        actionLabel="删除所选"
+        emptyText="还没有任何经期记录"
+        onCancel={() => setDataPicker(null)}
+        onConfirm={key => { setDataPicker(null); setPendingCycleKey(key); }}
+      />
+
+      {/* ── 选择要删除的症状日期 ── */}
+      <OptionListModal
+        visible={dataPicker === 'symptoms'}
+        title="删除症状记录"
+        hint="选择某一天的记录单独删除，或删除全部"
+        icon="clipboard"
+        options={symptomOptions}
+        actionLabel="删除所选"
+        emptyText="还没有任何症状记录"
+        onCancel={() => setDataPicker(null)}
+        onConfirm={key => { setDataPicker(null); setPendingSymptomKey(key); }}
+      />
+
+      {/* ── 删除确认 ── */}
+      <ConfirmModal
+        visible={pendingCycleKey !== null}
+        title="删除经期记录"
+        message={cycleConfirmMessage()}
+        icon="warning"
+        variant="danger"
+        cancelLabel="取消"
+        confirmLabel="确认删除"
+        onCancel={() => setPendingCycleKey(null)}
+        onConfirm={executeDeleteCycle}
+      />
+      <ConfirmModal
+        visible={pendingSymptomKey !== null}
+        title="删除症状记录"
+        message={symptomConfirmMessage()}
+        icon="warning"
+        variant="danger"
+        cancelLabel="取消"
+        confirmLabel="确认删除"
+        onCancel={() => setPendingSymptomKey(null)}
+        onConfirm={executeDeleteSymptom}
+      />
+      <ConfirmModal
+        visible={resetConfirm}
+        title="重置全部数据"
+        message={`将删除所有数据（${records.length} 个周期 + ${symptomCount} 天症状），并重置饮食规则为默认值。此操作不可恢复。`}
+        icon="warning"
+        variant="danger"
+        cancelLabel="取消"
+        confirmLabel="确认重置"
+        onCancel={() => setResetConfirm(false)}
+        onConfirm={executeResetAll}
+      />
 
       {/* ── Toast ── */}
       <Modal visible={toast !== null} transparent animationType="fade" onRequestClose={() => setToast(null)}>

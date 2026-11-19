@@ -160,7 +160,10 @@ Mappings live in `SymptomPicker.tsx` CATEGORIES/TOGGLES arrays.
 12. **Phase colors**: 经期 coral, 卵泡期 green, 排卵日 peach, 备孕窗口 cream, 黄体期 goose yellow.
 13. **Symptoms**: TOGGLES layout icon-above-text. 5 items in one row: 头痛/腹胀/腰痛/胸胀/眼干. All options can be deselected by tapping again.
 14. **Symptom empty-row cleanup**: When all symptom fields become null/0 (user deselects everything), the DB row is auto-deleted — no junk records.
-15. **Version**: 2.1.1 (versionCode 4).
+15. **Version**: 3.0.0 (versionCode 5).
+16. **Period end is a toggle**: the sheet keeps the end button on the marked day and flips it to「已标记为经期结束（再次点击可取消）」→ `PeriodContext.clearEndDate` sets `end_date = NULL`. The target record is found by scanning records whose `[start, start+8]` window contains the selected date (not "the latest record without end_date"), so the button survives after marking.
+17. **Start/end markers**: calendar cells use a filled dot for the period start and a hollow ring for the end (month grid + week strip + legend). `CalendarView` builds `recordDateSet` and `endDateSet` separately; a day never renders both.
+18. **Fine-grained deletion**: settings uses `OptionListModal` (SectionList, grouped by year for cycles / month for symptom days, virtualized). Labels are pure functions in `src/services/data-management.ts` (`buildCycleOptions`, `buildSymptomDayOptions`) covered by `tests/data-management.test.ts`. Year is always visible in the subtitle so cross-year identical month/day stays distinguishable.
 
 ## EAS Build
 
