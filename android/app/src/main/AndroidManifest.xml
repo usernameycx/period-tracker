@@ -12,6 +12,8 @@
   <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
   <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
   <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+  <!-- 高德定位 SDK 用 Wi-Fi 信息做网络定位，无 GPS 的设备（平板/模拟器）全靠它 -->
+  <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
   <queries>
     <intent>
       <action android:name="android.intent.action.VIEW"/>
@@ -24,6 +26,9 @@
     <meta-data android:name="com.amap.api.v2.apikey" android:value="${amapApiKey}"/>
     <!-- 高德 Web 服务 key：由 AMAP_WEB_KEY 注入，供原生通知取天气使用（不在代码里硬编码） -->
     <meta-data android:name="com.fayetide.amap.webkey" android:value="${amapWebKey}"/>
+    <!-- 高德定位 SDK 以 jar 形式引入（com.amap.api:location），jar 不会像 AAR 那样自动合并 manifest，
+         必须手动声明 APSService，否则定位必然失败（logcat: Unable to start service ... APSService not found） -->
+    <service android:name="com.amap.api.location.APSService" android:enabled="true" android:exported="false"/>
     <meta-data android:name="com.google.firebase.messaging.default_notification_color" android:resource="@color/notification_icon_color"/>
     <meta-data android:name="com.google.firebase.messaging.default_notification_icon" android:resource="@drawable/notification_icon"/>
     <meta-data android:name="expo.modules.notifications.default_notification_color" android:resource="@color/notification_icon_color"/>

@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+### 修复
+
+- **定位在真机/模拟器上始终失败**：高德定位 SDK 以 jar 形式引入（`com.amap.api:location:6.4.2`），jar 不会像 AAR 那样自动合并 manifest，导致 `com.amap.api.location.APSService` 从未被声明（logcat: `Unable to start service ... APSService not found`）。现已在 `AndroidManifest.xml` 中显式声明，并补 `ACCESS_WIFI_STATE` 权限以提升网络定位成功率。
+- **通知里的天气取不到**：`AMAP_WEB_KEY` 原先只写进 `.env`，而 Gradle 只读 `local.properties` / 环境变量，导致 APK 内 `com.fayetide.amap.webkey` 为空。现在 `android/app/build.gradle` 也会读取根目录 `.env`，与 `app.config.js` 共用同一份配置。
+
 ### 新增
 
 - `README.md`、`CONTRIBUTING.md`、`docs/`（架构 / 隐私 / 安全）与 Issue、PR 模板

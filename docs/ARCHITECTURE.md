@@ -135,6 +135,27 @@ dayOffset == cycleLen - 14                → ovulation（排卵日，1 天）
 
 > 已知脆弱点：`api.open-meteo.com` 在境内部分网络会出现整段不可达（同门其他子域正常）。当前行为是报错 + 手动重试，计划做主备回退与过期缓存兜底。
 
+### 定位与 Key 的注入链
+
+高德定位 SDK 以 **jar** 形式引入（`com.amap.api:location:6.4.2`）。jar 不像 AAR 那样会合并 manifest，所以必须手动声明它需要的服务：
+
+```xml
+<service android:name="com.amap.api.location.APSService" android:enabled="true" android:exported="false"/>
+```
+
+漏了这一行，定位必然失败，logcat 里会出现 `Unable to start service ... APSService not found`，SDK 最终抛出错误码 6（「定位结果失败」）。
+
+两个 key 的注入路径：
+
+| Key | JS 侧 | 原生侧 |
+|-----|-------|--------|
+| `AMAP_WEB_KEY`（Web 服务） | `.env` → `app.config.js` → `Constants.expoConfig.extra.amapApiKey` | `.env` → `build.gradle` → manifest 占位符 → `DailyNotificationReceiver` 读取 meta-data |
+| `AMAP_API_KEY`（Android 平台） | 不需要 | `.env` / `local.properties` / 环境变量 → `build.gradle` → manifest 占位符 `com.amap.api.v2.apikey` |
+
+`build.gradle` 与 `app.config.js` 都读同一份根目录 `.env`，避免两侧配置不一致（尤其是通知里的天气只在原生侧取 key）。
+
+> 注意：模拟器基本无法完成高德定位——SDK 需要基站 / Wi-Fi / GPS 的定位源数据，模拟器都提供不了。官方 FAQ 明确建议用真机测试；`errorCode 7` 才是 key 鉴权失败，`errorCode 6` 是定位源不足。MuMu 等模拟器给出的 mock 位置会被 SDK 忽略。
+
 ## 6. 通知系统
 
 **双通道，同一套内容语义。**

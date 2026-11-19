@@ -6,16 +6,26 @@ def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
 
 /**
  * 读取本地的高德 key —— 仓库里不保存任何 key。
- * 查找顺序：gradle 属性（~/.gradle/gradle.properties）→ android/local.properties → 环境变量。
- * EAS Build 走环境变量（在 expo.dev 的 Environment Variables 里配置）。
+ *
+ * 查找顺序（先命中先用）：
+ *   1. 项目根目录 .env          —— 与 app.config.js（JS 侧）共用同一份，避免两处配置不一致
+ *   2. android/local.properties —— Android 侧惯例位置
+ *   3. 环境变量                 —— EAS Build 走这个（expo.dev → Environment Variables）
+ *   4. gradle 属性（~/.gradle/gradle.properties）
  */
-def amapLocalProps = new Properties()
+def amapProps = new Properties()
+def amapEnvFile = file("$projectRoot/.env")
 def amapLocalFile = rootProject.file("local.properties")
-if (amapLocalFile.exists()) {
-    amapLocalFile.withInputStream { amapLocalProps.load(it) }
+[amapEnvFile, amapLocalFile].each { f ->
+    if (f != null && f.exists()) {
+        f.withInputStream { amapProps.load(it) }
+    }
 }
-def amapSdkKey = project.findProperty("AMAP_API_KEY") ?: amapLocalProps.getProperty("AMAP_API_KEY") ?: System.getenv("AMAP_API_KEY") ?: ""
-def amapWebKey = project.findProperty("AMAP_WEB_KEY") ?: amapLocalProps.getProperty("AMAP_WEB_KEY") ?: System.getenv("AMAP_WEB_KEY") ?: ""
+def amapKey = { String name ->
+    amapProps.getProperty(name) ?: System.getenv(name) ?: project.findProperty(name) ?: ""
+}
+def amapSdkKey = amapKey("AMAP_API_KEY")
+def amapWebKey = amapKey("AMAP_WEB_KEY")
 
 /**
  * This is the configuration block to customize your React Native Android app.
